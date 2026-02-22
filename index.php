@@ -74,33 +74,115 @@ try {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
         :root {
-            --msf-red: #c31e3a;
-            --msf-dark: #1a1a1a;
-            --msf-dark-nav: #2d2d2d;
+            --msf-red: #FFC107;
+            --msf-yellow: #FFC107;
+            --msf-blue-dark: #1D1C3E;
+            --msf-dark: #1D1C3E;
+            --msf-dark-nav: #2d2d4e;
+            --msf-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --msf-nav-font: -apple-system, BlinkMacSystemFont, system, sans-serif;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; padding-top: 120px; }
-        .site-header { position: fixed; top: 0; left: 0; right: 0; width: 100%; z-index: 1030; }
+        * {
+            font-family: var(--msf-font);
+        }
+        body, html { font-family: var(--msf-font); }
+        /* Préserver les icônes Bootstrap */
+        [class^="bi-"], [class*=" bi-"] {
+            font-family: "bootstrap-icons" !important;
+        }
+        .site-header { position: fixed; top: 0; left: 0; right: 0; width: 100%; z-index: 1030; background: transparent; margin: 0; padding: 0; }
         .top-bar { background: var(--msf-dark); color: #fff; font-size: 0.85rem; }
         .top-bar a { color: #fff; text-decoration: none; }
+        .top-bar .container { max-width: 1200px; margin: 0 auto; padding-left: 2rem; padding-right: 2rem; }
         .navbar-main { background: #fff !important; box-shadow: 0 1px 0 rgba(0,0,0,0.08); }
-        .navbar-main .navbar-brand { color: #000; font-weight: 700; text-transform: uppercase; letter-spacing: 0.02em; }
-        .navbar-main .nav-link { color: #000 !important; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.03em; }
-        .navbar-main .nav-link:hover { color: #000 !important; opacity: 0.85; }
-        .navbar-main .nav-link .bi-chevron-down { font-size: 0.6rem; color: var(--msf-red); vertical-align: 0.15em; }
-        .navbar-main .nav-link.active { outline: 1px solid #fff; outline-offset: 4px; }
-        .navbar-main .navbar-toggler { border-color: #333; }
+        .navbar-main .container { max-width: 1200px; margin: 0 auto; padding-left: 2rem; padding-right: 2rem; }
+        .navbar-main .navbar-brand { 
+            color: var(--msf-blue-dark); 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 0.02em; 
+            display: flex;
+            align-items: center;
+            padding: 0;
+        }
+        .navbar-main .navbar-brand img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+        .navbar-main .nav-link { 
+            color: var(--msf-blue-dark) !important; 
+            font-family: var(--msf-nav-font);
+            font-size: 0.9rem; 
+            letter-spacing: 0.03em; 
+            font-weight: 700; 
+        }
+        .navbar-main .nav-link:hover { color: var(--msf-blue-dark) !important; opacity: 0.85; }
+        .navbar-main .nav-link .bi-chevron-down { font-size: 0.6rem; color: #FF8F00; vertical-align: 0.15em; font-weight: 700; }
+        .navbar-main .nav-link.active { border-bottom: 3px solid var(--msf-red); }
+        .navbar-main .navbar-toggler { border-color: var(--msf-blue-dark); }
         .navbar-main .navbar-toggler-icon { filter: invert(1); }
-        .nav-red-line { height: 3px; background: var(--msf-red); width: 100%; }
-        .btn-donate { background: var(--msf-red); color: #fff; border: none; border-radius: 4px; padding: 0.5rem 1.25rem; text-transform: uppercase; font-size: 0.9rem; font-weight: 600; }
-        .btn-donate:hover { background: #a01930; color: #fff; }
-        /* Mega-menu overlay */
-        .mega-menu { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(26,26,26,0.98); z-index: 1050; overflow-y: auto; padding-top: 0; }
-        .mega-menu.show { display: block; }
+        .nav-red-line { height: 3px; background: var(--msf-red); width: 100%; margin: 0; }
+        .btn-donate { background: var(--msf-yellow); color: var(--msf-blue-dark); border: none; border-radius: 4px; padding: 0.5rem 1.25rem; text-transform: uppercase; font-size: 0.9rem; font-weight: 600; }
+        .btn-donate:hover { background: #FFB300; color: var(--msf-blue-dark); }
+        /* Mega-menu - affiché sous la navbar */
+        .mega-menu { 
+            position: fixed; 
+            top: 120px; 
+            left: 0; 
+            right: 0; 
+            background: rgba(29, 28, 62, 0.98); 
+            z-index: 1020; 
+            overflow-y: auto; 
+            padding-top: 0;
+            max-height: calc(100vh - 120px);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .mega-menu.show { 
+            visibility: visible;
+            pointer-events: auto;
+            opacity: 1;
+            transform: translateY(0);
+        }
         .mega-menu .mega-red-line { height: 3px; background: var(--msf-red); width: 100%; }
-        .mega-menu .mega-header { display: flex; justify-content: space-between; align-items: flex-start; padding: 2rem 0 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.15); }
+        .mega-menu .mega-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-start; 
+            padding: 2rem 0 1.5rem; 
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-left: 2rem;
+            padding-right: 2rem;
+        }
         .mega-menu .mega-title { font-size: 2.5rem; font-weight: 700; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 0.02em; }
-        .mega-menu .btn-close-mega { background: none; border: none; color: #fff; font-size: 1.5rem; padding: 0.25rem; line-height: 1; cursor: pointer; opacity: 0.9; }
+        .mega-menu .btn-close-mega { 
+            background: none; 
+            border: none; 
+            color: #fff; 
+            font-size: 2rem; 
+            padding: 0.25rem; 
+            line-height: 1; 
+            cursor: pointer; 
+            opacity: 0.9; 
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
         .mega-menu .btn-close-mega:hover { opacity: 1; color: #fff; }
+        .mega-menu .container { 
+            max-width: 1200px; 
+            margin: 0 auto; 
+            padding-left: 2rem; 
+            padding-right: 2rem; 
+        }
         .mega-menu .mega-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2rem; padding: 2rem 0 3rem; }
         .mega-menu .mega-col h3 { font-size: 0.8rem; font-weight: 700; color: var(--msf-red); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; }
         .mega-menu .mega-col p { color: rgba(255,255,255,0.9); font-size: 0.95rem; line-height: 1.5; margin-bottom: 0.75rem; }
@@ -112,13 +194,13 @@ try {
         .hero h1 { color: #fff; font-weight: 700; font-size: clamp(1.75rem, 4vw, 2.75rem); text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
         .hero .meta { color: rgba(255,255,255,0.9); font-size: 0.9rem; }
         .hero .lead { color: #fff; max-width: 480px; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-        .btn-read-more { background: var(--msf-red); color: #fff; border: none; border-radius: 4px; padding: 0.6rem 1.5rem; }
-        .btn-read-more:hover { background: #a01930; color: #fff; }
-        .share-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: #333; }
+        .btn-read-more { background: var(--msf-yellow); color: var(--msf-blue-dark); border: none; border-radius: 4px; padding: 0.6rem 1.5rem; font-weight: 600; }
+        .btn-read-more:hover { background: #FFB300; color: var(--msf-blue-dark); }
+        .share-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--msf-blue-dark); }
         .share-icon { width: 40px; height: 40px; border: 1px solid var(--msf-red); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: var(--msf-red); text-decoration: none; margin-right: 0.5rem; }
         .share-icon:hover { background: var(--msf-red); color: #fff; }
         .copy-link { color: var(--msf-red); text-decoration: none; font-size: 0.9rem; }
-        .tagline { font-size: clamp(1.1rem, 2.5vw, 1.5rem); font-weight: 700; color: #1a1a1a; }
+        .tagline { font-size: clamp(1.1rem, 2.5vw, 1.5rem); font-weight: 700; color: var(--msf-blue-dark); }
     </style>
 </head>
 <body>
@@ -138,12 +220,14 @@ try {
         <!-- Navigation principale (fond blanc, texte noir) -->
         <nav class="navbar navbar-expand-lg navbar-main navbar-light">
             <div class="container">
-                <a class="navbar-brand" href="#"><?= $organisation ? htmlspecialchars($organisation->name) : 'EXPERTISE' ?></a>
+                <a class="navbar-brand" href="#">
+                    <img src="assets/images/logo.jpg" alt="<?= $organisation ? htmlspecialchars($organisation->name) : 'EXPERTISE' ?>">
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Menu">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarMain">
-                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                         <li class="nav-item">
                             <a class="nav-link nav-mega-trigger" href="#" data-mega="mega-about">À propos <i class="bi bi-chevron-down"></i></a>
                         </li>
@@ -318,23 +402,46 @@ try {
         var megas = document.querySelectorAll('.mega-menu');
         var closeBtns = document.querySelectorAll('[data-close-mega]');
         var body = document.body;
+        var siteHeader = document.querySelector('.site-header');
+
+        // Calculer la hauteur du header pour positionner le mega-menu et le padding du body
+        function updateMegaMenuPosition() {
+            if (siteHeader) {
+                var headerHeight = siteHeader.offsetHeight;
+                body.style.paddingTop = headerHeight + 'px';
+                megas.forEach(function(m) {
+                    m.style.top = headerHeight + 'px';
+                    m.style.maxHeight = 'calc(100vh - ' + headerHeight + 'px)';
+                });
+            }
+        }
+
+        // Mettre à jour au chargement et au redimensionnement
+        updateMegaMenuPosition();
+        window.addEventListener('resize', updateMegaMenuPosition);
 
         function closeAll() {
             megas.forEach(function (m) {
                 m.classList.remove('show');
-                m.setAttribute('aria-hidden', 'true');
+                setTimeout(function() {
+                    m.setAttribute('aria-hidden', 'true');
+                }, 300);
             });
             triggers.forEach(function (t) { t.classList.remove('active'); });
-            body.style.overflow = '';
         }
 
         function openMega(id) {
             closeAll();
             var el = document.getElementById(id);
             if (el) {
-                el.classList.add('show');
+                updateMegaMenuPosition(); // Recalculer la position avant d'ouvrir
                 el.setAttribute('aria-hidden', 'false');
-                body.style.overflow = 'hidden';
+                // Petit délai pour permettre la transition CSS
+                requestAnimationFrame(function() {
+                    requestAnimationFrame(function() {
+                        el.classList.add('show');
+                    });
+                });
             }
             var t = document.querySelector('.nav-mega-trigger[data-mega="' + id + '"]');
             if (t) t.classList.add('active');
