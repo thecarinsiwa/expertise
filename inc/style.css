@@ -208,6 +208,8 @@ body, html {
     background: linear-gradient(135deg, var(--msf-blue-dark) 0%, #2d2d4e 100%);
 }
 .hero::before { z-index: 1; }
+/* L'overlay ne doit pas bloquer les clics sur le carousel (bouton Lire la suite) */
+.hero-carousel.hero-has-cover::before { pointer-events: none; }
 
 /* Hero carousel (3 dernières annonces) */
 .hero-carousel { position: relative; }
