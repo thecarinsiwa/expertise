@@ -328,10 +328,10 @@ require_once __DIR__ . '/auth.php';
             </a>
 
             <div class="admin-sidebar-label">Structure</div>
-            <a href="#" class="nav-link<?= $currentNav === 'organisations' ? ' active' : '' ?>">
+            <a href="organisations.php" class="nav-link<?= $currentNav === 'organisations' ? ' active' : '' ?>">
                 <i class="bi bi-building"></i><span>Organisations</span>
             </a>
-            <a href="#" class="nav-link<?= $currentNav === 'units' ? ' active' : '' ?>">
+            <a href="units.php" class="nav-link<?= $currentNav === 'units' ? ' active' : '' ?>">
                 <i class="bi bi-diagram-3"></i><span>Unités & Services</span>
             </a>
 
