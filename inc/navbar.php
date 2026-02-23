@@ -40,7 +40,11 @@ if (!isset($organisation))
                 <span class="nav-link d-none d-lg-inline" style="cursor:pointer;"><span
                         class="nav-link-text">FR</span><i class="bi bi-chevron-down nav-link-icon small"
                         aria-hidden="true"></i></span>
-                <a class="btn btn-read-more" href="<?= $baseUrl ?>admin/login.php">Se connecter</a>
+                                <?php if (isset($_SESSION['admin_email'])): ?>
+                    <a class="btn btn-read-more" href="<?= $baseUrl ?>admin/">Dashboard</a>
+                <?php else: ?>
+                    <a class="btn btn-read-more" href="<?= $baseUrl ?>admin/login.php">Se connecter</a>
+                <?php endif; ?>
             </div>
         </div>
     </div>

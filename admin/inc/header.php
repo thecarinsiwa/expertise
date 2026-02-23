@@ -336,11 +336,14 @@ require_once __DIR__ . '/auth.php';
             </a>
 
             <div class="admin-sidebar-label">RH & Sécurité</div>
-            <a href="#" class="nav-link<?= $currentNav === 'staff' ? ' active' : '' ?>">
+            <a href="staff.php" class="nav-link<?= $currentNav === 'staff' ? ' active' : '' ?>">
                 <i class="bi bi-people"></i><span>Personnel</span>
             </a>
-            <a href="#" class="nav-link<?= $currentNav === 'roles' ? ' active' : '' ?>">
+            <a href="roles.php" class="nav-link<?= $currentNav === 'roles' ? ' active' : '' ?>">
                 <i class="bi bi-shield-lock"></i><span>Rôles & Accès</span>
+            </a>
+            <a href="security.php" class="nav-link<?= $currentNav === 'security' ? ' active' : '' ?>">
+                <i class="bi bi-shield-check"></i><span>Sécurité</span>
             </a>
 
             <div class="admin-sidebar-label">Opérations</div>
@@ -351,6 +354,7 @@ require_once __DIR__ . '/auth.php';
                 <i class="bi bi-geo-alt"></i><span>Missions</span>
             </a>
 
+        
             <div class="admin-sidebar-label">Communication</div>
             <a href="announcements.php" class="nav-link<?= $currentNav === 'announcements' ? ' active' : '' ?>">
                 <i class="bi bi-megaphone"></i><span>Annonces</span>
@@ -387,3 +391,7 @@ require_once __DIR__ . '/auth.php';
     </aside>
 
     <main class="admin-main">
+
+</body>
+
+</html>

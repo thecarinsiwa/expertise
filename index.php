@@ -1,8 +1,5 @@
 <?php
-/**
- * Page d'accueil – Style MSF (Médecins Sans Frontières)
- * Données issues de database/schema.sql : organisation, mission, announcement
- */
+session_start();
 $pageTitle = 'Expertise';
 $organisation = null;
 $featuredMission = null;

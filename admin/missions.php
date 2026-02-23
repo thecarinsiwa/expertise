@@ -65,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                 $pdo->beginTransaction();
 
                 // Gestion photo de couverture
-                $cover_image = $detail->cover_image ?? null;
+                $cover_image = isset($detail) && isset($detail->cover_image) ? $detail->cover_image : null;
                 if (!empty($_FILES['cover_image']['name'])) {
                     $target_dir = "../uploads/missions/";
                     if (!is_dir($target_dir))
@@ -193,12 +193,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
             $author = (int) $_POST['author_user_id'];
             $status = $_POST['status'] ?? 'draft';
 
-            if ($repId > 0) {
-                $stmt = $pdo->prepare("UPDATE mission_report SET title = ?, summary = ?, content = ?, report_date = ?, author_user_id = ?, status = ? WHERE id = ?");
-                $stmt->execute([$title, $summary, $content, $date, $author, $status, $repId]);
-            } else {
-                $stmt = $pdo->prepare("INSERT INTO mission_report (mission_id, author_user_id, title, summary, content, report_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$m_id, $author, $title, $summary, $content, $date, $status]);
+            if ($m_id > 0) {
+                if ($repId > 0) {
+                    $stmt = $pdo->prepare("UPDATE mission_report SET title = ?, summary = ?, content = ?, report_date = ?, author_user_id = ?, status = ? WHERE id = ?");
+                    $stmt->execute([$title, $summary, $content, $date, $author, $status, $repId]);
+                } else {
+                    $stmt = $pdo->prepare("INSERT INTO mission_report (mission_id, author_user_id, title, summary, content, report_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$m_id, $author, $title, $summary, $content, $date, $status]);
+                }
+                header('Location: missions.php?action=edit&id=' . $m_id . '&msg=report_saved');
+                exit;
             }
             $success = "Rapport enregistré.";
         }
@@ -212,23 +216,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
         // GESTION DES FRAIS (AJOUT/MODIF)
         if (isset($_POST['save_expense'])) {
             $expId = (int) $_POST['expense_id'];
-            $m_id = (int) $_POST['mission_id'];
+            $m_id = (int) ($_POST['mission_id'] ?? 0);
             $cat = trim($_POST['category'] ?? '');
             $desc = trim($_POST['description'] ?? '');
-            $amount = (float) $_POST['amount'];
+            $amount = (float) ($_POST['amount'] ?? 0);
             $currency = $_POST['currency'] ?? 'XOF';
-            $date = $_POST['expense_date'] ?: date('Y-m-d');
-            $beneficiary = (int) $_POST['user_id'];
+            $date = !empty($_POST['expense_date']) ? $_POST['expense_date'] : date('Y-m-d');
+            $beneficiary = (int) ($_POST['user_id'] ?? 0);
             $status = $_POST['status'] ?? 'pending';
 
-            if ($expId > 0) {
-                $stmt = $pdo->prepare("UPDATE mission_expense SET category = ?, description = ?, amount = ?, currency = ?, expense_date = ?, user_id = ?, status = ? WHERE id = ?");
-                $stmt->execute([$cat, $desc, $amount, $currency, $date, $beneficiary, $status, $expId]);
+            if ($m_id <= 0) {
+                $error = "Mission invalide (mission_id manquant).";
             } else {
-                $stmt = $pdo->prepare("INSERT INTO mission_expense (mission_id, user_id, category, description, amount, currency, expense_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->execute([$m_id, $beneficiary, $cat, $desc, $amount, $currency, $date, $status]);
+                try {
+                    if ($expId > 0) {
+                        $stmt = $pdo->prepare("UPDATE mission_expense SET category = ?, description = ?, amount = ?, currency = ?, expense_date = ?, user_id = ?, status = ? WHERE id = ?");
+                        $stmt->execute([$cat, $desc, $amount, $currency, $date, $beneficiary, $status, $expId]);
+                    } else {
+                        $stmt = $pdo->prepare("INSERT INTO mission_expense (mission_id, user_id, category, description, amount, currency, expense_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                        $stmt->execute([$m_id, $beneficiary, $cat, $desc, $amount, $currency, $date, $status]);
+                    }
+                    header('Location: missions.php?action=edit&id=' . $m_id . '&msg=expense_saved');
+                    exit;
+                } catch (PDOException $e) {
+                    $error = "Erreur enregistrement dépense : " . $e->getMessage();
+                }
             }
-            $success = "Dépense enregistrée.";
         }
 
         // SUPPRESSION FRAIS
@@ -336,6 +349,10 @@ if (isset($_GET['msg'])) {
         $success = "Mission supprimée avec succès.";
     if ($_GET['msg'] === 'created')
         $success = "Mission créée avec succès.";
+    if ($_GET['msg'] === 'expense_saved')
+        $success = "Dépense enregistrée.";
+    if ($_GET['msg'] === 'report_saved')
+        $success = "Rapport enregistré.";
 }
 
 require __DIR__ . '/inc/header.php';
@@ -464,20 +481,18 @@ require __DIR__ . '/inc/header.php';
                         <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-steps" type="button">4. Planning
                             & Étapes</button>
                     </li>
-                    <?php if ($id > 0): ?>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-orders" type="button">5.
-                                Ordres</button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reports" type="button">6.
-                                Rapports</button>
-                        </li>
-                        <li class="nav-item">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-expenses" type="button">7.
-                                Frais</button>
-                        </li>
-                    <?php endif; ?>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-orders" type="button">5.
+                            Ordres</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reports" type="button">6.
+                            Rapports</button>
+                    </li>
+                    <li class="nav-item">
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-expenses" type="button">7.
+                            Frais</button>
+                    </li>
                 </ul>
             </div>
 
@@ -683,9 +698,9 @@ require __DIR__ . '/inc/header.php';
                     </div>
                 </div>
 
-                <?php if ($id > 0): ?>
                     <!-- TAB 5: ORDERS -->
                     <div class="tab-pane fade" id="tab-orders">
+                        <?php if ($id > 0): ?>
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h3 class="h6 mb-0 fw-bold"><i class="bi bi-file-earmark-text me-2"></i> Ordre de mission</h3>
                             <button type="button" class="btn btn-sm btn-admin-primary" data-bs-toggle="modal"
@@ -717,10 +732,17 @@ require __DIR__ . '/inc/header.php';
                                 <p class="text-muted small mb-0">Aucun ordre de mission généré pour le moment.</p>
                             </div>
                         <?php endif; ?>
+                        <?php else: ?>
+                        <div class="text-center py-5 bg-light rounded border border-dashed">
+                            <i class="bi bi-file-earmark-text text-muted d-block mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted small mb-0">Enregistrez d'abord la mission pour gérer les ordres de mission.</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- TAB 6: REPORTS -->
                     <div class="tab-pane fade" id="tab-reports">
+                        <?php if ($id > 0): ?>
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h3 class="h6 mb-0 fw-bold"><i class="bi bi-journal-text me-2"></i> Rapports de mission</h3>
                             <button type="button" class="btn btn-sm btn-admin-primary" onclick="openReportModal(0)">
@@ -782,10 +804,17 @@ require __DIR__ . '/inc/header.php';
                                 <p class="text-muted small mb-0">En attente des premiers comptes-rendus.</p>
                             </div>
                         <?php endif; ?>
+                        <?php else: ?>
+                        <div class="text-center py-5 bg-light rounded border border-dashed">
+                            <i class="bi bi-journal-text text-muted d-block mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted small mb-0">Enregistrez d'abord la mission pour ajouter des rapports.</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
 
                     <!-- TAB 7: EXPENSES -->
                     <div class="tab-pane fade" id="tab-expenses">
+                        <?php if ($id > 0): ?>
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h3 class="h6 mb-0 fw-bold"><i class="bi bi-cash-stack me-2"></i> Frais de mission</h3>
                             <button type="button" class="btn btn-sm btn-admin-primary" onclick="openExpenseModal(0)">
@@ -858,8 +887,13 @@ require __DIR__ . '/inc/header.php';
                                 <p class="text-muted small mb-0">Aucune dépense enregistrée.</p>
                             </div>
                         <?php endif; ?>
+                        <?php else: ?>
+                        <div class="text-center py-5 bg-light rounded border border-dashed">
+                            <i class="bi bi-cash-stack text-muted d-block mb-2" style="font-size: 2rem;"></i>
+                            <p class="text-muted small mb-0">Enregistrez d'abord la mission pour gérer les frais.</p>
+                        </div>
+                        <?php endif; ?>
                     </div>
-                <?php endif; ?>
             </div>
 
             <div class="admin-footer-actions border-top p-4 d-flex justify-content-between">
@@ -1445,22 +1479,23 @@ require __DIR__ . '/inc/header.php';
             </div>
             <div class="modal-body">
                 <input type="hidden" name="mission_id" value="<?= $id ?>">
+                <?php $order = isset($detail) && isset($detail->order) ? $detail->order : null; ?>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Numéro d'ordre</label>
                     <input type="text" name="order_number" id="order_number" class="form-control"
-                        value="<?= $detail->order->order_number ?? 'OM-' . date('Y') . '-' . sprintf('%04d', $id) ?>">
+                        value="<?= $order ? htmlspecialchars($order->order_number) : 'OM-' . date('Y') . '-' . sprintf('%04d', max(1, $id)) ?>">
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Date d'émission</label>
                     <input type="date" name="issue_date" id="order_issue_date" class="form-control"
-                        value="<?= $detail->order->issue_date ?? date('Y-m-d') ?>">
+                        value="<?= $order && $order->issue_date ? $order->issue_date : date('Y-m-d') ?>">
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Signataire autorisé</label>
                     <select name="authorised_by_user_id" id="order_auth_by" class="form-select">
                         <option value="">Sélectionner...</option>
                         <?php foreach ($allUsers as $u): ?>
-                            <option value="<?= $u->id ?>" <?= ($detail->order->authorised_by_user_id ?? '') == $u->id ? 'selected' : '' ?>>
+                            <option value="<?= $u->id ?>" <?= ($order && isset($order->authorised_by_user_id) && $order->authorised_by_user_id == $u->id) ? 'selected' : '' ?>>
                                 <?= htmlspecialchars($u->first_name . ' ' . $u->last_name) ?>
                             </option>
                         <?php endforeach; ?>
@@ -1469,18 +1504,18 @@ require __DIR__ . '/inc/header.php';
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Notes / Instructions</label>
                     <textarea name="notes" id="order_notes" class="form-control"
-                        rows="3"><?= htmlspecialchars($detail->order->notes ?? '') ?></textarea>
+                        rows="3"><?= htmlspecialchars($order && isset($order->notes) ? $order->notes : '') ?></textarea>
                 </div>
                 <div class="mb-0">
                     <label class="form-label small fw-bold">Statut</label>
                     <select name="status" id="order_status" class="form-select">
-                        <option value="draft" <?= ($detail->order->status ?? '') == 'draft' ? 'selected' : '' ?>>Brouillon
+                        <option value="draft" <?= (!$order || ($order->status ?? '') == 'draft') ? 'selected' : '' ?>>Brouillon
                         </option>
-                        <option value="sent" <?= ($detail->order->status ?? '') == 'sent' ? 'selected' : '' ?>>Envoyé
+                        <option value="sent" <?= ($order && ($order->status ?? '') == 'sent') ? 'selected' : '' ?>>Envoyé
                         </option>
-                        <option value="signed" <?= ($detail->order->status ?? '') == 'signed' ? 'selected' : '' ?>>Signé
+                        <option value="signed" <?= ($order && ($order->status ?? '') == 'signed') ? 'selected' : '' ?>>Signé
                         </option>
-                        <option value="cancelled" <?= ($detail->order->status ?? '') == 'cancelled' ? 'selected' : '' ?>>
+                        <option value="cancelled" <?= ($order && ($order->status ?? '') == 'cancelled') ? 'selected' : '' ?>>
                             Annulé</option>
                     </select>
                 </div>
@@ -1496,7 +1531,7 @@ require __DIR__ . '/inc/header.php';
 <!-- Modal Rapport -->
 <div class="modal fade" id="reportModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <form method="POST" class="modal-content border-0 shadow">
+        <form method="POST" <?= $id > 0 ? 'action="missions.php?action=edit&amp;id=' . (int) $id . '"' : '' ?> class="modal-content border-0 shadow">
             <div class="modal-header bg-dark text-white">
                 <h5 class="modal-title" id="reportModalTitle">Ajouter un rapport</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -1549,17 +1584,18 @@ require __DIR__ . '/inc/header.php';
     </div>
 </div>
 
-<!-- Modal Frais -->
+<!-- Modal Frais (formulaire isolé pour éviter toute soumission du formulaire mission) -->
 <div class="modal fade" id="expenseModal" tabindex="-1">
     <div class="modal-dialog">
-        <form method="POST" class="modal-content border-0 shadow">
+        <form id="expenseForm" method="POST" action="missions.php?action=edit&amp;id=<?= (int) $id ?>" class="modal-content border-0 shadow">
             <div class="modal-header bg-dark text-white">
                 <h5 class="modal-title" id="expenseModalTitle">Ajouter une dépense</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <input type="hidden" name="mission_id" value="<?= $id ?>">
+                <input type="hidden" name="mission_id" value="<?= (int) $id ?>">
                 <input type="hidden" name="expense_id" id="expense_id" value="0">
+                <input type="hidden" name="currency" value="XOF">
                 <div class="row g-3">
                     <div class="col-md-12">
                         <label class="form-label small fw-bold">Catégorie</label>
@@ -1629,6 +1665,41 @@ require __DIR__ . '/inc/header.php';
 <?php require __DIR__ . '/inc/footer.php'; ?>
 
 <script>
+    function openReportModal(id, title, summary, content, report_date, author_user_id, status) {
+        document.getElementById('report_id').value = id || 0;
+        document.getElementById('report_title').value = title || '';
+        document.getElementById('report_summary').value = summary || '';
+        document.getElementById('report_content').value = (typeof content === 'string') ? content : '';
+        document.getElementById('report_date').value = report_date || '';
+        var authorEl = document.getElementById('report_author');
+        if (authorEl) authorEl.value = author_user_id || '';
+        document.getElementById('report_status').value = status || 'draft';
+        document.getElementById('reportModalTitle').textContent = (id && id !== 0) ? 'Modifier le rapport' : 'Ajouter un rapport';
+        new bootstrap.Modal(document.getElementById('reportModal')).show();
+    }
+    function openExpenseModal(id, category, description, amount, currency, expense_date, user_id, status) {
+        document.getElementById('expense_id').value = id || 0;
+        document.getElementById('expense_category').value = category || 'Transport';
+        document.getElementById('expense_description').value = description || '';
+        document.getElementById('expense_amount').value = amount || '';
+        document.getElementById('expense_date').value = expense_date || '';
+        var userEl = document.getElementById('expense_user');
+        if (userEl) userEl.value = user_id || '';
+        document.getElementById('expense_status').value = status || 'pending';
+        document.getElementById('expenseModalTitle').textContent = (id && id !== 0) ? 'Modifier la dépense' : 'Ajouter une dépense';
+        new bootstrap.Modal(document.getElementById('expenseModal')).show();
+    }
+    function deleteReport(id) {
+        if (!confirm('Supprimer ce rapport ?')) return;
+        document.getElementById('delete_report_id_input').value = id;
+        document.getElementById('deleteReportForm').submit();
+    }
+    function deleteExpense(id) {
+        if (!confirm('Supprimer cette dépense ?')) return;
+        document.getElementById('delete_expense_id_input').value = id;
+        document.getElementById('deleteExpenseForm').submit();
+    }
+
     $(document).ready(function () {
         // Initialisation DataTable
         if ($('#missionsTable').length) {
