@@ -46,6 +46,18 @@ try {
         if ($stmt && $row = $stmt->fetch()) $featuredAnnouncement = $row;
     }
 
+    $heroAnnouncements = [];
+    $stmt = $pdo->query("
+        SELECT a.id, a.title, a.content AS description, a.cover_image, a.published_at, a.created_at
+        FROM announcement a
+        WHERE a.organisation_id = (SELECT id FROM organisation WHERE is_active = 1 LIMIT 1)
+          AND (a.published_at IS NULL OR a.published_at <= NOW())
+          AND (a.expires_at IS NULL OR a.expires_at > NOW())
+        ORDER BY COALESCE(a.published_at, a.created_at) DESC, a.created_at DESC
+        LIMIT 3
+    ");
+    if ($stmt) $heroAnnouncements = $stmt->fetchAll();
+
     $recentMissions = [];
     $stmt = $pdo->query("
         SELECT m.id, m.title, m.cover_image, m.location, m.start_date, m.updated_at
@@ -92,6 +104,7 @@ if (!isset($statsMissions)) $statsMissions = 0;
 if (!isset($statsLocations)) $statsLocations = 0;
 if (!isset($statsAnnouncements)) $statsAnnouncements = 0;
 if (!isset($recentLocations)) $recentLocations = [];
+if (!isset($heroAnnouncements)) $heroAnnouncements = [];
 
 // Photos depuis la BDD (hero + cartes missions)
 require_once __DIR__ . '/inc/asset_url.php';
@@ -106,40 +119,73 @@ require __DIR__ . '/inc/head.php';
 require __DIR__ . '/inc/header.php';
 ?>
 
-    <!-- Hero (photo de couverture depuis la BDD si mission à la une) -->
-    <section class="hero <?= $heroCoverUrl ? 'hero-has-cover' : '' ?>">
-        <?php if ($heroCoverUrl): ?>
-        <div class="hero-bg" style="background-image: url('<?= htmlspecialchars($heroCoverUrl) ?>');"></div>
-        <?php endif; ?>
+    <!-- Hero : carousel des 3 dernières annonces -->
+    <section class="hero hero-carousel <?= count($heroAnnouncements) > 0 ? 'hero-has-cover' : 'hero-fallback' ?>">
+        <?php if (count($heroAnnouncements) > 0): ?>
+        <div id="heroAnnouncementsCarousel" class="carousel slide carousel-fade h-100" data-bs-ride="carousel" data-bs-interval="6000">
+            <div class="carousel-inner h-100">
+                <?php foreach ($heroAnnouncements as $idx => $ann): 
+                    $slideCover = !empty($ann->cover_image) ? client_asset_url($baseUrl, $ann->cover_image) : '';
+                    $slideDesc = '';
+                    if (!empty($ann->description)) {
+                        $slideDesc = html_entity_decode(strip_tags($ann->description), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        $slideDesc = preg_replace('/^(Description\s+générale\s*:?\s*|Description\s*:?\s*)/iu', '', $slideDesc);
+                        $slideDesc = trim(preg_replace('/\s+/u', ' ', $slideDesc));
+                        $slideDesc = mb_substr($slideDesc, 0, 220) . (mb_strlen($slideDesc) > 220 ? '…' : '');
+                    }
+                    $slideDate = $ann->published_at ? date('d M Y', strtotime($ann->published_at)) : ($ann->created_at ? date('d M Y', strtotime($ann->created_at)) : '');
+                ?>
+                <div class="carousel-item h-100 <?= $idx === 0 ? 'active' : '' ?>">
+                    <?php if ($slideCover): ?>
+                    <div class="hero-bg" style="background-image: url('<?= htmlspecialchars($slideCover) ?>');"></div>
+                    <?php else: ?>
+                    <div class="hero-bg hero-bg-default"></div>
+                    <?php endif; ?>
+                    <div class="container h-100 d-flex align-items-end">
+                        <div class="row w-100 align-items-end">
+                            <div class="col-lg-7">
+                                <span class="badge-location d-block mb-2">Annonce</span>
+                                <h1 class="mb-3"><?= htmlspecialchars($ann->title) ?></h1>
+                                <p class="meta mb-2"><?= $slideDate ?></p>
+                                <?php if ($slideDesc !== ''): ?>
+                                <p class="lead mb-4"><?= htmlspecialchars($slideDesc) ?></p>
+                                <?php endif; ?>
+                                <a href="<?= $baseUrl ?>announcement.php?id=<?= (int) $ann->id ?>" class="btn btn-read-more">Lire la suite</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </div>
+            <?php if (count($heroAnnouncements) > 1): ?>
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroAnnouncementsCarousel" data-bs-slide="prev" aria-label="Précédent">
+                <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#heroAnnouncementsCarousel" data-bs-slide="next" aria-label="Suivant">
+                <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            </button>
+            <div class="carousel-indicators">
+                <?php foreach ($heroAnnouncements as $idx => $ann): ?>
+                <button type="button" data-bs-target="#heroAnnouncementsCarousel" data-bs-slide-to="<?= $idx ?>" <?= $idx === 0 ? 'class="active" aria-current="true"' : '' ?> aria-label="Annonce <?= $idx + 1 ?>"></button>
+                <?php endforeach; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php else: ?>
+        <div class="hero-bg hero-bg-default"></div>
+        <div class="hero-carousel-overlay"></div>
         <div class="container">
             <div class="row align-items-end">
                 <div class="col-lg-7">
-                    <?php if ($featuredMission): ?>
-                        <span class="badge-location d-block mb-2"><?= htmlspecialchars($featuredMission->location ?: 'Mission') ?></span>
-                        <h1 class="mb-3"><?= htmlspecialchars($featuredMission->title) ?></h1>
-                        <p class="meta mb-2">Mise à jour projet · <?= $featuredMission->updated_at ? date('d M Y', strtotime($featuredMission->updated_at)) : ($featuredMission->start_date ? date('d M Y', strtotime($featuredMission->start_date)) : '') ?></p>
-                        <?php if (!empty($featuredMission->description)): ?>
-                            <p class="lead mb-4"><?= htmlspecialchars(mb_substr(strip_tags($featuredMission->description), 0, 220)) ?><?= mb_strlen(strip_tags($featuredMission->description)) > 220 ? '…' : '' ?></p>
-                        <?php endif; ?>
-                        <a href="<?= $baseUrl ?>mission.php?id=<?= (int) $featuredMission->id ?>" class="btn btn-read-more">Lire la suite</a>
-                    <?php elseif ($featuredAnnouncement): ?>
-                        <span class="badge-location d-block mb-2">Annonce</span>
-                        <h1 class="mb-3"><?= htmlspecialchars($featuredAnnouncement->title) ?></h1>
-                        <p class="meta mb-2"><?= $featuredAnnouncement->updated_at ? date('d M Y', strtotime($featuredAnnouncement->updated_at)) : '' ?></p>
-                        <?php if (!empty($featuredAnnouncement->description)): ?>
-                            <p class="lead mb-4"><?= htmlspecialchars(mb_substr(strip_tags($featuredAnnouncement->description), 0, 220)) ?><?= mb_strlen(strip_tags($featuredAnnouncement->description)) > 220 ? '…' : '' ?></p>
-                        <?php endif; ?>
-                        <a href="<?= $baseUrl ?>announcement.php?id=<?= (int) $featuredAnnouncement->id ?>" class="btn btn-read-more">Lire la suite</a>
-                    <?php else: ?>
-                        <span class="badge-location d-block mb-2"><?= $organisation ? htmlspecialchars($organisation->name) : 'Actualité' ?></span>
-                        <h1 class="mb-3"><?= $organisation ? htmlspecialchars($organisation->name) : 'Bienvenue sur Expertise' ?></h1>
-                        <p class="meta mb-2"><?= date('d M Y') ?></p>
-                        <p class="lead mb-4"><?= $organisation && !empty($organisation->description) ? htmlspecialchars(mb_substr($organisation->description, 0, 280)) . (mb_strlen($organisation->description) > 280 ? '…' : '') : 'Plateforme de gestion des missions et des projets. Découvrez nos actions et actualités.' ?></p>
-                        <a href="<?= $baseUrl ?>about.php" class="btn btn-read-more">En savoir plus</a>
-                    <?php endif; ?>
+                    <span class="badge-location d-block mb-2"><?= $organisation ? htmlspecialchars($organisation->name) : 'Actualité' ?></span>
+                    <h1 class="mb-3"><?= $organisation ? htmlspecialchars($organisation->name) : 'Bienvenue sur Expertise' ?></h1>
+                    <p class="meta mb-2"><?= date('d M Y') ?></p>
+                    <p class="lead mb-4"><?= $organisation && !empty($organisation->description) ? htmlspecialchars(mb_substr($organisation->description, 0, 280)) . (mb_strlen($organisation->description) > 280 ? '…' : '') : 'Plateforme de gestion des missions et des projets. Découvrez nos actions et actualités.' ?></p>
+                    <a href="<?= $baseUrl ?>about.php" class="btn btn-read-more">En savoir plus</a>
                 </div>
             </div>
         </div>
+        <?php endif; ?>
     </section>
 
     <!-- Partager (URL et titre dynamiques) -->

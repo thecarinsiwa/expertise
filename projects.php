@@ -123,7 +123,7 @@ require_once __DIR__ . '/inc/page-static.php';
                                 <div class="card-mission-img" style="background-image: url('<?= htmlspecialchars($cardCover) ?>');"></div>
                                 <?php endif; ?>
                                 <div class="card-body">
-                                    <h2 class="card-title h5"><?= htmlspecialchars($p->name) ?></h2>
+                                    <h2 class="card-title h5"><a href="<?= $baseUrl ?>project.php?id=<?= (int) $p->id ?>" class="text-decoration-none"><?= htmlspecialchars($p->name) ?></a></h2>
                                     <?php if (!empty($p->code)): ?>
                                         <p class="card-meta mb-1"><?= htmlspecialchars($p->code) ?></p>
                                     <?php endif; ?>

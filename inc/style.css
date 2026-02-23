@@ -183,10 +183,19 @@ body, html {
     background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.35)), url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1600') center/cover no-repeat;
     transform: scaleY(-1);
 }
-.hero.hero-has-cover::before {
+.hero.hero-has-cover::before,
+.hero.hero-fallback::before {
     background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.4));
     transform: none;
 }
+.hero-fallback .hero-carousel-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(to top, rgba(29, 28, 62, 0.92) 0%, rgba(29, 28, 62, 0.5) 50%, transparent 100%);
+    pointer-events: none;
+}
+.hero-fallback .container { position: relative; z-index: 2; }
 .hero-bg {
     position: absolute;
     inset: 0;
@@ -195,7 +204,25 @@ body, html {
     background-position: center;
     background-repeat: no-repeat;
 }
+.hero-bg-default {
+    background: linear-gradient(135deg, var(--msf-blue-dark) 0%, #2d2d4e 100%);
+}
 .hero::before { z-index: 1; }
+
+/* Hero carousel (3 dernières annonces) */
+.hero-carousel { position: relative; }
+.hero-carousel .carousel { position: absolute; inset: 0; z-index: 0; }
+.hero-carousel .carousel-inner { height: 100%; }
+.hero-carousel .carousel-item { position: relative; min-height: 70vh; height: 100%; }
+.hero-carousel .carousel-item .hero-bg { position: absolute; inset: 0; z-index: 0; }
+.hero-carousel .carousel-item .container { position: relative; z-index: 2; padding-bottom: 3rem; }
+.hero-carousel .carousel-control-prev,
+.hero-carousel .carousel-control-next { z-index: 3; width: 4rem; opacity: 0.9; }
+.hero-carousel .carousel-control-prev:hover,
+.hero-carousel .carousel-control-next:hover { opacity: 1; }
+.hero-carousel .carousel-indicators { z-index: 3; margin-bottom: 1.5rem; }
+.hero-carousel .carousel-indicators button { width: 10px; height: 10px; border-radius: 50%; background-color: rgba(255,255,255,0.6); border: none; }
+.hero-carousel .carousel-indicators button.active { background-color: #fff; }
 .hero .container { position: relative; z-index: 1; min-height: 70vh; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 3rem; }
 .hero .badge-location { color: rgba(255,255,255,0.85); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .hero h1 { color: #fff; font-weight: 700; font-size: clamp(1.75rem, 4vw, 2.75rem); text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
@@ -426,6 +453,10 @@ body, html {
 .mission-detail-description li { margin-bottom: 0.35rem; }
 
 .mission-detail-sidebar { position: sticky; top: 120px; }
+.project-detail-meta dt { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #6c757d; margin-top: 0.5rem; margin-bottom: 0.15rem; }
+.project-detail-meta dt:first-child { margin-top: 0; }
+.project-detail-meta dd { margin-left: 0; margin-bottom: 0; }
+.project-detail-phase:last-child { border-bottom: none !important; margin-bottom: 0 !important; padding-bottom: 0 !important; }
 .mission-detail-block {
     background: #f8f9fa;
     border-radius: 10px;
