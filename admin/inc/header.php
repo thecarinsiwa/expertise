@@ -353,6 +353,12 @@ require_once __DIR__ . '/auth.php';
             <a href="projects.php" class="nav-link<?= $currentNav === 'projects' ? ' active' : '' ?>">
                 <i class="bi bi-kanban"></i><span>Projets & Tâches</span>
             </a>
+            <a href="programmes.php" class="nav-link<?= $currentNav === 'programmes' ? ' active' : '' ?>">
+                <i class="bi bi-folder2"></i><span>Programmes</span>
+            </a>
+            <a href="portfolios.php" class="nav-link<?= $currentNav === 'portfolios' ? ' active' : '' ?>">
+                <i class="bi bi-folder"></i><span>Portfolios</span>
+            </a>
             <a href="bailleurs.php" class="nav-link<?= $currentNav === 'bailleurs' ? ' active' : '' ?>">
                 <i class="bi bi-bank"></i><span>Bailleurs de fonds</span>
             </a>
@@ -365,8 +371,8 @@ require_once __DIR__ . '/auth.php';
             <a href="announcements.php" class="nav-link<?= $currentNav === 'announcements' ? ' active' : '' ?>">
                 <i class="bi bi-megaphone"></i><span>Annonces</span>
             </a>
-            <a href="#" class="nav-link<?= $currentNav === 'channels' ? ' active' : '' ?>">
-                <i class="bi bi-chat-dots"></i><span>Canaux & Message</span>
+            <a href="channels.php" class="nav-link<?= $currentNav === 'channels' ? ' active' : '' ?>">
+                <i class="bi bi-chat-dots"></i><span>Canaux & Messages</span>
             </a>
 
             <div class="admin-sidebar-label">Gestion</div>

@@ -487,39 +487,33 @@ require __DIR__ . '/inc/header.php';
 <?php endif; ?>
 
 <?php if ($action === 'add' || $action === 'edit'): ?>
-    <!-- FORMULAIRE (AJOUT / EDITION) ENRICHI -->
+    <!-- Formulaire mission : onglets + stepper (même logique que Projets) -->
     <div class="admin-card admin-section-card p-0 overflow-hidden">
         <form method="POST" action="missions.php?action=<?= $action ?><?= $id ? '&id=' . $id : '' ?>" id="missionForm"
             enctype="multipart/form-data">
+            <input type="hidden" name="save_mission" value="1">
             <div class="admin-header-tabs px-4 pt-3 bg-light border-bottom">
                 <ul class="nav nav-tabs border-0" id="missionTabs" role="tablist">
                     <li class="nav-item">
-                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" type="button">1.
-                            Général</button>
+                        <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" type="button">1. Général</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-objectives" type="button">2.
-                            Objectifs</button>
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-objectives" type="button">2. Objectifs</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-team" type="button">3. Équipe &
-                            RH</button>
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-team" type="button">3. Équipe & RH</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-steps" type="button">4. Planning
-                            & Étapes</button>
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-steps" type="button">4. Planning & Étapes</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-orders" type="button">5.
-                            Ordres</button>
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-orders" type="button">5. Ordres</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reports" type="button">6.
-                            Rapports</button>
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reports" type="button">6. Rapports</button>
                     </li>
                     <li class="nav-item">
-                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-expenses" type="button">7.
-                            Frais</button>
+                        <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-expenses" type="button">7. Frais</button>
                     </li>
                 </ul>
             </div>
@@ -933,16 +927,14 @@ require __DIR__ . '/inc/header.php';
                     </div>
             </div>
 
-            <div class="admin-footer-actions border-top p-4 d-flex justify-content-between">
+            <div class="admin-footer-actions border-top p-4 d-flex justify-content-between align-items-center">
                 <div>
-                    <button type="button" class="btn btn-admin-outline me-2 prev-tab"
-                        style="display:none">Précédent</button>
+                    <button type="button" class="btn btn-admin-outline me-2 prev-tab" style="display:none">Précédent</button>
                     <button type="button" class="btn btn-admin-primary next-tab">Suivant</button>
                 </div>
                 <div>
                     <a href="missions.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline me-2">Annuler</a>
-                    <button type="submit" name="save_mission" class="btn btn-success px-4" id="submitMission"
-                        style="display:none">
+                    <button type="submit" name="save_mission" value="1" class="btn btn-success px-4" id="submitMission" style="display:none">
                         <i class="bi bi-cloud-upload me-1"></i> Finaliser & Enregistrer
                     </button>
                 </div>
@@ -1807,8 +1799,11 @@ require __DIR__ . '/inc/header.php';
         $('#missionTabs button').on('shown.bs.tab', function (e) {
             const targetId = $(e.target).data('bs-target').replace('#', '');
             currentTabIdx = tabs.indexOf(targetId);
+            if (currentTabIdx < 0) currentTabIdx = 0;
             updateStepButtons();
         });
+
+        updateStepButtons();
 
         // Ajout dynamique d'étapes
         $('#addStepBtn').click(function () {

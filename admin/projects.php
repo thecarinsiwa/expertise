@@ -354,8 +354,10 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <a href="projects.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
                 <a href="projects.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
+                <a href="programmes.php" class="btn btn-admin-outline" target="_blank"><i class="bi bi-folder2 me-1"></i> Configuration des programmes</a>
                 <a href="projects.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
+                <a href="programmes.php" class="btn btn-admin-outline"><i class="bi bi-folder2 me-1"></i> Configuration des programmes</a>
                 <a href="projects.php?action=add" class="btn btn-admin-primary"><i class="bi bi-kanban me-1"></i> Nouveau projet</a>
             <?php endif; ?>
         </div>
@@ -477,6 +479,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                 <option value="<?= (int) $pr->id ?>" <?= ($detail && $detail->programme_id == $pr->id) ? 'selected' : '' ?>><?= htmlspecialchars($pr->name) ?></option>
                             <?php endforeach; ?>
                         </select>
+                        <small class="text-muted"><a href="programmes.php" target="_blank">Configuration des programmes</a></small>
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-bold">Bailleurs de fonds</label>
