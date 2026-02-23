@@ -9,8 +9,76 @@ $activityLog = [];
 $auditLog = [];
 $tab = isset($_GET['tab']) ? $_GET['tab'] : 'sessions';
 $dashStats = ['sessions' => 0, 'activity' => 0, 'audit' => 0];
+$error = '';
+$success = '';
 
 if ($pdo) {
+    // --- TRAITEMENT POST (suppressions) ---
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['delete_session_id'])) {
+            $sid = $_POST['delete_session_id'] ?? '';
+            if (preg_match('/^[a-zA-Z0-9_-]+$/', $sid)) {
+                try {
+                    $pdo->prepare("DELETE FROM session WHERE id = ?")->execute([$sid]);
+                    header('Location: security.php?tab=sessions&msg=session_revoked');
+                    exit;
+                } catch (PDOException $e) {
+                    $error = 'Impossible de révoquer la session.';
+                }
+            }
+        }
+        if (isset($_POST['delete_activity_id'])) {
+            $aid = (int) ($_POST['delete_activity_id'] ?? 0);
+            if ($aid > 0) {
+                try {
+                    $pdo->prepare("DELETE FROM activity_log WHERE id = ?")->execute([$aid]);
+                    header('Location: security.php?tab=activity&msg=activity_deleted');
+                    exit;
+                } catch (PDOException $e) {
+                    $error = 'Impossible de supprimer l\'entrée.';
+                }
+            }
+        }
+        if (isset($_POST['delete_audit_id'])) {
+            $aid = (int) ($_POST['delete_audit_id'] ?? 0);
+            if ($aid > 0) {
+                try {
+                    $pdo->prepare("DELETE FROM audit WHERE id = ?")->execute([$aid]);
+                    header('Location: security.php?tab=audit&msg=audit_deleted');
+                    exit;
+                } catch (PDOException $e) {
+                    $error = 'Impossible de supprimer l\'entrée d\'audit.';
+                }
+            }
+        }
+        if (isset($_POST['clear_old_activity'])) {
+            $days = (int) ($_POST['days'] ?? 90);
+            if ($days >= 1 && $days <= 365) {
+                try {
+                    $stmt = $pdo->prepare("DELETE FROM activity_log WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)");
+                    $stmt->execute([$days]);
+                    header('Location: security.php?tab=activity&msg=activity_cleared');
+                    exit;
+                } catch (PDOException $e) {
+                    $error = 'Impossible de purger le journal.';
+                }
+            }
+        }
+        if (isset($_POST['clear_old_audit'])) {
+            $days = (int) ($_POST['days'] ?? 90);
+            if ($days >= 1 && $days <= 365) {
+                try {
+                    $stmt = $pdo->prepare("DELETE FROM audit WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)");
+                    $stmt->execute([$days]);
+                    header('Location: security.php?tab=audit&msg=audit_cleared');
+                    exit;
+                } catch (PDOException $e) {
+                    $error = 'Impossible de purger l\'audit.';
+                }
+            }
+        }
+    }
+
     try {
         $dashStats['sessions'] = (int) $pdo->query("SELECT COUNT(*) FROM session")->fetchColumn();
         $stmt = $pdo->query("
@@ -72,6 +140,20 @@ require __DIR__ . '/inc/header.php';
     </div>
 </header>
 
+<?php if (isset($_GET['msg'])): ?>
+    <?php
+    $msg = $_GET['msg'];
+    if ($msg === 'session_revoked') echo '<div class="alert alert-success">Session révoquée.</div>';
+    elseif ($msg === 'activity_deleted') echo '<div class="alert alert-success">Entrée du journal supprimée.</div>';
+    elseif ($msg === 'audit_deleted') echo '<div class="alert alert-success">Entrée d\'audit supprimée.</div>';
+    elseif ($msg === 'activity_cleared') echo '<div class="alert alert-success">Anciennes entrées du journal purgées.</div>';
+    elseif ($msg === 'audit_cleared') echo '<div class="alert alert-success">Anciennes entrées d\'audit purgées.</div>';
+    ?>
+<?php endif; ?>
+<?php if ($error): ?>
+    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+<?php endif; ?>
+
 <!-- Cartes statistiques -->
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-4">
@@ -124,6 +206,7 @@ require __DIR__ . '/inc/header.php';
                                 <th>IP</th>
                                 <th>Dernière activité</th>
                                 <th>Créée le</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -140,6 +223,12 @@ require __DIR__ . '/inc/header.php';
                                     <td><code class="x-small"><?= htmlspecialchars($s->ip_address ?? '—') ?></code></td>
                                     <td class="x-small"><?= $s->last_activity ? date('d/m/Y H:i', $s->last_activity) : '—' ?></td>
                                     <td class="x-small"><?= $s->created_at ? date('d/m/Y H:i', strtotime($s->created_at)) : '—' ?></td>
+                                    <td class="text-end">
+                                        <form method="POST" class="d-inline" onsubmit="return confirm('Révoquer cette session ? L\'utilisateur devra se reconnecter.');">
+                                            <input type="hidden" name="delete_session_id" value="<?= htmlspecialchars($s->id) ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Révoquer"><i class="bi bi-x-circle"></i></button>
+                                        </form>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -155,6 +244,19 @@ require __DIR__ . '/inc/header.php';
 
         <?php elseif ($tab === 'activity'): ?>
             <?php if (count($activityLog) > 0): ?>
+                <div class="d-flex justify-content-end mb-3">
+                    <form method="POST" class="d-inline-flex align-items-center gap-2" onsubmit="return confirm('Supprimer toutes les entrées du journal de plus de N jours ?');">
+                        <input type="hidden" name="clear_old_activity" value="1">
+                        <label class="small text-muted mb-0">Purger les entrées de plus de</label>
+                        <select name="days" class="form-select form-select-sm" style="width: auto;">
+                            <option value="30">30 jours</option>
+                            <option value="90" selected>90 jours</option>
+                            <option value="180">180 jours</option>
+                            <option value="365">1 an</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-warning"><i class="bi bi-trash me-1"></i> Purger</button>
+                    </form>
+                </div>
                 <div class="table-responsive">
                     <table class="admin-table table table-hover" id="activityTable">
                         <thead>
@@ -165,6 +267,7 @@ require __DIR__ . '/inc/header.php';
                                 <th>Sujet</th>
                                 <th>Description</th>
                                 <th>IP</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -176,6 +279,12 @@ require __DIR__ . '/inc/header.php';
                                     <td class="x-small"><?= htmlspecialchars($a->subject_type ?? '—') ?> #<?= (int) ($a->subject_id ?? 0) ?></td>
                                     <td class="x-small"><?= htmlspecialchars(mb_substr($a->description ?? '', 0, 60)) ?><?= mb_strlen($a->description ?? '') > 60 ? '…' : '' ?></td>
                                     <td class="x-small"><?= htmlspecialchars($a->ip_address ?? '—') ?></td>
+                                    <td class="text-end">
+                                        <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette entrée ?');">
+                                            <input type="hidden" name="delete_activity_id" value="<?= (int) $a->id ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
@@ -191,6 +300,19 @@ require __DIR__ . '/inc/header.php';
 
         <?php else: ?>
             <?php if (count($auditLog) > 0): ?>
+                <div class="d-flex justify-content-end mb-3">
+                    <form method="POST" class="d-inline-flex align-items-center gap-2" onsubmit="return confirm('Supprimer toutes les entrées d\'audit de plus de N jours ?');">
+                        <input type="hidden" name="clear_old_audit" value="1">
+                        <label class="small text-muted mb-0">Purger les entrées de plus de</label>
+                        <select name="days" class="form-select form-select-sm" style="width: auto;">
+                            <option value="30">30 jours</option>
+                            <option value="90" selected>90 jours</option>
+                            <option value="180">180 jours</option>
+                            <option value="365">1 an</option>
+                        </select>
+                        <button type="submit" class="btn btn-sm btn-outline-secondary"><i class="bi bi-trash me-1"></i> Purger</button>
+                    </form>
+                </div>
                 <div class="table-responsive">
                     <table class="admin-table table table-hover" id="auditTable">
                         <thead>
@@ -200,6 +322,7 @@ require __DIR__ . '/inc/header.php';
                                 <th>Événement</th>
                                 <th>Entité</th>
                                 <th>IP</th>
+                                <th class="text-end">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -210,6 +333,12 @@ require __DIR__ . '/inc/header.php';
                                     <td><code class="x-small"><?= htmlspecialchars($a->event) ?></code></td>
                                     <td class="x-small"><?= htmlspecialchars($a->auditable_type) ?> #<?= (int) $a->auditable_id ?></td>
                                     <td class="x-small"><?= htmlspecialchars($a->ip_address ?? '—') ?></td>
+                                    <td class="text-end">
+                                        <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette entrée d\'audit ?');">
+                                            <input type="hidden" name="delete_audit_id" value="<?= (int) $a->id ?>">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer"><i class="bi bi-trash"></i></button>
+                                        </form>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         </tbody>
