@@ -12,6 +12,12 @@ $success = '';
 $organisations = [];
 $channels = [];
 $users = [];
+$announcement_comments = [];
+$announcement_attachments = [];
+$announcement_notifications = [];
+$announcement_history = [];
+$announcement_conversations = [];
+$conversation_has_announcement_link = false;
 
 if ($pdo) {
     try {
@@ -36,6 +42,89 @@ if ($pdo) {
                 exit;
             } catch (PDOException $e) {
                 $error = 'Impossible de supprimer l\'annonce.';
+            }
+        }
+        $announcementId = ($id > 0) ? $id : null;
+        if ($announcementId && $_SERVER['REQUEST_METHOD'] === 'POST') {
+            if (isset($_POST['add_comment'])) {
+                $user_id = (int) ($_POST['comment_user_id'] ?? 0);
+                $body = trim($_POST['comment_body'] ?? '');
+                if ($user_id > 0 && $body !== '') {
+                    try {
+                        $pdo->prepare("INSERT INTO comment (user_id, commentable_type, commentable_id, body) VALUES (?, 'announcement', ?, ?)")->execute([$user_id, $announcementId, $body]);
+                        $success = 'Commentaire ajouté.';
+                        try { $pdo->prepare("INSERT INTO communication_history (user_id, entity_type, entity_id, action) VALUES (?, 'announcement', ?, 'comment_created')")->execute([$user_id, $announcementId]); } catch (PDOException $e) {}
+                    } catch (PDOException $e) { $error = 'Erreur commentaire.'; }
+                } else { $error = 'Auteur et contenu obligatoires.'; }
+            }
+            if (isset($_POST['delete_comment_id'])) {
+                $cid = (int) $_POST['delete_comment_id'];
+                try {
+                    $pdo->prepare("DELETE FROM comment WHERE id = ? AND commentable_type = 'announcement' AND commentable_id = ?")->execute([$cid, $announcementId]);
+                    $success = 'Commentaire supprimé.';
+                } catch (PDOException $e) { $error = 'Impossible de supprimer.'; }
+            }
+            if (isset($_POST['add_attachment']) && !empty($_FILES['attachment_file']['name'])) {
+                $upload_user_id = (int) ($_POST['attachment_user_id'] ?? 0);
+                if ($upload_user_id > 0) {
+                    $targetDir = __DIR__ . '/../uploads/announcements/attachments/';
+                    if (!is_dir($targetDir)) mkdir($targetDir, 0755, true);
+                    $ext = strtolower(pathinfo($_FILES['attachment_file']['name'], PATHINFO_EXTENSION));
+                    $fname = 'att_' . $announcementId . '_' . time() . '_' . uniqid() . '.' . $ext;
+                    $relPath = 'uploads/announcements/attachments/' . $fname;
+                    if (move_uploaded_file($_FILES['attachment_file']['tmp_name'], $targetDir . $fname)) {
+                        $size = (int) $_FILES['attachment_file']['size'];
+                        $mime = $_FILES['attachment_file']['type'] ?? null;
+                        try {
+                            $pdo->prepare("INSERT INTO attachment (attachable_type, attachable_id, uploaded_by_user_id, file_name, file_path, file_size, mime_type) VALUES ('announcement', ?, ?, ?, ?, ?, ?)")
+                                ->execute([$announcementId, $upload_user_id, $_FILES['attachment_file']['name'], $relPath, $size, $mime]);
+                            $success = 'Pièce jointe ajoutée.';
+                            try { $pdo->prepare("INSERT INTO communication_history (user_id, entity_type, entity_id, action) VALUES (?, 'announcement', ?, 'attachment_created')")->execute([$upload_user_id, $announcementId]); } catch (PDOException $e) {}
+                        } catch (PDOException $e) { $error = 'Erreur enregistrement.'; @unlink($targetDir . $fname); }
+                    } else { $error = 'Erreur upload fichier.'; }
+                } else { $error = 'Veuillez sélectionner un utilisateur.'; }
+            }
+            if (isset($_POST['delete_attachment_id'])) {
+                $aid = (int) $_POST['delete_attachment_id'];
+                try {
+                    $row = $pdo->prepare("SELECT file_path FROM attachment WHERE id = ? AND attachable_type = 'announcement' AND attachable_id = ?");
+                    $row->execute([$aid, $announcementId]);
+                    $f = $row->fetch();
+                    $pdo->prepare("DELETE FROM attachment WHERE id = ? AND attachable_type = 'announcement' AND attachable_id = ?")->execute([$aid, $announcementId]);
+                    if ($f && !empty($f->file_path)) { $path = __DIR__ . '/../' . $f->file_path; if (is_file($path)) @unlink($path); }
+                    $success = 'Pièce jointe supprimée.';
+                } catch (PDOException $e) { $error = 'Impossible de supprimer.'; }
+            }
+            if (isset($_POST['create_notification'])) {
+                $user_id = (int) ($_POST['notif_user_id'] ?? 0);
+                $title = trim($_POST['notif_title'] ?? '');
+                $body = trim($_POST['notif_body'] ?? '') ?: null;
+                if ($user_id > 0 && $title !== '') {
+                    try {
+                        $pdo->prepare("INSERT INTO notification (user_id, title, body, type, related_entity_type, related_entity_id) VALUES (?, ?, ?, 'announcement', 'announcement', ?)")
+                            ->execute([$user_id, $title, $body, $announcementId]);
+                        $success = 'Notification envoyée.';
+                        try { $pdo->prepare("INSERT INTO communication_history (user_id, entity_type, entity_id, action) VALUES (?, 'announcement', ?, 'notification_sent')")->execute([$user_id, $announcementId]); } catch (PDOException $e) {}
+                    } catch (PDOException $e) { $error = 'Erreur notification.'; }
+                } else { $error = 'Destinataire et titre obligatoires.'; }
+            }
+            if (isset($_POST['create_conversation'])) {
+                $subject = trim($_POST['conv_subject'] ?? '') ?: null;
+                $channel_id = trim($_POST['conv_channel_id'] ?? '') !== '' ? (int) $_POST['conv_channel_id'] : null;
+                $created_by = trim($_POST['conv_created_by_user_id'] ?? '') !== '' ? (int) $_POST['conv_created_by_user_id'] : null;
+                try {
+                    $hasAnnouncementCol = false;
+                    try { $pdo->query("SELECT announcement_id FROM conversation LIMIT 1"); $hasAnnouncementCol = true; } catch (PDOException $e) {}
+                    if ($hasAnnouncementCol && $announcementId) {
+                        $pdo->prepare("INSERT INTO conversation (channel_id, announcement_id, subject, conversation_type, created_by_user_id) VALUES (?, ?, ?, 'thread', ?)")
+                            ->execute([$channel_id, $announcementId, $subject ?: 'Annonce #' . $announcementId, $created_by]);
+                    } else {
+                        $pdo->prepare("INSERT INTO conversation (channel_id, subject, conversation_type, created_by_user_id) VALUES (?, ?, 'thread', ?)")
+                            ->execute([$channel_id, $subject ?: 'Annonce #' . $announcementId, $created_by]);
+                    }
+                    $success = 'Conversation créée.';
+                    if ($created_by) { try { $pdo->prepare("INSERT INTO communication_history (user_id, entity_type, entity_id, action) VALUES (?, 'announcement', ?, 'conversation_created')")->execute([$created_by, $announcementId]); } catch (PDOException $e) {} }
+                } catch (PDOException $e) { $error = 'Erreur : ' . $e->getMessage(); }
             }
         }
         if (isset($_POST['save_announcement'])) {
@@ -82,6 +171,29 @@ if ($pdo) {
         ");
         $stmt->execute([$id]);
         $detail = $stmt->fetch();
+        if ($detail) {
+            $stmt = $pdo->prepare("SELECT c.*, u.first_name, u.last_name, u.email FROM comment c JOIN user u ON c.user_id = u.id WHERE c.commentable_type = 'announcement' AND c.commentable_id = ? ORDER BY c.created_at DESC");
+            $stmt->execute([$id]);
+            $announcement_comments = $stmt->fetchAll();
+            $stmt = $pdo->prepare("SELECT a.*, u.first_name, u.last_name FROM attachment a JOIN user u ON a.uploaded_by_user_id = u.id WHERE a.attachable_type = 'announcement' AND a.attachable_id = ? ORDER BY a.created_at DESC");
+            $stmt->execute([$id]);
+            $announcement_attachments = $stmt->fetchAll();
+            $stmt = $pdo->prepare("SELECT n.*, u.first_name, u.last_name, u.email FROM notification n JOIN user u ON n.user_id = u.id WHERE n.related_entity_type = 'announcement' AND n.related_entity_id = ? ORDER BY n.created_at DESC");
+            $stmt->execute([$id]);
+            $announcement_notifications = $stmt->fetchAll();
+            $stmt = $pdo->prepare("SELECT ch.*, u.first_name, u.last_name FROM communication_history ch LEFT JOIN user u ON ch.user_id = u.id WHERE ch.entity_type = 'announcement' AND ch.entity_id = ? ORDER BY ch.created_at DESC");
+            $stmt->execute([$id]);
+            $announcement_history = $stmt->fetchAll();
+            $conversation_has_announcement_link = false;
+            try { $pdo->query("SELECT announcement_id FROM conversation LIMIT 1"); $conversation_has_announcement_link = true; } catch (PDOException $e) {}
+            if ($conversation_has_announcement_link) {
+                $stmt = $pdo->prepare("SELECT cv.*, c.name AS channel_name, u.first_name AS created_by_first_name, u.last_name AS created_by_last_name FROM conversation cv LEFT JOIN channel c ON cv.channel_id = c.id LEFT JOIN user u ON cv.created_by_user_id = u.id WHERE cv.announcement_id = ? ORDER BY cv.updated_at DESC");
+                $stmt->execute([$id]);
+                $announcement_conversations = $stmt->fetchAll();
+            } else {
+                $announcement_conversations = [];
+            }
+        }
     }
 
     if (!$detail || $action === 'list') {
@@ -304,9 +416,144 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             </div>
         </div>
     </div>
+
+    <!-- Onglets / sections liées à l'annonce -->
+    <ul class="nav nav-tabs mt-4 mb-3 border-0 admin-header-tabs" id="announcementTabs" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-comments" type="button"><i class="bi bi-chat-quote me-1"></i> Commentaires (<?= count($announcement_comments) ?>)</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-attachments" type="button"><i class="bi bi-paperclip me-1"></i> Pièces jointes (<?= count($announcement_attachments) ?>)</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-notifications" type="button"><i class="bi bi-bell me-1"></i> Notifications (<?= count($announcement_notifications) ?>)</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-conversations" type="button"><i class="bi bi-chat-text me-1"></i> Conversations (<?= count($announcement_conversations) ?>)</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-history" type="button"><i class="bi bi-clock-history me-1"></i> Historique (<?= count($announcement_history) ?>)</button></li>
+    </ul>
+    <div class="tab-content" id="announcementTabsContent">
+        <div class="tab-pane fade show active" id="tab-comments" role="tabpanel">
+            <div class="admin-card admin-section-card">
+                <h5 class="card-title mb-3"><i class="bi bi-chat-quote"></i> Commentaires sur cette annonce</h5>
+                <form method="POST" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded">
+                    <input type="hidden" name="add_comment" value="1">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3"><label class="form-label small mb-0">Auteur</label><select name="comment_user_id" class="form-select form-select-sm" required><option value="">— Choisir —</option><?php foreach ($users as $u): ?><option value="<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></option><?php endforeach; ?></select></div>
+                        <div class="col-md-6"><label class="form-label small mb-0">Commentaire</label><input type="text" name="comment_body" class="form-control form-control-sm" required placeholder="Votre commentaire"></div>
+                        <div class="col-md-2"><button type="submit" class="btn btn-admin-primary btn-sm w-100"><i class="bi bi-plus me-1"></i> Ajouter</button></div>
+                    </div>
+                </form>
+                <?php if (count($announcement_comments) > 0): ?>
+                    <ul class="list-group list-group-flush">
+                        <?php foreach ($announcement_comments as $c): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-start">
+                                <div><strong><?= htmlspecialchars($c->last_name . ' ' . $c->first_name) ?></strong> <span class="text-muted small"><?= $c->created_at ? date('d/m/Y H:i', strtotime($c->created_at)) : '' ?></span><br><span class="text-break"><?= nl2br(htmlspecialchars($c->body)) ?></span></div>
+                                <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce commentaire ?');"><input type="hidden" name="delete_comment_id" value="<?= (int) $c->id ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p class="text-muted mb-0">Aucun commentaire. Utilisez le formulaire ci-dessus pour en ajouter.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-attachments" role="tabpanel">
+            <div class="admin-card admin-section-card">
+                <h5 class="card-title mb-3"><i class="bi bi-paperclip"></i> Pièces jointes de cette annonce</h5>
+                <form method="POST" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded">
+                    <input type="hidden" name="add_attachment" value="1">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3"><label class="form-label small mb-0">Déposé par</label><select name="attachment_user_id" class="form-select form-select-sm" required><option value="">— Choisir —</option><?php foreach ($users as $u): ?><option value="<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></option><?php endforeach; ?></select></div>
+                        <div class="col-md-5"><label class="form-label small mb-0">Fichier</label><input type="file" name="attachment_file" class="form-control form-control-sm" required></div>
+                        <div class="col-md-2"><button type="submit" class="btn btn-admin-primary btn-sm w-100"><i class="bi bi-upload me-1"></i> Joindre</button></div>
+                    </div>
+                </form>
+                <?php if (count($announcement_attachments) > 0): ?>
+                    <div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead class="bg-light"><tr><th>Fichier</th><th>Déposé par</th><th>Date</th><th class="text-end">Actions</th></tr></thead><tbody>
+                        <?php foreach ($announcement_attachments as $a): ?>
+                            <tr><td><a href="../<?= htmlspecialchars($a->file_path) ?>" target="_blank" rel="noopener"><?= htmlspecialchars($a->file_name) ?></a></td><td><?= htmlspecialchars($a->last_name . ' ' . $a->first_name) ?></td><td class="text-muted small"><?= $a->created_at ? date('d/m/Y H:i', strtotime($a->created_at)) : '' ?></td><td class="text-end"><a href="../<?= htmlspecialchars($a->file_path) ?>" target="_blank" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-download"></i></a><form method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette pièce jointe ?');"><input type="hidden" name="delete_attachment_id" value="<?= (int) $a->id ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form></td></tr>
+                        <?php endforeach; ?>
+                    </tbody></table></div>
+                <?php else: ?>
+                    <p class="text-muted mb-0">Aucune pièce jointe.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-notifications" role="tabpanel">
+            <div class="admin-card admin-section-card">
+                <h5 class="card-title mb-3"><i class="bi bi-bell"></i> Notifications liées à cette annonce</h5>
+                <form method="POST" class="mb-4 p-3 bg-light rounded">
+                    <input type="hidden" name="create_notification" value="1">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3"><label class="form-label small mb-0">Destinataire</label><select name="notif_user_id" class="form-select form-select-sm" required><option value="">— Choisir —</option><?php foreach ($users as $u): ?><option value="<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></option><?php endforeach; ?></select></div>
+                        <div class="col-md-2"><label class="form-label small mb-0">Titre</label><input type="text" name="notif_title" class="form-control form-control-sm" required placeholder="Titre" value="Annonce : <?= htmlspecialchars($detail->title ?? '') ?>"></div>
+                        <div class="col-md-4"><label class="form-label small mb-0">Message (optionnel)</label><input type="text" name="notif_body" class="form-control form-control-sm" placeholder="Contenu"></div>
+                        <div class="col-md-2"><button type="submit" class="btn btn-admin-primary btn-sm w-100"><i class="bi bi-send me-1"></i> Envoyer</button></div>
+                    </div>
+                </form>
+                <?php if (count($announcement_notifications) > 0): ?>
+                    <ul class="list-group list-group-flush">
+                        <?php foreach ($announcement_notifications as $n): ?>
+                            <li class="list-group-item d-flex justify-content-between"><div><strong><?= htmlspecialchars($n->title) ?></strong> → <?= htmlspecialchars($n->last_name . ' ' . $n->first_name) ?> <span class="text-muted small"><?= $n->created_at ? date('d/m/Y H:i', strtotime($n->created_at)) : '' ?></span> <?= $n->is_read ? '<span class="badge bg-success">Lu</span>' : '<span class="badge bg-warning text-dark">Non lu</span>' ?></div></li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p class="text-muted mb-0">Aucune notification envoyée pour cette annonce.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-conversations" role="tabpanel">
+            <div class="admin-card admin-section-card">
+                <h5 class="card-title mb-3"><i class="bi bi-chat-text"></i> Conversations liées à cette annonce</h5>
+                <?php if (!empty($conversation_has_announcement_link)): ?>
+                <form method="POST" class="mb-4 p-3 bg-light rounded">
+                    <input type="hidden" name="create_conversation" value="1">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3"><label class="form-label small mb-0">Sujet</label><input type="text" name="conv_subject" class="form-control form-control-sm" placeholder="Sujet (optionnel)"></div>
+                        <div class="col-md-2"><label class="form-label small mb-0">Canal</label><select name="conv_channel_id" class="form-select form-select-sm"><option value="">— Aucun —</option><?php foreach ($channels as $c): ?><option value="<?= (int) $c->id ?>"><?= htmlspecialchars($c->name) ?></option><?php endforeach; ?></select></div>
+                        <div class="col-md-2"><label class="form-label small mb-0">Créé par</label><select name="conv_created_by_user_id" class="form-select form-select-sm"><option value="">—</option><?php foreach ($users as $u): ?><option value="<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></option><?php endforeach; ?></select></div>
+                        <div class="col-md-2"><button type="submit" class="btn btn-admin-primary btn-sm w-100"><i class="bi bi-plus me-1"></i> Nouvelle conversation</button></div>
+                    </div>
+                </form>
+                <?php endif; ?>
+                <?php if (count($announcement_conversations) > 0): ?>
+                    <ul class="list-group list-group-flush">
+                        <?php foreach ($announcement_conversations as $cv): ?>
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <div><strong><?= htmlspecialchars($cv->subject ?: 'Conversation #' . $cv->id) ?></strong> <?= $cv->channel_name ? ' <span class="badge bg-secondary">' . htmlspecialchars($cv->channel_name) . '</span>' : '' ?> <span class="text-muted small"><?= $cv->created_at ? date('d/m/Y H:i', strtotime($cv->created_at)) : '' ?></span></div>
+                                <a href="conversations.php?id=<?= (int) $cv->id ?>" class="btn btn-sm btn-admin-outline"><i class="bi bi-eye me-1"></i> Voir / Répondre</a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <p class="text-muted mb-0">Aucune conversation liée.<?= !empty($conversation_has_announcement_link) ? ' Créez-en une avec le formulaire ci-dessus.' : ' Exécutez la migration <code>migrate_conversation_announcement.sql</code> pour lier des conversations à cette annonce.' ?></p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-history" role="tabpanel">
+            <div class="admin-card admin-section-card">
+                <h5 class="card-title mb-3"><i class="bi bi-clock-history"></i> Historique des actions sur cette annonce</h5>
+                <?php if (count($announcement_history) > 0): ?>
+                    <div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead class="bg-light"><tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Métadonnées</th></tr></thead><tbody>
+                        <?php foreach ($announcement_history as $h): ?>
+                            <tr><td class="text-muted small"><?= $h->created_at ? date('d/m/Y H:i:s', strtotime($h->created_at)) : '—' ?></td><td><?= $h->user_id ? htmlspecialchars(trim(($h->first_name ?? '') . ' ' . ($h->last_name ?? '')) ?: '—') : '—' ?></td><td><span class="badge bg-light text-dark"><?= htmlspecialchars($h->action) ?></span></td><td class="small text-break"><?= $h->metadata ? htmlspecialchars(is_string($h->metadata) ? $h->metadata : json_encode($h->metadata)) : '—' ?></td></tr>
+                        <?php endforeach; ?>
+                    </tbody></table></div>
+                <?php else: ?>
+                    <p class="text-muted mb-0">Aucune entrée dans l'historique pour cette annonce.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var hash = window.location.hash;
+        if (hash && document.querySelector('#announcementTabsContent ' + hash)) {
+            var btn = document.querySelector('#announcementTabs button[data-bs-target="' + hash + '"]');
+            if (btn && typeof bootstrap !== 'undefined' && bootstrap.Tab) {
+                var t = new bootstrap.Tab(btn);
+                t.show();
+            }
+        }
+    });
+    </script>
 <?php elseif (count($list) > 0): ?>
-    <div class="admin-card admin-section-card">
-        <div class="table-responsive">
+    <div class="admin-card admin-section-card announcements-datatable-wrapper">
+        <div class="table-responsive announcements-table-responsive">
             <table class="admin-table table table-hover" id="announcementsTable">
                 <thead>
                     <tr>
@@ -327,11 +574,18 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                             <td><?= $a->is_pinned ? '<span class="badge bg-warning text-dark">Épinglée</span>' : '—' ?></td>
                             <td class="text-muted"><?= $a->published_at ? date('d/m/Y H:i', strtotime($a->published_at)) : '—' ?></td>
                             <td class="text-end">
-                                <div class="dropdown">
-                                    <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
+                                <div class="dropdown" data-bs-boundary="viewport">
+                                    <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-reference="toggle" aria-expanded="false" title="Actions"><i class="bi bi-three-dots-vertical"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
+                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>"><i class="bi bi-eye me-2"></i> Voir la fiche</a></li>
                                         <li><a class="dropdown-item" href="announcements.php?action=edit&id=<?= (int) $a->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><h6 class="dropdown-header py-1">Accès rapide</h6></li>
+                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-comments"><i class="bi bi-chat-quote me-2"></i> Commentaires</a></li>
+                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-attachments"><i class="bi bi-paperclip me-2"></i> Pièces jointes</a></li>
+                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-notifications"><i class="bi bi-bell me-2"></i> Notifications</a></li>
+                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-conversations"><i class="bi bi-chat-text me-2"></i> Conversations</a></li>
+                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-history"><i class="bi bi-clock-history me-2"></i> Historique</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form method="POST" onsubmit="return confirm('Supprimer cette annonce ?');">
@@ -348,11 +602,28 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             </table>
         </div>
     </div>
-    <style>.breadcrumb{font-size:0.85rem;} .admin-table th{background:#f8f9fa;padding:1rem 0.5rem;} .admin-table td{padding:1rem 0.5rem;}</style>
+    <style>
+        .breadcrumb{font-size:0.85rem;}
+        .admin-table th{background:#f8f9fa;padding:1rem 0.5rem;}
+        .admin-table td{padding:1rem 0.5rem;}
+        /* Le popup des actions doit s'afficher en dehors du datatable (pas coupé par overflow) */
+        .announcements-datatable-wrapper,
+        .announcements-datatable-wrapper .announcements-table-responsive,
+        .announcements-datatable-wrapper .dataTables_wrapper { overflow: visible !important; }
+        .announcements-datatable-wrapper .dataTables_scrollBody { overflow: visible !important; }
+        #announcementsTable td:last-child { overflow: visible; position: relative; z-index: 1; }
+        .announcements-datatable-wrapper .dropdown-menu { z-index: 1060; }
+    </style>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         if (document.getElementById('announcementsTable') && typeof $ !== 'undefined' && $.fn.DataTable) {
-            $('#announcementsTable').DataTable({ language: { url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json" }, order: [[4, "desc"]], pageLength: 10, dom: '<"d-flex justify-content-between align-items-center mb-3"f>t<"d-flex justify-content-between align-items-center mt-3"ip>' });
+            $('#announcementsTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json" },
+                order: [[4, "desc"]],
+                pageLength: 10,
+                dom: '<"d-flex justify-content-between align-items-center mb-3"f>t<"d-flex justify-content-between align-items-center mt-3"ip>',
+                columnDefs: [{ orderable: false, targets: 5 }]
+            });
         }
     });
     </script>

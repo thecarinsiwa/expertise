@@ -372,7 +372,22 @@ require_once __DIR__ . '/auth.php';
                 <i class="bi bi-megaphone"></i><span>Annonces</span>
             </a>
             <a href="channels.php" class="nav-link<?= $currentNav === 'channels' ? ' active' : '' ?>">
-                <i class="bi bi-chat-dots"></i><span>Canaux & Messages</span>
+                <i class="bi bi-chat-dots"></i><span>Canaux</span>
+            </a>
+            <a href="conversations.php" class="nav-link<?= $currentNav === 'conversations' ? ' active' : '' ?>">
+                <i class="bi bi-chat-text"></i><span>Conversations</span>
+            </a>
+            <a href="notifications.php" class="nav-link<?= $currentNav === 'notifications' ? ' active' : '' ?>">
+                <i class="bi bi-bell"></i><span>Notifications</span>
+            </a>
+            <a href="comments.php" class="nav-link<?= $currentNav === 'comments' ? ' active' : '' ?>">
+                <i class="bi bi-chat-quote"></i><span>Commentaires</span>
+            </a>
+            <a href="attachments.php" class="nav-link<?= $currentNav === 'attachments' ? ' active' : '' ?>">
+                <i class="bi bi-paperclip"></i><span>Pièces jointes</span>
+            </a>
+            <a href="communication_history.php" class="nav-link<?= $currentNav === 'communication_history' ? ' active' : '' ?>">
+                <i class="bi bi-clock-history"></i><span>Historique</span>
             </a>
 
             <div class="admin-sidebar-label">Gestion</div>
