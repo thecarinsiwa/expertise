@@ -455,15 +455,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             </table>
         </div>
     </div>
-<?php else: ?>
-    <div class="admin-card admin-section-card">
-        <div class="admin-empty py-5">
-            <i class="bi bi-people d-block mb-3" style="font-size: 3rem;"></i>
-            <h5>Aucun personnel enregistré</h5>
-            <p class="text-muted mb-4">Créez des comptes utilisateurs puis associez-les au personnel.</p>
-            <a href="register.php" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Créer un utilisateur</a>
-        </div>
-    </div>
+
 <?php endif; ?>
 
 <style>
