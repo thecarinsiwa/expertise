@@ -336,6 +336,9 @@ require_once __DIR__ . '/auth.php';
             </a>
 
             <div class="admin-sidebar-label">RH & Sécurité</div>
+            <a href="user.php" class="nav-link<?= $currentNav === 'users' ? ' active' : '' ?>">
+                <i class="bi bi-person-badge"></i><span>Utilisateurs</span>
+            </a>
             <a href="staff.php" class="nav-link<?= $currentNav === 'staff' ? ' active' : '' ?>">
                 <i class="bi bi-people"></i><span>Personnel</span>
             </a>

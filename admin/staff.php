@@ -173,7 +173,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <a href="staff.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
                 <a href="staff.php?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Ajouter au personnel</a>
-                <a href="register.php" class="btn btn-admin-outline"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a>
+                <a href="user.php" class="btn btn-admin-outline"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a>
             <?php endif; ?>
         </div>
     </div>
@@ -190,6 +190,33 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php endif; ?>
 <?php if ($success): ?>
     <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+<?php endif; ?>
+
+<?php if (!$detail && !$isForm): ?>
+    <!-- Cartes statistiques personnel -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-4">
+            <div class="admin-card text-center p-3 h-100">
+                <div class="text-muted small text-uppercase mb-1 fw-bold">Total personnel</div>
+                <div class="h3 mb-0 fw-bold"><?= $dashStats['total'] ?></div>
+                <div class="mt-2"><span class="badge bg-secondary-subtle text-secondary border">Global</span></div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-4">
+            <div class="admin-card text-center p-3 h-100">
+                <div class="text-muted small text-uppercase mb-1 fw-bold">Actifs</div>
+                <div class="h3 mb-0 fw-bold text-success"><?= $dashStats['active'] ?></div>
+                <div class="mt-2"><span class="badge bg-success-subtle text-success border">En poste</span></div>
+            </div>
+        </div>
+        <div class="col-sm-6 col-xl-4">
+            <div class="admin-card text-center p-3 h-100">
+                <div class="text-muted small text-uppercase mb-1 fw-bold">Inactifs</div>
+                <div class="h3 mb-0 fw-bold text-secondary"><?= $dashStats['inactive'] ?></div>
+                <div class="mt-2"><span class="badge bg-secondary-subtle text-secondary border">Hors effectif</span></div>
+            </div>
+        </div>
+    </div>
 <?php endif; ?>
 
 <?php if ($isForm): ?>

@@ -37,11 +37,11 @@ if ($pdo) {
     }
 }
 
-/* ── Accès : premier utilisateur OU superadmin connecté ── */
-$isSuperAdmin = !empty($_SESSION['admin_logged_in']) && ($_SESSION['admin_role'] ?? '') === 'superadmin';
+/* ── Accès : premier utilisateur OU admin connecté (création de comptes) ── */
+$isAdmin = !empty($_SESSION['admin_logged_in']) && in_array($_SESSION['admin_role'] ?? '', ['admin', 'superadmin'], true);
 $isFirstSetup = !$adminExists;
 
-if (!$isFirstSetup && !$isSuperAdmin) {
+if (!$isFirstSetup && !$isAdmin) {
     header('Location: login.php');
     exit;
 }
