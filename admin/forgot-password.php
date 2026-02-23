@@ -13,15 +13,9 @@ if (!empty($_SESSION['admin_logged_in'])) {
     exit;
 }
 
-/* ── DB ── */
-$dbConfig = ['host' => 'localhost', 'dbname' => 'expertise', 'user' => 'root', 'pass' => '', 'charset' => 'utf8mb4'];
-$pdo = null;
-try {
-    $dsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', $dbConfig['host'], $dbConfig['dbname'], $dbConfig['charset']);
-    $pdo = new PDO($dsn, $dbConfig['user'], $dbConfig['pass'], [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
-    ]);
+/* ── DB (config centralisée, voir config/database.php) ── */
+require_once __DIR__ . '/inc/db.php';
+if ($pdo) {
     // Assure l'existence de la table password_reset_tokens
     $pdo->exec("
         CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
@@ -37,8 +31,6 @@ try {
             CONSTRAINT `fk_prt_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
-} catch (PDOException $e) {
-    $pdo = null;
 }
 
 /* ── Étapes : 1=saisie email | 2=saisie nouveau mdp | 3=succès ── */

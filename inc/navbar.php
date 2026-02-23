@@ -18,25 +18,18 @@ if (!isset($organisation))
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav nav-center mb-2 mb-lg-0">
                 <li class="nav-item">
-                    <a class="nav-link nav-mega-trigger" href="#" data-mega="mega-about"><span class="nav-link-text">Qui
-                            nous sommes</span><i class="bi bi-chevron-down nav-link-icon" aria-hidden="true"></i></a>
+                    <a class="nav-link nav-mega-trigger" href="<?= $baseUrl ?>about.php" data-mega="mega-about"><span class="nav-link-text">Qui nous sommes</span><i class="bi bi-chevron-down nav-link-icon" aria-hidden="true"></i></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link nav-mega-trigger" href="#" data-mega="mega-what"><span
-                            class="nav-link-text">Notre travail</span><i class="bi bi-chevron-down nav-link-icon"
-                            aria-hidden="true"></i></a>
+                    <a class="nav-link nav-mega-trigger" href="<?= $baseUrl ?>missions.php" data-mega="mega-what"><span class="nav-link-text">Notre travail</span><i class="bi bi-chevron-down nav-link-icon" aria-hidden="true"></i></a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link nav-mega-trigger" href="#" data-mega="mega-where"><span class="nav-link-text">Où
-                            nous travaillons</span><i class="bi bi-chevron-down nav-link-icon"
-                            aria-hidden="true"></i></a>
+                    <a class="nav-link nav-mega-trigger" href="<?= $baseUrl ?>where-we-work.php" data-mega="mega-where"><span class="nav-link-text">Où nous travaillons</span><i class="bi bi-chevron-down nav-link-icon" aria-hidden="true"></i></a>
                 </li>
-
             </ul>
             <div class="navbar-nav nav-right ms-auto">
                 <a class="nav-link" href="#" aria-label="Recherche"><i class="bi bi-search"></i></a>
-                <a class="nav-link d-none d-lg-inline" href="#"><span class="nav-link-text">Médias &amp;
-                        ressources</span><i class="bi bi-chevron-down nav-link-icon small" aria-hidden="true"></i></a>
+                <a class="nav-link d-none d-lg-inline" href="<?= $baseUrl ?>media-resources.php"><span class="nav-link-text">Médias &amp; ressources</span><i class="bi bi-chevron-down nav-link-icon small" aria-hidden="true"></i></a>
                 <span class="nav-link d-none d-lg-inline" style="cursor:pointer;"><span
                         class="nav-link-text">FR</span><i class="bi bi-chevron-down nav-link-icon small"
                         aria-hidden="true"></i></span>

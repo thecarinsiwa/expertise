@@ -7,18 +7,8 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-/* ── Connexion DB ── */
-$dbConfig = ['host' => 'localhost', 'dbname' => 'expertise', 'user' => 'root', 'pass' => '', 'charset' => 'utf8mb4'];
-$pdo = null;
-try {
-    $dsn = sprintf('mysql:host=%s;dbname=%s;charset=%s', $dbConfig['host'], $dbConfig['dbname'], $dbConfig['charset']);
-    $pdo = new PDO($dsn, $dbConfig['user'], $dbConfig['pass'], [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_OBJ,
-    ]);
-} catch (PDOException $e) {
-    $pdo = null;
-}
+/* ── Connexion DB (config centralisée, voir config/database.php) ── */
+require_once __DIR__ . '/inc/db.php';
 
 /* ── Vérifier si au moins un admin existe ── */
 $adminExists = false;

@@ -12,6 +12,7 @@ $success = '';
 $organisations = [];
 $channels = [];
 $users = [];
+$activeOrganisationId = null;
 $announcement_comments = [];
 $announcement_attachments = [];
 $announcement_notifications = [];
@@ -24,6 +25,8 @@ if ($pdo) {
         $organisations = $pdo->query("SELECT id, name FROM organisation ORDER BY name")->fetchAll();
         $channels = $pdo->query("SELECT id, name, channel_type FROM channel ORDER BY name")->fetchAll();
         $users = $pdo->query("SELECT id, first_name, last_name, email FROM user WHERE is_active = 1 ORDER BY last_name, first_name")->fetchAll();
+        $row = $pdo->query("SELECT id FROM organisation WHERE is_active = 1 LIMIT 1")->fetch(PDO::FETCH_OBJ);
+        $activeOrganisationId = $row ? (int) $row->id : null;
     } catch (PDOException $e) {
         $organisations = [];
         $channels = [];
@@ -319,9 +322,10 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                     <select name="organisation_id" class="form-select" required>
                         <option value="">— Choisir —</option>
                         <?php foreach ($organisations as $o): ?>
-                            <option value="<?= (int) $o->id ?>" <?= ($detail && $detail->organisation_id == $o->id) ? 'selected' : '' ?>><?= htmlspecialchars($o->name) ?></option>
+                            <option value="<?= (int) $o->id ?>" <?= ($detail && $detail->organisation_id == $o->id) || (!$detail && $activeOrganisationId && (int) $o->id === $activeOrganisationId) ? 'selected' : '' ?>><?= htmlspecialchars($o->name) ?><?= $activeOrganisationId && (int) $o->id === $activeOrganisationId ? ' (site client)' : '' ?></option>
                         <?php endforeach; ?>
                     </select>
+                    <div class="form-text">Sur le site client, seules les annonces de l’organisation marquée « site client » sont affichées.</div>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Canal (optionnel)</label>

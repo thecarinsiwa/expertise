@@ -12,10 +12,10 @@ if (!isset($baseUrl)) $baseUrl = '';
                 <div class="col-md-2">
                     <p class="footer-title">Liens</p>
                     <ul class="footer-links">
-                        <li><a href="#">Qui nous sommes</a></li>
-                        <li><a href="#">Notre travail</a></li>
-                        <li><a href="#">Où nous travaillons</a></li>
-                        <li><a href="#">Nous contacter</a></li>
+                        <li><a href="<?= $baseUrl ?>index.php#missions">Missions</a></li>
+                        <li><a href="<?= $baseUrl ?>index.php#actualites">Actualités</a></li>
+                        <li><a href="<?= $baseUrl ?>missions.php">Toutes les missions</a></li>
+                        <li><a href="<?= $baseUrl ?>news.php">Toutes les actualités</a></li>
                     </ul>
                 </div>
                 <div class="col-md-2">
@@ -27,7 +27,7 @@ if (!isset($baseUrl)) $baseUrl = '';
             </div>
             <div class="footer-bottom d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <span>&copy; <?= date('Y') ?> <?= $organisation ? htmlspecialchars($organisation->name) : 'Expertise' ?></span>
-                <a href="#">Mentions légales</a>
+                <a href="<?= $baseUrl ?>legal-notice.php">Mentions légales</a>
             </div>
         </div>
     </footer>

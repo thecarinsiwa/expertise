@@ -562,7 +562,7 @@ CREATE TABLE IF NOT EXISTS `mission` (
   `mission_status_id` INT UNSIGNED DEFAULT NULL,
   `title` VARCHAR(255) NOT NULL,
   `reference` VARCHAR(100),
-  `description` TEXT,
+  `description` LONGTEXT,
   `cover_image` VARCHAR(500) DEFAULT NULL,
   `start_date` DATE,
   `end_date` DATE,
