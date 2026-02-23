@@ -540,6 +540,7 @@ CREATE TABLE IF NOT EXISTS `mission` (
   `title` VARCHAR(255) NOT NULL,
   `reference` VARCHAR(100),
   `description` TEXT,
+  `cover_image` VARCHAR(500) DEFAULT NULL,
   `start_date` DATE,
   `end_date` DATE,
   `location` VARCHAR(255),
@@ -565,6 +566,7 @@ CREATE TABLE IF NOT EXISTS `mission_order` (
   `authorised_by_user_id` INT UNSIGNED DEFAULT NULL,
   `document_url` VARCHAR(500),
   `notes` TEXT,
+  `status` ENUM('draft', 'sent', 'signed', 'cancelled') DEFAULT 'draft',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -593,6 +595,7 @@ CREATE TABLE IF NOT EXISTS `mission_plan` (
   `mission_id` INT UNSIGNED NOT NULL,
   `title` VARCHAR(255),
   `content` TEXT,
+  `image_url` VARCHAR(500) DEFAULT NULL,
   `planned_date` DATE,
   `sequence` INT UNSIGNED DEFAULT 0,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -608,6 +611,9 @@ CREATE TABLE IF NOT EXISTS `mission_report` (
   `author_user_id` INT UNSIGNED NOT NULL,
   `title` VARCHAR(255),
   `content` TEXT,
+  `summary` TEXT,
+  `report_date` DATE,
+  `status` ENUM('draft', 'submitted', 'final') DEFAULT 'draft',
   `submitted_at` TIMESTAMP NULL,
   `document_url` VARCHAR(500),
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -629,6 +635,7 @@ CREATE TABLE IF NOT EXISTS `mission_expense` (
   `expense_date` DATE,
   `receipt_url` VARCHAR(500),
   `status` ENUM('pending','submitted','approved','reimbursed','rejected') DEFAULT 'pending',
+  `user_id` INT UNSIGNED DEFAULT NULL,
   `created_by_user_id` INT UNSIGNED DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1057,3 +1064,31 @@ CREATE TABLE IF NOT EXISTS `conversation_participant` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- -----------------------------------------------------------------------------
+-- 9. SEED DATA (INITIALIZATION)
+-- -----------------------------------------------------------------------------
+
+-- Default Organisation
+INSERT IGNORE INTO `organisation` (`id`, `name`, `code`, `is_active`) 
+VALUES (1, 'Expertise Humanitaire et Sociale SARL', 'EXPERT', 1);
+
+-- System Roles
+INSERT IGNORE INTO `role` (`id`, `organisation_id`, `name`, `code`, `is_system`) 
+VALUES 
+(1, 1, 'Super Administrateur', 'superadmin', 1),
+(2, 1, 'Administrateur', 'admin', 1),
+(3, 1, 'Manager', 'manager', 1),
+(4, 1, 'Collaborateur', 'staff', 1);
+
+-- Default Permissions
+INSERT IGNORE INTO `permission` (`module`, `code`, `name`) VALUES 
+('admin', 'admin.access', 'Accès administration'),
+('users', 'users.manage', 'Gérer les utilisateurs'),
+('projects', 'projects.manage', 'Gérer les projets'),
+('missions', 'missions.manage', 'Gérer les missions');
+
+-- Link SuperAdmin to all permissions
+INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
+SELECT 1, id FROM `permission`;
+
