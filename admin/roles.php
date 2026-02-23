@@ -6,9 +6,66 @@ require __DIR__ . '/inc/db.php';
 
 $rolesList = [];
 $detail = null;
+$dashStats = ['total' => 0];
+$error = '';
+$success = '';
+$organisations = [];
+$allPermissions = [];
 
 if ($pdo) {
+    $action = $_GET['action'] ?? 'list';
     $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+
+    $organisations = $pdo->query("SELECT id, name FROM organisation WHERE is_active = 1 ORDER BY name")->fetchAll();
+    $allPermissions = $pdo->query("SELECT id, name, code, module FROM permission ORDER BY module, code")->fetchAll();
+
+    // --- TRAITEMENT POST ---
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['delete_id'])) {
+            $delId = (int) $_POST['delete_id'];
+            $pdo->prepare("DELETE FROM role WHERE id = ?")->execute([$delId]);
+            header('Location: roles.php?msg=deleted');
+            exit;
+        }
+        if (isset($_POST['save_role'])) {
+            $name = trim($_POST['name'] ?? '');
+            $code = trim($_POST['code'] ?? '');
+            $description = trim($_POST['description'] ?? '');
+            $organisation_id = !empty($_POST['organisation_id']) ? (int) $_POST['organisation_id'] : null;
+            $permission_ids = isset($_POST['permission_ids']) && is_array($_POST['permission_ids']) ? array_map('intval', $_POST['permission_ids']) : [];
+
+            if (!$name || !$code) {
+                $error = 'Nom et code sont obligatoires.';
+            } else {
+                if ($id > 0) {
+                    $stmt = $pdo->prepare("UPDATE role SET name = ?, code = ?, description = ?, organisation_id = ? WHERE id = ?");
+                    $stmt->execute([$name, $code, $description ?: null, $organisation_id, $id]);
+                    $pdo->prepare("DELETE FROM role_permission WHERE role_id = ?")->execute([$id]);
+                    if (!empty($permission_ids)) {
+                        $ins = $pdo->prepare("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)");
+                        foreach ($permission_ids as $pid) {
+                            if ($pid > 0) $ins->execute([$id, $pid]);
+                        }
+                    }
+                    $success = 'Rôle mis à jour.';
+                    $action = 'view';
+                } else {
+                    $stmt = $pdo->prepare("INSERT INTO role (name, code, description, organisation_id, is_system) VALUES (?, ?, ?, ?, 0)");
+                    $stmt->execute([$name, $code, $description ?: null, $organisation_id]);
+                    $newId = (int) $pdo->lastInsertId();
+                    if (!empty($permission_ids)) {
+                        $ins = $pdo->prepare("INSERT INTO role_permission (role_id, permission_id) VALUES (?, ?)");
+                        foreach ($permission_ids as $pid) {
+                            if ($pid > 0) $ins->execute([$newId, $pid]);
+                        }
+                    }
+                    header('Location: roles.php?id=' . $newId . '&msg=created');
+                    exit;
+                }
+            }
+        }
+    }
+
     if ($id > 0) {
         $stmt = $pdo->prepare("
             SELECT r.id, r.name, r.code, r.description, r.is_system, r.organisation_id, r.created_at,
@@ -40,7 +97,8 @@ if ($pdo) {
             $detail->users = $stmtUsers->fetchAll();
         }
     }
-    if (!$detail) {
+    if (!$detail && $action !== 'add') {
+        $dashStats['total'] = (int) $pdo->query("SELECT COUNT(*) FROM role")->fetchColumn();
         $stmt = $pdo->query("
             SELECT r.id, r.name, r.code, r.is_system, r.created_at,
                    o.name AS organisation_name,
@@ -50,27 +108,150 @@ if ($pdo) {
             LEFT JOIN organisation o ON r.organisation_id = o.id
             ORDER BY r.name ASC
         ");
-        if ($stmt) {
-            $rolesList = $stmt->fetchAll();
-        }
+        if ($stmt) $rolesList = $stmt->fetchAll();
     }
 }
 require __DIR__ . '/inc/header.php';
+$isForm = ($action === 'add') || ($action === 'edit' && $detail);
+$detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail->permissions, 'id') : [];
 ?>
+
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="roles.php" class="text-decoration-none">Rôles & Accès</a></li>
+        <?php if ($action === 'add'): ?>
+            <li class="breadcrumb-item active">Nouveau</li>
+        <?php elseif ($action === 'edit' && $detail): ?>
+            <li class="breadcrumb-item active">Modifier</li>
+        <?php elseif ($detail): ?>
+            <li class="breadcrumb-item active"><?= htmlspecialchars($detail->name) ?></li>
+        <?php endif; ?>
+    </ol>
+</nav>
 
 <header class="admin-header">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
         <div>
-            <h1><?= $detail ? 'Détail du rôle' : 'Rôles & Accès' ?></h1>
-            <p><?= $detail ? htmlspecialchars($detail->name) : 'Gestion des rôles et permissions.' ?></p>
+            <h1>
+                <?php
+                if ($action === 'add') echo 'Nouveau rôle';
+                elseif ($action === 'edit' && $detail) echo 'Modifier le rôle';
+                elseif ($detail) echo 'Détail du rôle';
+                else echo 'Rôles & Accès';
+                ?>
+            </h1>
+            <p><?= $detail ? htmlspecialchars($detail->name) : ($action === 'add' ? 'Créer un rôle et associer des permissions.' : 'Gestion des rôles et permissions.'); ?></p>
         </div>
-        <?php if ($detail): ?>
-            <a href="roles.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour à la liste</a>
-        <?php endif; ?>
+        <div class="d-flex gap-2">
+            <?php if ($detail && !$isForm): ?>
+                <?php if (!$detail->is_system): ?>
+                    <a href="roles.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
+                <?php endif; ?>
+                <a href="roles.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <?php elseif ($isForm): ?>
+                <a href="roles.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
+            <?php else: ?>
+                <a href="roles.php?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Créer un rôle</a>
+            <?php endif; ?>
+        </div>
     </div>
 </header>
 
-<?php if ($detail): ?>
+<?php if (isset($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
+    <div class="alert alert-success">Le rôle a été supprimé.</div>
+<?php endif; ?>
+<?php if (isset($_GET['msg']) && $_GET['msg'] === 'created'): ?>
+    <div class="alert alert-success">Rôle créé.</div>
+<?php endif; ?>
+<?php if ($error): ?>
+    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+<?php endif; ?>
+<?php if ($success): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+<?php endif; ?>
+
+<?php if ($isForm): ?>
+    <!-- Formulaire Ajout / Édition rôle -->
+    <div class="admin-card admin-section-card mb-4">
+        <form method="POST" action="<?= $id ? 'roles.php?action=edit&id=' . $id : 'roles.php?action=add' ?>">
+            <input type="hidden" name="save_role" value="1">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Nom du rôle *</label>
+                    <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($detail->name ?? '') ?>" required placeholder="ex: Administrateur">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Code *</label>
+                    <input type="text" name="code" class="form-control" value="<?= htmlspecialchars($detail->code ?? '') ?>" required placeholder="ex: admin" <?= $detail && $detail->is_system ? 'readonly' : '' ?>>
+                    <div class="form-text">Identifiant technique unique (minuscules, sans espaces).</div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Description</label>
+                    <textarea name="description" class="form-control" rows="2" placeholder="Optionnel"><?= htmlspecialchars($detail->description ?? '') ?></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Organisation</label>
+                    <select name="organisation_id" class="form-select">
+                        <option value="">-- Toutes / Global --</option>
+                        <?php foreach ($organisations as $o): ?>
+                            <option value="<?= (int) $o->id ?>" <?= ($detail && (int)($detail->organisation_id ?? 0) === (int)$o->id) ? 'selected' : '' ?>><?= htmlspecialchars($o->name) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Permissions</label>
+                    <div class="border rounded p-3 bg-light" style="max-height: 280px; overflow-y: auto;">
+                        <?php
+                        $byModule = [];
+                        foreach ($allPermissions as $p) {
+                            $m = $p->module ?: 'Autre';
+                            if (!isset($byModule[$m])) $byModule[$m] = [];
+                            $byModule[$m][] = $p;
+                        }
+                        foreach ($byModule as $module => $perms):
+                        ?>
+                            <div class="mb-3">
+                                <strong class="d-block mb-2"><?= htmlspecialchars($module) ?></strong>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <?php foreach ($perms as $p): ?>
+                                        <div class="form-check">
+                                            <input type="checkbox" name="permission_ids[]" id="perm_<?= (int) $p->id ?>" class="form-check-input" value="<?= (int) $p->id ?>" <?= in_array($p->id, $detailPermIds) ? 'checked' : '' ?>>
+                                            <label class="form-check-label small" for="perm_<?= (int) $p->id ?>"><?= htmlspecialchars($p->code) ?></label>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (empty($allPermissions)): ?>
+                            <p class="text-muted small mb-0">Aucune permission définie en base. Créez-en via le schéma ou les paramètres.</p>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-admin-primary"><i class="bi bi-check-lg me-1"></i> Enregistrer</button>
+                    <a href="roles.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-secondary">Annuler</a>
+                </div>
+            </div>
+        </form>
+    </div>
+<?php endif; ?>
+
+<?php if (!$detail && count($rolesList) > 0): ?>
+    <!-- Cartes statistiques -->
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-4">
+            <div class="admin-card text-center p-3 h-100">
+                <div class="text-muted small text-uppercase mb-1 fw-bold">Total rôles</div>
+                <div class="h3 mb-0 fw-bold"><?= $dashStats['total'] ?></div>
+                <div class="mt-2"><span class="badge bg-secondary-subtle text-secondary border">Définis</span></div>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
+
+<?php if ($detail && !$isForm): ?>
     <div class="admin-card admin-section-card mb-4">
         <h5 class="card-title"><i class="bi bi-shield-lock"></i> Rôle</h5>
         <table class="admin-table mb-4">
@@ -112,7 +293,7 @@ require __DIR__ . '/inc/header.php';
                 <p class="mb-1"><strong><?= htmlspecialchars($module) ?></strong></p>
                 <p class="mb-3">
                     <?php foreach ($perms as $p): ?>
-                        <span class="badge bg-secondary me-1" title="<?= htmlspecialchars($p->name) ?>"><?= htmlspecialchars($p->code) ?></span>
+                        <span class="badge bg-secondary-subtle text-secondary border me-1" title="<?= htmlspecialchars($p->name) ?>"><?= htmlspecialchars($p->code) ?></span>
                     <?php endforeach; ?>
                 </p>
             <?php endforeach; ?>
@@ -124,59 +305,142 @@ require __DIR__ . '/inc/header.php';
         <?php if (!empty($detail->users)): ?>
             <ul class="list-unstyled mb-0">
                 <?php foreach ($detail->users as $u): ?>
-                    <li><a href="staff.php?user_id=<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></a> – <?= htmlspecialchars($u->email) ?></li>
+                    <li><a href="staff.php?user_id=<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></a> – <span class="text-muted"><?= htmlspecialchars($u->email) ?></span></li>
                 <?php endforeach; ?>
             </ul>
-            <p class="small text-muted mt-2">Le lien ouvre la fiche personnel si un enregistrement staff existe pour cet utilisateur ; sinon la liste du personnel s'affiche.</p>
+            <p class="small text-muted mt-2">Le lien ouvre la fiche personnel si un enregistrement staff existe ; sinon la liste du personnel.</p>
         <?php else: ?>
             <p class="text-muted">Aucun utilisateur avec ce rôle.</p>
         <?php endif; ?>
 
-        <div class="mt-4">
-            <a href="roles.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour à la liste</a>
+        <div class="mt-4 d-flex gap-2">
+            <?php if (!$detail->is_system): ?>
+                <a href="roles.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
+            <?php endif; ?>
+            <a href="roles.php" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
         </div>
     </div>
+
+    <?php if (!$detail->is_system): ?>
+    <div class="modal fade" id="deleteRoleModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Supprimer ce rôle ?</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body py-4">
+                    Le rôle <strong><?= htmlspecialchars($detail->name) ?></strong> sera supprimé. Les affectations utilisateurs à ce rôle seront perdues. Cette action est irréversible.
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <form method="POST" class="d-inline">
+                        <input type="hidden" name="delete_id" value="<?= (int) $detail->id ?>">
+                        <button type="submit" class="btn btn-danger">Supprimer définitivement</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <?php endif; ?>
 <?php elseif (count($rolesList) > 0): ?>
+    <!-- Liste des rôles -->
     <div class="admin-card admin-section-card">
-        <table class="admin-table table-hover">
-            <thead>
-                <tr>
-                    <th>Rôle</th>
-                    <th>Code</th>
-                    <th>Organisation</th>
-                    <th>Permissions</th>
-                    <th>Utilisateurs</th>
-                    <th></th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($rolesList as $r): ?>
+        <div class="table-responsive">
+            <table class="admin-table table table-hover" id="rolesTable">
+                <thead>
                     <tr>
-                        <td><a href="roles.php?id=<?= (int) $r->id ?>"><?= htmlspecialchars($r->name) ?></a></td>
-                        <td><code><?= htmlspecialchars($r->code) ?></code></td>
-                        <td><?= htmlspecialchars($r->organisation_name ?? '—') ?></td>
-                        <td><?= (int) $r->perm_count ?></td>
-                        <td><?= (int) $r->user_count ?></td>
-                        <td><a href="roles.php?id=<?= (int) $r->id ?>" class="btn btn-sm btn-light border"><i class="bi bi-eye"></i></a></td>
+                        <th>Rôle</th>
+                        <th>Organisation</th>
+                        <th>Permissions</th>
+                        <th>Utilisateurs</th>
+                        <th class="text-end">Actions</th>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach ($rolesList as $r): ?>
+                        <tr>
+                            <td>
+                                <h6 class="mb-0"><a href="roles.php?id=<?= (int) $r->id ?>"><?= htmlspecialchars($r->name) ?></a></h6>
+                                <div class="d-flex gap-2 align-items-center mt-1">
+                                    <span class="text-muted x-small"><code><?= htmlspecialchars($r->code) ?></code></span>
+                                    <?php if ($r->is_system): ?>
+                                        <span class="badge bg-warning-subtle text-warning border x-small">Système</span>
+                                    <?php endif; ?>
+                                </div>
+                            </td>
+                            <td><span class="text-muted"><?= htmlspecialchars($r->organisation_name ?? '—') ?></span></td>
+                            <td><span class="badge bg-primary"><?= (int) $r->perm_count ?></span></td>
+                            <td><span class="badge bg-info-subtle text-info border"><?= (int) $r->user_count ?></span></td>
+                            <td class="text-end">
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                                        <li><a class="dropdown-item" href="roles.php?id=<?= (int) $r->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
+                                        <li><a class="dropdown-item" href="roles.php?action=edit&id=<?= (int) $r->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                        <?php if (!$r->is_system): ?>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <form method="POST" onsubmit="return confirm('Supprimer ce rôle ?');">
+                                                <input type="hidden" name="delete_id" value="<?= (int) $r->id ?>">
+                                                <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Supprimer</button>
+                                            </form>
+                                        </li>
+                                        <?php endif; ?>
+                                    </ul>
+                                </div>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     </div>
 <?php else: ?>
     <div class="admin-card admin-section-card">
-        <div class="admin-empty">
-            <i class="bi bi-shield-lock d-block"></i>
-            Aucun rôle défini. Les rôles peuvent être créés via le schéma ou les paramètres.
+        <div class="admin-empty py-5">
+            <i class="bi bi-shield-lock d-block mb-3" style="font-size: 3rem;"></i>
+            <h5>Aucun rôle défini</h5>
+            <p class="text-muted mb-4">Les rôles peuvent être créés via le schéma de la base ou les paramètres applicatifs.</p>
         </div>
     </div>
 <?php endif; ?>
 
+<style>
+    .breadcrumb { font-size: 0.85rem; margin-bottom: 0; }
+    .breadcrumb-item a { color: var(--admin-muted); }
+    .breadcrumb-item.active { color: var(--admin-accent); font-weight: 600; }
+    .x-small { font-size: 0.75rem; }
+    .admin-table th { background: #f8f9fa; padding: 1rem 0.5rem; }
+    .admin-table td { padding: 1rem 0.5rem; }
+    .dataTables_filter input { border-radius: 8px; border: 1.5px solid #dde1e7; padding: 0.4rem 0.8rem; margin-left: 0.5rem; outline: none; }
+    .dataTables_filter input:focus { border-color: var(--admin-sidebar); }
+    .dataTables_wrapper .pagination .page-item.active .page-link { background-color: var(--admin-sidebar); border-color: var(--admin-sidebar); color: #fff; }
+    .dataTables_wrapper .pagination .page-link { color: var(--admin-sidebar); border-radius: 6px; margin: 0 2px; }
+    .dataTables_info { font-size: 0.85rem; color: var(--admin-muted); }
+</style>
+
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index.php" class="text-muted text-decoration-none"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
-        <span><?= date('Y') ?></span>
+        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (document.getElementById('rolesTable') && typeof $ !== 'undefined' && $.fn.DataTable) {
+            $('#rolesTable').DataTable({
+                language: { url: "//cdn.datatables.net/plug-ins/1.13.7/i18n/fr-FR.json" },
+                order: [[0, "asc"]],
+                pageLength: 10,
+                dom: '<"d-flex justify-content-between align-items-center mb-3"f>t<"d-flex justify-content-between align-items-center mt-3"ip>'
+            });
+        }
+    });
+</script>
 
 <?php require __DIR__ . '/inc/footer.php'; ?>
