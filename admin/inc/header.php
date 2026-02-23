@@ -350,8 +350,11 @@ require_once __DIR__ . '/auth.php';
             </a>
 
             <div class="admin-sidebar-label">Opérations</div>
-            <a href="#" class="nav-link<?= $currentNav === 'projects' ? ' active' : '' ?>">
+            <a href="projects.php" class="nav-link<?= $currentNav === 'projects' ? ' active' : '' ?>">
                 <i class="bi bi-kanban"></i><span>Projets & Tâches</span>
+            </a>
+            <a href="bailleurs.php" class="nav-link<?= $currentNav === 'bailleurs' ? ' active' : '' ?>">
+                <i class="bi bi-bank"></i><span>Bailleurs de fonds</span>
             </a>
             <a href="missions.php" class="nav-link<?= $currentNav === 'missions' ? ' active' : '' ?>">
                 <i class="bi bi-geo-alt"></i><span>Missions</span>

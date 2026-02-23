@@ -27,6 +27,12 @@ $allStaff = $pdo->query("
 
 $allUsers = $pdo->query("SELECT id, first_name, last_name, email FROM user ORDER BY last_name ASC")->fetchAll();
 
+try {
+    $bailleurs = $pdo->query("SELECT id, name, code FROM bailleur WHERE is_active = 1 ORDER BY name")->fetchAll();
+} catch (PDOException $e) {
+    $bailleurs = [];
+}
+
 // --- TRAITEMENT DES ACTIONS (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
     // SUPPRESSION
@@ -57,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
         $step_titles = $_POST['step_titles'] ?? [];
         $step_contents = $_POST['step_contents'] ?? [];
         $existing_step_images = $_POST['existing_step_images'] ?? [];
+        $bailleur_ids = isset($_POST['bailleur_ids']) && is_array($_POST['bailleur_ids']) ? array_map('intval', array_filter($_POST['bailleur_ids'])) : [];
 
         if (empty($title)) {
             $error = "Le titre est obligatoire.";
@@ -144,11 +151,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                     $stmtStep->execute([$missionId, trim($stepTitle), $stepContent, $stepImage, $index]);
                 }
 
+                // --- GESTION DES BAILLEURS DE FONDS ---
+                try {
+                    $pdo->prepare("DELETE FROM mission_bailleur WHERE mission_id = ?")->execute([$missionId]);
+                    $insBailleur = $pdo->prepare("INSERT INTO mission_bailleur (mission_id, bailleur_id) VALUES (?, ?)");
+                    foreach ($bailleur_ids as $bid) {
+                        if ($bid > 0) $insBailleur->execute([$missionId, $bid]);
+                    }
+                } catch (PDOException $e) { /* table peut être absente */ }
+
                 $pdo->commit();
 
                 if ($id > 0) {
-                    $success = "Mission mise à jour avec succès.";
-                    $action = 'view';
+                    header('Location: missions.php?id=' . $missionId . '&msg=updated');
+                    exit;
                 } else {
                     header('Location: missions.php?id=' . $missionId . '&msg=created');
                     exit;
@@ -311,6 +327,16 @@ if ($pdo) {
             $detail->expenses = $stmtExpenses->fetchAll();
             $detail->expenses_total = array_sum(array_column($detail->expenses, 'amount'));
 
+            try {
+                $mbStmt = $pdo->prepare("SELECT b.id, b.name FROM mission_bailleur mb JOIN bailleur b ON mb.bailleur_id = b.id WHERE mb.mission_id = ? ORDER BY b.name");
+                $mbStmt->execute([$id]);
+                $detail->bailleurs = $mbStmt->fetchAll(PDO::FETCH_OBJ);
+                $detail->bailleur_ids = array_column($detail->bailleurs, 'id');
+            } catch (PDOException $e) {
+                $detail->bailleurs = [];
+                $detail->bailleur_ids = [];
+            }
+
             if ($action === 'list')
                 $action = 'view';
         }
@@ -349,6 +375,8 @@ if (isset($_GET['msg'])) {
         $success = "Mission supprimée avec succès.";
     if ($_GET['msg'] === 'created')
         $success = "Mission créée avec succès.";
+    if ($_GET['msg'] === 'updated')
+        $success = "Mission mise à jour avec succès.";
     if ($_GET['msg'] === 'expense_saved')
         $success = "Dépense enregistrée.";
     if ($_GET['msg'] === 'report_saved')
@@ -542,6 +570,15 @@ require __DIR__ . '/inc/header.php';
                                     </option>
                                 <?php endforeach; ?>
                             </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-bold">Bailleurs de fonds</label>
+                            <select name="bailleur_ids[]" class="form-select" multiple size="4">
+                                <?php foreach ($bailleurs as $b): ?>
+                                    <option value="<?= (int) $b->id ?>" <?= ($detail && in_array((int)$b->id, $detail->bailleur_ids ?? [])) ? 'selected' : '' ?>><?= htmlspecialchars($b->name) ?><?= !empty($b->code) ? ' (' . htmlspecialchars($b->code) . ')' : '' ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs bailleurs. <a href="bailleurs.php?action=add" target="_blank">Créer un bailleur</a></small>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold">Lieu / Destination</label>
@@ -1043,6 +1080,10 @@ require __DIR__ . '/inc/header.php';
                                 <tr>
                                     <td class="text-muted small">Référence</td>
                                     <td class="small text-uppercase"><?= htmlspecialchars($detail->reference ?: '—') ?></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted small">Bailleurs de fonds</td>
+                                    <td class="small"><?= !empty($detail->bailleurs) ? implode(', ', array_map(function($b) { return htmlspecialchars($b->name); }, $detail->bailleurs)) : '—' ?></td>
                                 </tr>
                             </table>
                         </div>

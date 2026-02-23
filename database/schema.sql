@@ -344,6 +344,7 @@ CREATE TABLE IF NOT EXISTS `project` (
   `name` VARCHAR(255) NOT NULL,
   `code` VARCHAR(50),
   `description` TEXT,
+  `cover_image` VARCHAR(255) DEFAULT NULL,
   `start_date` DATE,
   `end_date` DATE,
   `status` ENUM('draft','planned','in_progress','on_hold','completed','cancelled') DEFAULT 'draft',
@@ -360,6 +361,27 @@ CREATE TABLE IF NOT EXISTS `project` (
   CONSTRAINT `fk_project_manager` FOREIGN KEY (`manager_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS `bailleur` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(255) NOT NULL,
+  `code` VARCHAR(50) DEFAULT NULL,
+  `description` TEXT,
+  `logo` VARCHAR(255) DEFAULT NULL,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `project_bailleur` (
+  `project_id` INT UNSIGNED NOT NULL,
+  `bailleur_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`project_id`, `bailleur_id`),
+  KEY `idx_project_bailleur_bailleur` (`bailleur_id`),
+  CONSTRAINT `fk_project_bailleur_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_project_bailleur_bailleur` FOREIGN KEY (`bailleur_id`) REFERENCES `bailleur` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS `project_phase` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `project_id` INT UNSIGNED NOT NULL,
@@ -368,6 +390,7 @@ CREATE TABLE IF NOT EXISTS `project_phase` (
   `start_date` DATE,
   `end_date` DATE,
   `description` TEXT,
+  `image_url` VARCHAR(255) DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
@@ -556,6 +579,15 @@ CREATE TABLE IF NOT EXISTS `mission` (
   CONSTRAINT `fk_mission_type` FOREIGN KEY (`mission_type_id`) REFERENCES `mission_type` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_mission_status` FOREIGN KEY (`mission_status_id`) REFERENCES `mission_status` (`id`) ON DELETE SET NULL,
   CONSTRAINT `fk_mission_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `mission_bailleur` (
+  `mission_id` INT UNSIGNED NOT NULL,
+  `bailleur_id` INT UNSIGNED NOT NULL,
+  PRIMARY KEY (`mission_id`, `bailleur_id`),
+  KEY `idx_mission_bailleur_bailleur` (`bailleur_id`),
+  CONSTRAINT `fk_mission_bailleur_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_mission_bailleur_bailleur` FOREIGN KEY (`bailleur_id`) REFERENCES `bailleur` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `mission_order` (

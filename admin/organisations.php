@@ -298,11 +298,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             </table>
         </div>
     </div>
-<?php else: ?>
-    <div class="admin-card admin-section-card text-center py-5">
-        <p class="text-muted mb-3">Aucune organisation.</p>
-        <a href="organisations.php?action=add" class="btn btn-admin-primary"><i class="bi bi-building-add me-1"></i> Créer une organisation</a>
-    </div>
+
 <?php endif; ?>
 
 <style>
