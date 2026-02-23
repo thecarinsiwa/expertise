@@ -376,10 +376,10 @@ require_once __DIR__ . '/auth.php';
             </a>
 
             <div class="admin-sidebar-label">Gestion</div>
-            <a href="#" class="nav-link<?= $currentNav === 'documents' ? ' active' : '' ?>">
+            <a href="documents.php" class="nav-link<?= $currentNav === 'documents' ? ' active' : '' ?>">
                 <i class="bi bi-file-earmark-text"></i><span>Documents</span>
             </a>
-            <a href="#" class="nav-link<?= $currentNav === 'planning' ? ' active' : '' ?>">
+            <a href="planning.php" class="nav-link<?= $currentNav === 'planning' ? ' active' : '' ?>">
                 <i class="bi bi-calendar3"></i><span>Planning & KPI</span>
             </a>
 
