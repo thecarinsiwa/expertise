@@ -199,6 +199,16 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
 <?php endif; ?>
 
 <?php if (!$detail && !$isForm): ?>
+    <!-- Raccourcis de configuration (même logique que page Missions) -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
+                <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i> Configuration :</span>
+                <a href="channel_types.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les types de canal</a>
+            </div>
+        </div>
+    </div>
+    <!-- Cartes statistiques -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-4">
             <div class="admin-card text-center p-3 h-100">
@@ -264,7 +274,10 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-bold">Description</label>
-                    <textarea name="description" class="form-control" rows="2"><?= htmlspecialchars($detail->description ?? '') ?></textarea>
+                    <textarea name="description" id="channel_description" class="form-control" rows="5" placeholder="Description du canal"></textarea>
+                <?php if (!empty($detail->description)): ?>
+                <script type="application/json" id="channel_description_data"><?= json_encode($detail->description, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+                <?php endif; ?>
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-admin-primary"><i class="bi bi-check-lg me-1"></i> Enregistrer</button>
@@ -281,7 +294,7 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
             <tr><th>Type</th><td><span class="badge bg-secondary"><?= $channelTypes[$detail->channel_type] ?? $detail->channel_type ?></span></td></tr>
             <tr><th>Organisation</th><td><?= htmlspecialchars($detail->organisation_name ?? '—') ?></td></tr>
             <tr><th>Créé par</th><td><?= htmlspecialchars(trim(($detail->created_by_first_name ?? '') . ' ' . ($detail->created_by_last_name ?? '')) ?: $detail->created_by_email ?? '—') ?></td></tr>
-            <tr><th>Description</th><td><?= nl2br(htmlspecialchars($detail->description ?? '—')) ?></td></tr>
+            <tr><th>Description</th><td><?= !empty($detail->description) ? '<div class="channel-description">' . $detail->description . '</div>' : '—' ?></td></tr>
         </table>
         <div class="mt-4 d-flex gap-2">
             <a href="channels.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
@@ -427,6 +440,36 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
     <div class="admin-card admin-section-card">
         <p class="admin-empty py-4 mb-0"><i class="bi bi-chat-dots"></i> Aucun canal. <a href="channels.php?action=add">Créer un canal</a> pour organiser les conversations et annonces.</p>
     </div>
+<?php endif; ?>
+
+<?php if ($isForm): ?>
+<style>.channel-description { vertical-align: top; } .channel-description h1, .channel-description h2, .channel-description h3, .channel-description h4 { margin: 1rem 0 0.5rem; font-size: 1rem; font-weight: 600; } .channel-description p { margin: 0.5rem 0; } .channel-description ul, .channel-description ol { margin: 0.5rem 0; padding-left: 1.5rem; } .channel-description img { max-width: 100%; height: auto; }</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ !== 'undefined' && $.fn.summernote) {
+        $('#channel_description').summernote({
+            placeholder: 'Description du canal...',
+            tabsize: 2,
+            height: 200,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ]
+        });
+        var dataEl = document.getElementById('channel_description_data');
+        if (dataEl) {
+            try {
+                var content = JSON.parse(dataEl.textContent);
+                if (content) $('#channel_description').summernote('code', content);
+            } catch (e) {}
+        }
+    }
+});
+</script>
 <?php endif; ?>
 
 <footer class="admin-main-footer mt-4">

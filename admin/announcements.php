@@ -168,6 +168,17 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php endif; ?>
 
 <?php if (!$detail && !$isForm): ?>
+    <!-- Raccourcis de configuration (même logique que Missions / Canaux) -->
+    <div class="row g-3 mb-4">
+        <div class="col-12">
+            <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
+                <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i> Configuration :</span>
+                <a href="channels.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Gérer les canaux</a>
+                <a href="channel_types.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les types de canal</a>
+            </div>
+        </div>
+    </div>
+    <!-- Cartes statistiques -->
     <div class="row g-3 mb-4">
         <div class="col-sm-6 col-xl-4">
             <div class="admin-card text-center p-3 h-100">
@@ -224,7 +235,10 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-bold">Contenu *</label>
-                    <textarea name="content" class="form-control" rows="5" required placeholder="Contenu de l'annonce"><?= htmlspecialchars($detail->content ?? '') ?></textarea>
+                    <textarea name="content" id="announcement_content" class="form-control" rows="6" required placeholder="Contenu de l'annonce"></textarea>
+                <?php if (!empty($detail->content)): ?>
+                <script type="application/json" id="announcement_content_data"><?= json_encode($detail->content, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
+                <?php endif; ?>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label fw-bold">Publiée le</label>
@@ -262,7 +276,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <?php if (!empty($detail->content)): ?>
             <div class="mt-3 pt-3 border-top">
                 <strong>Contenu</strong>
-                <div class="mt-1"><?= nl2br(htmlspecialchars($detail->content)) ?></div>
+                <div class="mt-1 announcement-content"><?= $detail->content ?></div>
             </div>
         <?php endif; ?>
         <div class="mt-4 d-flex gap-2">
@@ -346,6 +360,60 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
     <div class="admin-card admin-section-card">
         <p class="admin-empty py-4 mb-0"><i class="bi bi-megaphone"></i> Aucune annonce. <a href="announcements.php?action=add">Créer une annonce</a>. <?php if (empty($organisations)): ?> Créez d'abord une <strong><a href="organisations.php">organisation</a></strong>.<?php endif; ?></p>
     </div>
+<?php endif; ?>
+
+<?php if ($isForm): ?>
+<style>.announcement-content { vertical-align: top; } .announcement-content h1, .announcement-content h2, .announcement-content h3, .announcement-content h4 { margin: 1rem 0 0.5rem; font-size: 1rem; font-weight: 600; } .announcement-content p { margin: 0.5rem 0; } .announcement-content ul, .announcement-content ol { margin: 0.5rem 0; padding-left: 1.5rem; } .announcement-content img { max-width: 100%; height: auto; }</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof $ !== 'undefined' && $.fn.summernote) {
+        $('#announcement_content').summernote({
+            placeholder: 'Contenu de l\'annonce...',
+            tabsize: 2,
+            height: 220,
+            toolbar: [
+                ['style', ['style']],
+                ['font', ['bold', 'italic', 'underline', 'clear']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['table', ['table']],
+                ['insert', ['link', 'picture']],
+                ['view', ['fullscreen', 'codeview', 'help']]
+            ],
+            callbacks: {
+                onImageUpload: function(files) {
+                    for (var i = 0; i < files.length; i++) {
+                        var data = new FormData();
+                        data.append('file', files[i]);
+                        $.ajax({
+                            url: 'upload_announcement_image.php',
+                            data: data,
+                            processData: false,
+                            contentType: false,
+                            type: 'POST',
+                            success: function(res) {
+                                if (res && res.url) $('#announcement_content').summernote('insertImage', res.url);
+                            },
+                            error: function(xhr) {
+                                try {
+                                    var r = (xhr.responseJSON || {});
+                                    alert(r.error || 'Erreur lors de l\'upload de l\'image.');
+                                } catch (e) { alert('Erreur lors de l\'upload de l\'image.'); }
+                            }
+                        });
+                    }
+                }
+            }
+        });
+        var dataEl = document.getElementById('announcement_content_data');
+        if (dataEl) {
+            try {
+                var content = JSON.parse(dataEl.textContent);
+                if (content) $('#announcement_content').summernote('code', content);
+            } catch (e) {}
+        }
+    }
+});
+</script>
 <?php endif; ?>
 
 <footer class="admin-main-footer mt-4">
