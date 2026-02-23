@@ -25,6 +25,8 @@ $allStaff = $pdo->query("
     ORDER BY u.last_name ASC
 ")->fetchAll();
 
+$allUsers = $pdo->query("SELECT id, first_name, last_name, email FROM user ORDER BY last_name ASC")->fetchAll();
+
 // --- TRAITEMENT DES ACTIONS (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
     // SUPPRESSION
@@ -155,6 +157,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                 $pdo->rollBack();
                 $error = "Erreur : " . $e->getMessage();
             }
+        }
+
+        // GESTION DES ORDRES DE MISSION (AJOUT/MODIF)
+        if (isset($_POST['save_order'])) {
+            $m_id = (int) $_POST['mission_id'];
+            $num = trim($_POST['order_number'] ?? '');
+            $date = $_POST['issue_date'] ?: null;
+            $auth_by = (int) $_POST['authorised_by_user_id'] ?: null;
+            $notes = trim($_POST['notes'] ?? '');
+            $status = $_POST['status'] ?? 'draft';
+
+            $stmt = $pdo->prepare("SELECT id FROM mission_order WHERE mission_id = ?");
+            $stmt->execute([$m_id]);
+            $exists = $stmt->fetch();
+
+            if ($exists) {
+                $stmt = $pdo->prepare("UPDATE mission_order SET order_number = ?, issue_date = ?, authorised_by_user_id = ?, notes = ?, status = ? WHERE mission_id = ?");
+                $stmt->execute([$num, $date, $auth_by, $notes, $status, $m_id]);
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO mission_order (mission_id, order_number, issue_date, authorised_by_user_id, notes, status) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$m_id, $num, $date, $auth_by, $notes, $status]);
+            }
+            $success = "Ordre de mission enregistré.";
+        }
+
+        // GESTION DES RAPPORTS (AJOUT/MODIF)
+        if (isset($_POST['save_report'])) {
+            $repId = (int) $_POST['report_id'];
+            $m_id = (int) $_POST['mission_id'];
+            $title = trim($_POST['report_title'] ?? '');
+            $summary = trim($_POST['summary'] ?? '');
+            $content = trim($_POST['content'] ?? '');
+            $date = $_POST['report_date'] ?: date('Y-m-d');
+            $author = (int) $_POST['author_user_id'];
+            $status = $_POST['status'] ?? 'draft';
+
+            if ($repId > 0) {
+                $stmt = $pdo->prepare("UPDATE mission_report SET title = ?, summary = ?, content = ?, report_date = ?, author_user_id = ?, status = ? WHERE id = ?");
+                $stmt->execute([$title, $summary, $content, $date, $author, $status, $repId]);
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO mission_report (mission_id, author_user_id, title, summary, content, report_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$m_id, $author, $title, $summary, $content, $date, $status]);
+            }
+            $success = "Rapport enregistré.";
+        }
+
+        // SUPPRESSION RAPPORT
+        if (isset($_POST['delete_report_id'])) {
+            $pdo->prepare("DELETE FROM mission_report WHERE id = ?")->execute([(int) $_POST['delete_report_id']]);
+            $success = "Rapport supprimé.";
+        }
+
+        // GESTION DES FRAIS (AJOUT/MODIF)
+        if (isset($_POST['save_expense'])) {
+            $expId = (int) $_POST['expense_id'];
+            $m_id = (int) $_POST['mission_id'];
+            $cat = trim($_POST['category'] ?? '');
+            $desc = trim($_POST['description'] ?? '');
+            $amount = (float) $_POST['amount'];
+            $currency = $_POST['currency'] ?? 'XOF';
+            $date = $_POST['expense_date'] ?: date('Y-m-d');
+            $beneficiary = (int) $_POST['user_id'];
+            $status = $_POST['status'] ?? 'pending';
+
+            if ($expId > 0) {
+                $stmt = $pdo->prepare("UPDATE mission_expense SET category = ?, description = ?, amount = ?, currency = ?, expense_date = ?, user_id = ?, status = ? WHERE id = ?");
+                $stmt->execute([$cat, $desc, $amount, $currency, $date, $beneficiary, $status, $expId]);
+            } else {
+                $stmt = $pdo->prepare("INSERT INTO mission_expense (mission_id, user_id, category, description, amount, currency, expense_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->execute([$m_id, $beneficiary, $cat, $desc, $amount, $currency, $date, $status]);
+            }
+            $success = "Dépense enregistrée.";
+        }
+
+        // SUPPRESSION FRAIS
+        if (isset($_POST['delete_expense_id'])) {
+            $pdo->prepare("DELETE FROM mission_expense WHERE id = ?")->execute([(int) $_POST['delete_expense_id']]);
+            $success = "Dépense supprimée.";
         }
     }
 }
@@ -607,9 +687,11 @@ require __DIR__ . '/inc/header.php';
                     <!-- TAB 5: ORDERS -->
                     <div class="tab-pane fade" id="tab-orders">
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h3 class="h6 mb-0 fw-bold"><i class="bi bi-file-earmark-text me-2"></i> Ordres de mission</h3>
-                            <a href="mission_orders.php?mission_id=<?= $id ?>" class="btn btn-sm btn-admin-primary">Gérer
-                                les ordres</a>
+                            <h3 class="h6 mb-0 fw-bold"><i class="bi bi-file-earmark-text me-2"></i> Ordre de mission</h3>
+                            <button type="button" class="btn btn-sm btn-admin-primary" data-bs-toggle="modal"
+                                data-bs-target="#orderModal">
+                                <?= $detail->order ? 'Modifier' : 'Générer' ?> l'ordre
+                            </button>
                         </div>
                         <?php if ($detail->order): ?>
                             <div class="admin-card p-3 border shadow-none bg-light">
@@ -641,8 +723,9 @@ require __DIR__ . '/inc/header.php';
                     <div class="tab-pane fade" id="tab-reports">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h3 class="h6 mb-0 fw-bold"><i class="bi bi-journal-text me-2"></i> Rapports de mission</h3>
-                            <a href="mission_reports.php?mission_id=<?= $id ?>" class="btn btn-sm btn-admin-primary">Accéder
-                                aux rapports</a>
+                            <button type="button" class="btn btn-sm btn-admin-primary" onclick="openReportModal(0)">
+                                <i class="bi bi-plus-lg me-1"></i> Nouveau rapport
+                            </button>
                         </div>
                         <?php if (!empty($detail->reports)): ?>
                             <div class="table-responsive">
@@ -651,30 +734,48 @@ require __DIR__ . '/inc/header.php';
                                         <tr>
                                             <th>Date</th>
                                             <th>Résumé</th>
-                                            <th class="text-end">Statut</th>
+                                            <th>Auteur</th>
+                                            <th>Statut</th>
+                                            <th class="text-end">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <?php foreach (array_slice($detail->reports, 0, 3) as $rep): ?>
+                                        <?php foreach ($detail->reports as $rep): ?>
                                             <tr>
                                                 <td class="small"><?= date('d/m/Y', strtotime($rep->report_date)) ?></td>
-                                                <td class="small text-truncate" style="max-width: 250px;">
-                                                    <?= htmlspecialchars($rep->summary) ?>
+                                                <td class="small text-truncate" style="max-width: 200px;">
+                                                    <strong><?= htmlspecialchars($rep->title) ?></strong><br>
+                                                    <span class="text-muted"><?= htmlspecialchars($rep->summary) ?></span>
                                                 </td>
-                                                <td class="text-end">
+                                                <td class="small">
+                                                    <?php
+                                                    $author = null;
+                                                    foreach ($allUsers as $u)
+                                                        if ($u->id == $rep->author_user_id)
+                                                            $author = $u;
+                                                    echo $author ? htmlspecialchars($author->first_name . ' ' . $author->last_name) : '—';
+                                                    ?>
+                                                </td>
+                                                <td>
                                                     <span
                                                         class="badge bg-<?= $rep->status === 'final' ? 'success' : 'info' ?>-subtle text-<?= $rep->status === 'final' ? 'success' : 'info' ?> x-small border">
                                                         <?= ucfirst($rep->status) ?>
                                                     </span>
                                                 </td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-link text-primary p-0 me-2"
+                                                        onclick="openReportModal(<?= $rep->id ?>, '<?= addslashes($rep->title) ?>', '<?= addslashes($rep->summary) ?>', '<?= addslashes(str_replace(["\r", "\n"], ['\r', '\n'], $rep->content)) ?>', '<?= $rep->report_date ?>', <?= $rep->author_user_id ?>, '<?= $rep->status ?>')">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-link text-danger p-0"
+                                                        onclick="deleteReport(<?= $rep->id ?>)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
                                             </tr>
                                         <?php endforeach; ?>
                                     </tbody>
                                 </table>
-                                <?php if (count($detail->reports) > 3): ?>
-                                    <div class="text-center mt-2 small text-muted italic">... et <?= count($detail->reports) - 3 ?>
-                                        autres rapports</div>
-                                <?php endif; ?>
                             </div>
                         <?php else: ?>
                             <div class="text-center py-4 bg-light rounded border border-dashed">
@@ -687,25 +788,76 @@ require __DIR__ . '/inc/header.php';
                     <div class="tab-pane fade" id="tab-expenses">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h3 class="h6 mb-0 fw-bold"><i class="bi bi-cash-stack me-2"></i> Frais de mission</h3>
-                            <a href="mission_expenses.php?mission_id=<?= $id ?>" class="btn btn-sm btn-admin-primary">Suivi
-                                financier</a>
+                            <button type="button" class="btn btn-sm btn-admin-primary" onclick="openExpenseModal(0)">
+                                <i class="bi bi-plus-lg me-1"></i> Nouvelle dépense
+                            </button>
                         </div>
-                        <div class="row g-3">
+
+                        <div class="row g-3 mb-4">
                             <div class="col-md-6">
-                                <div class="admin-card p-4 bg-light text-center border-0 shadow-none">
+                                <div class="admin-card p-3 bg-light text-center border shadow-none">
                                     <div class="small text-muted mb-1">Budget consommé</div>
-                                    <div class="h4 fw-bold mb-0"><?= number_format($detail->expenses_total, 0, ',', ' ') ?>
-                                        <small class="text-muted">XOF</small>
-                                    </div>
+                                    <div class="h5 fw-bold mb-0 text-success">
+                                        <?= number_format($detail->expenses_total, 0, ',', ' ') ?> <small>XOF</small></div>
                                 </div>
                             </div>
                             <div class="col-md-6">
-                                <div class="admin-card p-4 bg-light text-center border-0 shadow-none">
+                                <div class="admin-card p-3 bg-light text-center border shadow-none">
                                     <div class="small text-muted mb-1">Nombre de justificatifs</div>
-                                    <div class="h4 fw-bold mb-0"><?= count($detail->expenses) ?></div>
+                                    <div class="h5 fw-bold mb-0"><?= count($detail->expenses) ?></div>
                                 </div>
                             </div>
                         </div>
+
+                        <?php if (!empty($detail->expenses)): ?>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover align-middle">
+                                    <thead class="small text-muted">
+                                        <tr>
+                                            <th>Date</th>
+                                            <th>Catégorie</th>
+                                            <th>Description</th>
+                                            <th>Montant</th>
+                                            <th>Statut</th>
+                                            <th class="text-end">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <?php foreach ($detail->expenses as $exp): ?>
+                                            <tr>
+                                                <td class="small"><?= date('d/m/Y', strtotime($exp->expense_date)) ?></td>
+                                                <td><span
+                                                        class="badge bg-light text-muted border small"><?= htmlspecialchars($exp->category) ?></span>
+                                                </td>
+                                                <td class="small"><?= htmlspecialchars($exp->description) ?></td>
+                                                <td class="fw-bold small"><?= number_format($exp->amount, 0, ',', ' ') ?>
+                                                    <?= $exp->currency ?></td>
+                                                <td>
+                                                    <span
+                                                        class="badge bg-<?= $exp->status === 'approved' ? 'success' : ($exp->status === 'rejected' ? 'danger' : 'warning') ?>-subtle text-<?= $exp->status === 'approved' ? 'success' : ($exp->status === 'rejected' ? 'danger' : 'warning') ?> x-small border">
+                                                        <?= ucfirst($exp->status) ?>
+                                                    </span>
+                                                </td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-link text-primary p-0 me-2"
+                                                        onclick="openExpenseModal(<?= $exp->id ?>, '<?= $exp->category ?>', '<?= addslashes($exp->description) ?>', <?= $exp->amount ?>, '<?= $exp->currency ?>', '<?= $exp->expense_date ?>', <?= $exp->user_id ?>, '<?= $exp->status ?>')">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-link text-danger p-0"
+                                                        onclick="deleteExpense(<?= $exp->id ?>)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    </tbody>
+                                </table>
+                            </div>
+                        <?php else: ?>
+                            <div class="text-center py-4 bg-light rounded border border-dashed">
+                                <p class="text-muted small mb-0">Aucune dépense enregistrée.</p>
+                            </div>
+                        <?php endif; ?>
                     </div>
                 <?php endif; ?>
             </div>
@@ -1282,6 +1434,197 @@ require __DIR__ . '/inc/header.php';
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>
+
+<!-- Modal Ordre de Mission -->
+<div class="modal fade" id="orderModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Gérer l'ordre de mission</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="mission_id" value="<?= $id ?>">
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Numéro d'ordre</label>
+                    <input type="text" name="order_number" id="order_number" class="form-control"
+                        value="<?= $detail->order->order_number ?? 'OM-' . date('Y') . '-' . sprintf('%04d', $id) ?>">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Date d'émission</label>
+                    <input type="date" name="issue_date" id="order_issue_date" class="form-control"
+                        value="<?= $detail->order->issue_date ?? date('Y-m-d') ?>">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Signataire autorisé</label>
+                    <select name="authorised_by_user_id" id="order_auth_by" class="form-select">
+                        <option value="">Sélectionner...</option>
+                        <?php foreach ($allUsers as $u): ?>
+                            <option value="<?= $u->id ?>" <?= ($detail->order->authorised_by_user_id ?? '') == $u->id ? 'selected' : '' ?>>
+                                <?= htmlspecialchars($u->first_name . ' ' . $u->last_name) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Notes / Instructions</label>
+                    <textarea name="notes" id="order_notes" class="form-control"
+                        rows="3"><?= htmlspecialchars($detail->order->notes ?? '') ?></textarea>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label small fw-bold">Statut</label>
+                    <select name="status" id="order_status" class="form-select">
+                        <option value="draft" <?= ($detail->order->status ?? '') == 'draft' ? 'selected' : '' ?>>Brouillon
+                        </option>
+                        <option value="sent" <?= ($detail->order->status ?? '') == 'sent' ? 'selected' : '' ?>>Envoyé
+                        </option>
+                        <option value="signed" <?= ($detail->order->status ?? '') == 'signed' ? 'selected' : '' ?>>Signé
+                        </option>
+                        <option value="cancelled" <?= ($detail->order->status ?? '') == 'cancelled' ? 'selected' : '' ?>>
+                            Annulé</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" name="save_order" class="btn btn-admin-primary">Enregistrer l'ordre</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Rapport -->
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <form method="POST" class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="reportModalTitle">Ajouter un rapport</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="mission_id" value="<?= $id ?>">
+                <input type="hidden" name="report_id" id="report_id" value="0">
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label class="form-label small fw-bold">Titre du rapport</label>
+                        <input type="text" name="report_title" id="report_title" class="form-control" required>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label small fw-bold">Date</label>
+                        <input type="date" name="report_date" id="report_date" class="form-control"
+                            value="<?= date('Y-m-d') ?>">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Résumé court</label>
+                        <textarea name="summary" id="report_summary" class="form-control" rows="2"></textarea>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Contenu détaillé</label>
+                        <textarea name="content" id="report_content" class="form-control" rows="5"></textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Auteur</label>
+                        <select name="author_user_id" id="report_author" class="form-select" required>
+                            <?php foreach ($allUsers as $u): ?>
+                                <option value="<?= $u->id ?>"><?= htmlspecialchars($u->first_name . ' ' . $u->last_name) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Statut</label>
+                        <select name="status" id="report_status" class="form-select">
+                            <option value="draft">Brouillon</option>
+                            <option value="submitted">Soumis</option>
+                            <option value="final">Finalisé</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" name="save_report" class="btn btn-admin-primary">Enregistrer le rapport</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal Frais -->
+<div class="modal fade" id="expenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form method="POST" class="modal-content border-0 shadow">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title" id="expenseModalTitle">Ajouter une dépense</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" name="mission_id" value="<?= $id ?>">
+                <input type="hidden" name="expense_id" id="expense_id" value="0">
+                <div class="row g-3">
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold">Catégorie</label>
+                        <select name="category" id="expense_category" class="form-select">
+                            <option value="Transport">Transport</option>
+                            <option value="Hébergement">Hébergement</option>
+                            <option value="Restauration">Restauration</option>
+                            <option value="Matériel">Matériel</option>
+                            <option value="Communication">Communication</option>
+                            <option value="Autre">Autre</option>
+                        </select>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label small fw-bold">Description</label>
+                        <input type="text" name="description" id="expense_description" class="form-control" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Montant</label>
+                        <div class="input-group">
+                            <input type="number" name="amount" id="expense_amount" class="form-control" step="0.01"
+                                required>
+                            <span class="input-group-text">XOF</span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small fw-bold">Date</label>
+                        <input type="date" name="expense_date" id="expense_date" class="form-control"
+                            value="<?= date('Y-m-d') ?>">
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold">Bénéficiaire</label>
+                        <select name="user_id" id="expense_user" class="form-select" required>
+                            <?php foreach ($allUsers as $u): ?>
+                                <option value="<?= $u->id ?>"><?= htmlspecialchars($u->first_name . ' ' . $u->last_name) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-12">
+                        <label class="form-label small fw-bold">Statut</label>
+                        <select name="status" id="expense_status" class="form-select">
+                            <option value="pending">En attente</option>
+                            <option value="submitted">Soumis</option>
+                            <option value="approved">Approuvé</option>
+                            <option value="reimbursed">Remboursé</option>
+                            <option value="rejected">Rejeté</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="submit" name="save_expense" class="btn btn-admin-primary">Enregistrer la dépense</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Forms cachés pour suppression -->
+<form id="deleteReportForm" method="POST" style="display:none;">
+    <input type="hidden" name="delete_report_id" id="delete_report_id_input">
+</form>
+<form id="deleteExpenseForm" method="POST" style="display:none;">
+    <input type="hidden" name="delete_expense_id" id="delete_expense_id_input">
+</form>
 
 <?php require __DIR__ . '/inc/footer.php'; ?>
 
