@@ -71,4 +71,41 @@
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeAll();
     });
+
+    // Copier le lien (partage)
+    document.querySelectorAll('.copy-link[data-copy-url]').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            var url = el.getAttribute('data-copy-url');
+            var label = el.querySelector('.copy-link-text');
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function () {
+                    if (label) label.textContent = 'Lien copié !';
+                    setTimeout(function () { if (label) label.textContent = 'Copier le lien'; }, 2000);
+                });
+            } else {
+                var ta = document.createElement('textarea');
+                ta.value = url;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'absolute';
+                ta.style.left = '-9999px';
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    document.execCommand('copy');
+                    if (label) label.textContent = 'Lien copié !';
+                    setTimeout(function () { if (label) label.textContent = 'Copier le lien'; }, 2000);
+                } catch (err) {}
+                document.body.removeChild(ta);
+            }
+        });
+    });
+
+    // Imprimer
+    document.querySelectorAll('.share-print').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.print();
+        });
+    });
 })();

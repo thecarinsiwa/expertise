@@ -772,6 +772,7 @@ CREATE TABLE IF NOT EXISTS `announcement` (
   `author_user_id` INT UNSIGNED NOT NULL,
   `title` VARCHAR(255) NOT NULL,
   `content` TEXT NOT NULL,
+  `cover_image` VARCHAR(500) DEFAULT NULL,
   `is_pinned` TINYINT(1) NOT NULL DEFAULT 0,
   `published_at` TIMESTAMP NULL,
   `expires_at` TIMESTAMP NULL,

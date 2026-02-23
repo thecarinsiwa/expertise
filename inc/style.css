@@ -183,6 +183,19 @@ body, html {
     background: linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.35)), url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?w=1600') center/cover no-repeat;
     transform: scaleY(-1);
 }
+.hero.hero-has-cover::before {
+    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.4));
+    transform: none;
+}
+.hero-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.hero::before { z-index: 1; }
 .hero .container { position: relative; z-index: 1; min-height: 70vh; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 3rem; }
 .hero .badge-location { color: rgba(255,255,255,0.85); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .hero h1 { color: #fff; font-weight: 700; font-size: clamp(1.75rem, 4vw, 2.75rem); text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
@@ -199,8 +212,9 @@ body, html {
 
 /* Sections / Cards */
 .section-heading { font-size: 1.5rem; font-weight: 700; color: var(--msf-blue-dark); margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.03em; }
-.card-mission, .card-announcement { border: none; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: box-shadow 0.2s, transform 0.2s; height: 100%; }
+.card-mission, .card-announcement { border: none; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: box-shadow 0.2s, transform 0.2s; height: 100%; overflow: hidden; }
 .card-mission:hover, .card-announcement:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+.card-mission-img { height: 140px; background-size: cover; background-position: center; background-repeat: no-repeat; flex-shrink: 0; }
 .card-mission .card-title, .card-announcement .card-title { font-weight: 600; color: var(--msf-blue-dark); font-size: 1rem; }
 .card-mission .card-title a, .card-announcement .card-title a { color: inherit; text-decoration: none; }
 .card-mission .card-title a:hover, .card-announcement .card-title a:hover { color: var(--msf-red); }

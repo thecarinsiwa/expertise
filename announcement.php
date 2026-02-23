@@ -3,7 +3,8 @@ session_start();
 $pageTitle = 'Actualité';
 $organisation = null;
 $announcement = null;
-$baseUrl = '';
+$scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
+$baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
 
@@ -21,7 +22,7 @@ try {
     }
 
     $stmt = $pdo->prepare("
-        SELECT a.id, a.title, a.content, a.published_at, a.created_at, a.is_pinned,
+        SELECT a.id, a.title, a.content, a.cover_image, a.published_at, a.created_at, a.is_pinned,
                u.first_name, u.last_name
         FROM announcement a
         INNER JOIN user u ON a.author_user_id = u.id
@@ -61,13 +62,38 @@ try {
 require_once __DIR__ . '/inc/asset_url.php';
 require __DIR__ . '/inc/head.php';
 require __DIR__ . '/inc/header.php';
+$hasCover = !empty($announcement->cover_image);
+$coverUrl = $hasCover ? client_asset_url($baseUrl, $announcement->cover_image) : '';
 ?>
 
     <main class="announcement-detail mission-detail">
+        <?php if ($hasCover): ?>
+        <header class="mission-detail-hero">
+            <div class="mission-detail-hero-bg" style="background-image: url('<?= htmlspecialchars($coverUrl) ?>');"></div>
+            <div class="mission-detail-hero-overlay"></div>
+            <div class="container mission-detail-hero-content">
+                <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                </nav>
+                <span class="mission-detail-badge">Annonce</span>
+                <h1 class="mission-detail-title"><?= htmlspecialchars($announcement->title) ?></h1>
+                <p class="mission-detail-dates">
+                    <?php if ($announcement->published_at): ?>
+                        <?= date('d M Y', strtotime($announcement->published_at)) ?>
+                    <?php else: ?>
+                        <?= date('d M Y', strtotime($announcement->created_at)) ?>
+                    <?php endif; ?>
+                    <?php if (!empty($announcement->first_name) || !empty($announcement->last_name)): ?>
+                        <span class="mission-detail-updated"> · <?= htmlspecialchars(trim($announcement->first_name . ' ' . $announcement->last_name)) ?></span>
+                    <?php endif; ?>
+                </p>
+            </div>
+        </header>
+        <?php else: ?>
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark">Annonce</span>
                 <h1 class="mission-detail-title mission-detail-title--dark"><?= htmlspecialchars($announcement->title) ?></h1>
@@ -83,6 +109,7 @@ require __DIR__ . '/inc/header.php';
                 </p>
             </div>
         </div>
+        <?php endif; ?>
 
         <div class="mission-detail-body">
             <div class="container">
@@ -100,14 +127,14 @@ require __DIR__ . '/inc/header.php';
                                 <ul class="list-unstyled mb-0">
                                     <?php foreach ($recentAnnouncements as $a): ?>
                                         <li class="mb-2 pb-2 border-bottom border-light">
-                                            <a href="announcement.php?id=<?= (int) $a->id ?>" class="text-decoration-none text-dark">
+                                            <a href="<?= $baseUrl ?>announcement.php?id=<?= (int) $a->id ?>" class="text-decoration-none text-dark">
                                                 <strong class="d-block"><?= htmlspecialchars($a->title) ?></strong>
                                                 <span class="small text-muted"><?= $a->published_at ? date('d/m/Y', strtotime($a->published_at)) : date('d/m/Y', strtotime($a->created_at)) ?></span>
                                             </a>
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
-                                <a href="news.php" class="btn btn-view-all btn-sm mt-2">Toutes les actualités</a>
+                                <a href="<?= $baseUrl ?>news.php" class="btn btn-view-all btn-sm mt-2">Toutes les actualités</a>
                             </div>
                         <?php endif; ?>
                     </aside>

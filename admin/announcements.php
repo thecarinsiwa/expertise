@@ -140,19 +140,52 @@ if ($pdo) {
             $published_at = trim($_POST['published_at'] ?? '') ?: null;
             $expires_at = trim($_POST['expires_at'] ?? '') ?: null;
 
+            $cover_image = ($id > 0 && $detail && isset($detail->cover_image)) ? $detail->cover_image : null;
+            if (!empty($_FILES['cover_image']['name'])) {
+                $target_dir = __DIR__ . '/../uploads/announcements/covers/';
+                if (!is_dir($target_dir)) mkdir($target_dir, 0755, true);
+                $ext = strtolower(pathinfo($_FILES['cover_image']['name'], PATHINFO_EXTENSION));
+                $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                if (in_array($ext, $allowed)) {
+                    $fname = 'cover_' . time() . '_' . uniqid() . '.' . $ext;
+                    $rel_path = 'uploads/announcements/covers/' . $fname;
+                    if (move_uploaded_file($_FILES['cover_image']['tmp_name'], $target_dir . $fname)) {
+                        $cover_image = $rel_path;
+                    }
+                }
+            }
+
             if ($title === '' || $organisation_id <= 0 || $author_user_id <= 0) {
                 $error = 'Le titre, l\'organisation et l\'auteur sont obligatoires.';
             } else {
                 try {
                     if ($id > 0) {
-                        $pdo->prepare("UPDATE announcement SET organisation_id = ?, channel_id = ?, author_user_id = ?, title = ?, content = ?, is_pinned = ?, published_at = ?, expires_at = ? WHERE id = ?")
-                            ->execute([$organisation_id, $channel_id, $author_user_id, $title, $content, $is_pinned, $published_at, $expires_at, $id]);
+                        $has_cover = false;
+                        try { $pdo->query("SELECT cover_image FROM announcement LIMIT 1"); $has_cover = true; } catch (PDOException $e) {}
+                        if ($has_cover) {
+                            $pdo->prepare("UPDATE announcement SET organisation_id = ?, channel_id = ?, author_user_id = ?, title = ?, content = ?, cover_image = ?, is_pinned = ?, published_at = ?, expires_at = ? WHERE id = ?")
+                                ->execute([$organisation_id, $channel_id, $author_user_id, $title, $content, $cover_image, $is_pinned, $published_at, $expires_at, $id]);
+                        } else {
+                            $pdo->prepare("UPDATE announcement SET organisation_id = ?, channel_id = ?, author_user_id = ?, title = ?, content = ?, is_pinned = ?, published_at = ?, expires_at = ? WHERE id = ?")
+                                ->execute([$organisation_id, $channel_id, $author_user_id, $title, $content, $is_pinned, $published_at, $expires_at, $id]);
+                        }
                         $success = 'Annonce mise à jour.';
                         $action = 'view';
+                        $stmt = $pdo->prepare("SELECT a.*, o.name AS organisation_name, c.name AS channel_name, u.first_name AS author_first_name, u.last_name AS author_last_name, u.email AS author_email FROM announcement a LEFT JOIN organisation o ON a.organisation_id = o.id LEFT JOIN channel c ON a.channel_id = c.id LEFT JOIN user u ON a.author_user_id = u.id WHERE a.id = ?");
+                        $stmt->execute([$id]);
+                        $detail = $stmt->fetch();
                     } else {
-                        $pdo->prepare("INSERT INTO announcement (organisation_id, channel_id, author_user_id, title, content, is_pinned, published_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-                            ->execute([$organisation_id, $channel_id, $author_user_id, $title, $content, $is_pinned, $published_at, $expires_at]);
-                        header('Location: announcements.php?id=' . $pdo->lastInsertId() . '&msg=created');
+                        $has_cover = false;
+                        try { $pdo->query("SELECT cover_image FROM announcement LIMIT 1"); $has_cover = true; } catch (PDOException $e) {}
+                        if ($has_cover) {
+                            $pdo->prepare("INSERT INTO announcement (organisation_id, channel_id, author_user_id, title, content, cover_image, is_pinned, published_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+                                ->execute([$organisation_id, $channel_id, $author_user_id, $title, $content, $cover_image, $is_pinned, $published_at, $expires_at]);
+                        } else {
+                            $pdo->prepare("INSERT INTO announcement (organisation_id, channel_id, author_user_id, title, content, is_pinned, published_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+                                ->execute([$organisation_id, $channel_id, $author_user_id, $title, $content, $is_pinned, $published_at, $expires_at]);
+                        }
+                        $newId = (int) $pdo->lastInsertId();
+                        header('Location: announcements.php?action=edit&id=' . $newId . '&msg=created');
                         exit;
                     }
                 } catch (PDOException $e) {
@@ -314,9 +347,19 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php if ($isForm): ?>
     <div class="admin-card admin-section-card">
         <h5 class="card-title mb-4"><i class="bi bi-megaphone"></i> <?= $id ? 'Modifier l\'annonce' : 'Nouvelle annonce' ?></h5>
-        <form method="POST" action="<?= $id ? 'announcements.php?action=edit&id=' . $id : 'announcements.php?action=add' ?>">
+        <form method="POST" action="<?= $id ? 'announcements.php?action=edit&id=' . $id : 'announcements.php?action=add' ?>" enctype="multipart/form-data">
             <input type="hidden" name="save_announcement" value="1">
             <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label fw-bold">Photo de couverture</label>
+                    <?php if ($detail && !empty($detail->cover_image)): ?>
+                    <div class="mb-2">
+                        <img src="../<?= htmlspecialchars($detail->cover_image) ?>" alt="Couverture" class="rounded border" style="max-height: 180px; object-fit: cover;">
+                        <p class="form-text small mb-0">Image actuelle. Choisir un nouveau fichier pour la remplacer.</p>
+                    </div>
+                    <?php endif; ?>
+                    <input type="file" name="cover_image" class="form-control" accept="image/*">
+                </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Organisation *</label>
                     <select name="organisation_id" class="form-select" required>
@@ -379,6 +422,12 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php elseif ($detail): ?>
     <div class="admin-card admin-section-card mb-4">
         <h5 class="card-title"><i class="bi bi-megaphone"></i> Informations annonce</h5>
+        <?php if (!empty($detail->cover_image)): ?>
+        <div class="mb-3">
+            <strong>Photo de couverture</strong>
+            <div class="mt-1"><img src="../<?= htmlspecialchars($detail->cover_image) ?>" alt="Couverture" class="rounded border" style="max-height: 200px; object-fit: cover;"></div>
+        </div>
+        <?php endif; ?>
         <table class="admin-table mb-0">
             <tr><th style="width:180px;">Titre</th><td><?= htmlspecialchars($detail->title) ?></td></tr>
             <tr><th>Organisation</th><td><?= htmlspecialchars($detail->organisation_name ?? '—') ?></td></tr>
