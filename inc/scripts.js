@@ -109,3 +109,20 @@
         });
     });
 })();
+
+/**
+ * Hero carousel : pause quand l’onglet n’est pas visible (économise les ressources)
+ */
+(function () {
+    var carouselEl = document.getElementById('heroAnnouncementsCarousel');
+    if (!carouselEl || typeof bootstrap === 'undefined' || !bootstrap.Carousel) return;
+    function onVisibilityChange() {
+        var instance = bootstrap.Carousel.getInstance(carouselEl);
+        if (!instance) return;
+        if (document.hidden) instance.pause();
+        else instance.cycle();
+    }
+    if (typeof document.hidden !== 'undefined') {
+        document.addEventListener('visibilitychange', onVisibilityChange);
+    }
+})();

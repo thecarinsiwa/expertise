@@ -1,30 +1,211 @@
 <?php
 session_start();
 $pageTitle = 'Médias & ressources';
-$baseUrl = '';
-require_once __DIR__ . '/inc/db.php';
+$scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
+$baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 $organisation = null;
+$categoriesWithDocs = [];
+$attachments = [];
+
+require_once __DIR__ . '/inc/db.php';
+
 if ($pdo) {
-    $stmt = $pdo->query("SELECT id, name, description FROM organisation WHERE is_active = 1 LIMIT 1");
+    $stmt = $pdo->query("SELECT id, name, code, description FROM organisation WHERE is_active = 1 LIMIT 1");
     if ($row = $stmt->fetch()) $organisation = $row;
     if ($organisation) $pageTitle = 'Médias & ressources — ' . $organisation->name;
+
+    $orgId = $organisation ? (int) $organisation->id : 0;
+    if ($orgId) {
+        $stmt = $pdo->prepare("
+            SELECT c.id, c.name, c.code, c.description
+            FROM document_category c
+            INNER JOIN document d ON d.document_category_id = c.id AND (d.organisation_id = ? OR d.organisation_id IS NULL)
+            WHERE (c.organisation_id = ? OR c.organisation_id IS NULL)
+            GROUP BY c.id, c.name, c.code, c.description
+            ORDER BY c.name
+        ");
+        $stmt->execute([$orgId, $orgId]);
+        $allCategories = $stmt->fetchAll(PDO::FETCH_OBJ);
+
+        foreach ($allCategories as $cat) {
+            $stmt2 = $pdo->prepare("
+                SELECT d.id, d.title, d.description, d.document_type, d.current_version_id
+                FROM document d
+                WHERE d.document_category_id = ? AND (d.organisation_id = ? OR d.organisation_id IS NULL)
+                ORDER BY d.updated_at DESC, d.title
+            ");
+            $stmt2->execute([$cat->id, $orgId]);
+            $docs = $stmt2->fetchAll(PDO::FETCH_OBJ);
+            $versionIds = array_filter(array_map(function ($d) { return (int) $d->current_version_id; }, $docs));
+            $versions = [];
+            if (!empty($versionIds)) {
+                $ph = implode(',', array_fill(0, count($versionIds), '?'));
+                $stmt3 = $pdo->prepare("SELECT id, document_id, file_path, file_name, file_size, mime_type FROM document_version WHERE id IN ($ph)");
+                $stmt3->execute(array_values($versionIds));
+                while ($v = $stmt3->fetch(PDO::FETCH_OBJ)) {
+                    $versions[(int) $v->id] = $v;
+                }
+            }
+            foreach ($docs as $d) {
+                $d->version = isset($d->current_version_id) ? ($versions[(int) $d->current_version_id] ?? null) : null;
+            }
+            $cat->documents = $docs;
+            $categoriesWithDocs[] = $cat;
+        }
+
+        $stmt = $pdo->prepare("
+            SELECT a.id, a.attachable_type, a.attachable_id, a.file_name, a.file_path, a.file_size, a.mime_type, a.created_at,
+                   m.title AS mission_title,
+                   an.title AS announcement_title
+            FROM attachment a
+            LEFT JOIN mission m ON a.attachable_type = 'mission' AND m.id = a.attachable_id AND m.organisation_id = ?
+            LEFT JOIN announcement an ON a.attachable_type = 'announcement' AND an.id = a.attachable_id AND an.organisation_id = ?
+            WHERE (a.attachable_type = 'mission' AND m.id IS NOT NULL)
+               OR (a.attachable_type = 'announcement' AND an.id IS NOT NULL)
+            ORDER BY a.created_at DESC
+            LIMIT 50
+        ");
+        $stmt->execute([$orgId, $orgId]);
+        $attachments = $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
 }
+
+require_once __DIR__ . '/inc/asset_url.php';
 require_once __DIR__ . '/inc/page-static.php';
+
+function format_file_size($bytes) {
+    if ($bytes === null || $bytes === '') return '';
+    $bytes = (int) $bytes;
+    if ($bytes < 1024) return $bytes . ' o';
+    if ($bytes < 1048576) return round($bytes / 1024, 1) . ' Ko';
+    return round($bytes / 1048576, 1) . ' Mo';
+}
 ?>
-    <section class="py-5 page-content">
+    <section class="py-5 page-content media-resources-page">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
+                <a href="<?= htmlspecialchars($baseUrl) ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
             </nav>
             <h1 class="section-heading mb-4">Médias & ressources</h1>
-            <div class="content-prose">
+
+            <div class="content-prose mb-5">
                 <p>Documents, publications et ressources utiles.</p>
                 <p>Cette section rassemble les supports de communication, rapports et documents mis à disposition du public.</p>
-                <div class="mt-4">
-                    <a href="index.php#actualites" class="btn btn-view-all me-2">Actualités</a>
-                    <a href="reports-finances.php" class="btn btn-view-all">Rapports et finances</a>
+                <div class="mt-4 d-flex flex-wrap gap-2">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>index.php#actualites" class="btn btn-view-all">Actualités</a>
+                    <a href="<?= htmlspecialchars($baseUrl) ?>reports-finances.php" class="btn btn-view-all">Rapports et finances</a>
+                    <a href="<?= htmlspecialchars($baseUrl) ?>responsibility.php" class="btn btn-view-all">Responsabilité</a>
                 </div>
             </div>
+
+            <?php if (!empty($categoriesWithDocs)): ?>
+            <section class="media-documents mb-5" aria-labelledby="media-docs-heading">
+                <h2 id="media-docs-heading" class="section-heading mb-4">Documents par catégorie</h2>
+                <?php foreach ($categoriesWithDocs as $cat): ?>
+                <div class="card border-0 shadow-sm mb-4 media-category-card">
+                    <div class="card-body p-4">
+                        <h3 class="h5 mb-2">
+                            <i class="bi bi-folder2-open text-primary me-2"></i>
+                            <?= htmlspecialchars($cat->name) ?>
+                            <?php if (!empty($cat->code)): ?>
+                            <span class="text-muted fw-normal small">(<?= htmlspecialchars($cat->code) ?>)</span>
+                            <?php endif; ?>
+                        </h3>
+                        <?php if (!empty($cat->description)): ?>
+                        <p class="text-muted small mb-3"><?= nl2br(htmlspecialchars($cat->description)) ?></p>
+                        <?php endif; ?>
+                        <div class="row g-3">
+                            <?php foreach ($cat->documents as $doc): ?>
+                            <div class="col-12 col-md-6 col-lg-4">
+                                <div class="media-doc-item card border-0 bg-light h-100">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi bi-file-earmark-text text-primary mt-1"></i>
+                                            <div class="flex-grow-1 min-w-0">
+                                                <span class="fw-semibold d-block text-truncate" title="<?= htmlspecialchars($doc->title) ?>"><?= htmlspecialchars($doc->title) ?></span>
+                                                <?php if (!empty($doc->document_type)): ?>
+                                                <span class="badge bg-secondary bg-opacity-25 text-dark small"><?= htmlspecialchars($doc->document_type) ?></span>
+                                                <?php endif; ?>
+                                                <?php if (!empty($doc->version)): ?>
+                                                <div class="mt-2">
+                                                    <?php
+                                                    $fileUrl = client_asset_url($baseUrl, $doc->version->file_path);
+                                                    $fileName = !empty($doc->version->file_name) ? $doc->version->file_name : basename($doc->version->file_path);
+                                                    $sz = format_file_size($doc->version->file_size ?? null);
+                                                    ?>
+                                                    <a href="<?= htmlspecialchars($fileUrl) ?>" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" download="<?= htmlspecialchars($fileName) ?>">
+                                                        <i class="bi bi-download me-1"></i> Télécharger<?= $sz ? ' (' . $sz . ')' : '' ?>
+                                                    </a>
+                                                </div>
+                                                <?php endif; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+            </section>
+            <?php endif; ?>
+
+            <?php if (!empty($attachments)): ?>
+            <section class="media-attachments mb-5" aria-labelledby="media-attachments-heading">
+                <h2 id="media-attachments-heading" class="section-heading mb-4">Fichiers joints (missions & annonces)</h2>
+                <p class="text-muted mb-4">Documents attachés aux missions et aux actualités.</p>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle media-attachments-table">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fichier</th>
+                                <th>Type</th>
+                                <th>Lié à</th>
+                                <th class="text-end">Taille</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($attachments as $att): ?>
+                            <?php
+                            $fileUrl = client_asset_url($baseUrl, $att->file_path);
+                            $parentTitle = $att->attachable_type === 'mission' ? ($att->mission_title ?? 'Mission #' . $att->attachable_id) : ($att->announcement_title ?? 'Annonce #' . $att->attachable_id);
+                            $parentUrl = $att->attachable_type === 'mission'
+                                ? $baseUrl . 'mission.php?id=' . (int) $att->attachable_id
+                                : $baseUrl . 'announcement.php?id=' . (int) $att->attachable_id;
+                            $typeLabel = $att->attachable_type === 'mission' ? 'Mission' : 'Annonce';
+                            ?>
+                            <tr>
+                                <td>
+                                    <i class="bi bi-paperclip text-muted me-2"></i>
+                                    <span title="<?= htmlspecialchars($att->file_name) ?>"><?= htmlspecialchars($att->file_name) ?></span>
+                                </td>
+                                <td><span class="badge bg-light text-dark"><?= htmlspecialchars($att->mime_type ?? '—') ?></span></td>
+                                <td>
+                                    <a href="<?= htmlspecialchars($parentUrl) ?>"><?= htmlspecialchars($parentTitle) ?></a>
+                                    <span class="text-muted small">(<?= $typeLabel ?>)</span>
+                                </td>
+                                <td class="text-end text-muted small"><?= format_file_size($att->file_size) ?></td>
+                                <td class="text-end">
+                                    <a href="<?= htmlspecialchars($fileUrl) ?>" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" download="<?= htmlspecialchars($att->file_name) ?>">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <?php endif; ?>
+
+            <?php if (empty($categoriesWithDocs) && empty($attachments)): ?>
+            <div class="alert alert-light border text-muted mb-0">
+                <i class="bi bi-info-circle me-2"></i>
+                Aucun document ni fichier joint pour le moment. Les ressources apparaîtront ici une fois publiées depuis l’administration.
+            </div>
+            <?php endif; ?>
         </div>
     </section>
 <?php require __DIR__ . '/inc/footer.php'; ?>

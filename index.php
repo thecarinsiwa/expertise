@@ -120,9 +120,9 @@ require __DIR__ . '/inc/header.php';
 ?>
 
     <!-- Hero : carousel des 3 dernières annonces -->
-    <section class="hero hero-carousel <?= count($heroAnnouncements) > 0 ? 'hero-has-cover' : 'hero-fallback' ?>">
+    <section class="hero hero-carousel <?= count($heroAnnouncements) > 0 ? 'hero-has-cover' : 'hero-fallback' ?>" aria-label="Annonces à la une">
         <?php if (count($heroAnnouncements) > 0): ?>
-        <div id="heroAnnouncementsCarousel" class="carousel slide carousel-fade h-100" data-bs-ride="carousel" data-bs-interval="6000">
+        <div id="heroAnnouncementsCarousel" class="carousel slide carousel-fade h-100" role="region" aria-roledescription="carousel" aria-label="Carousel des annonces" data-bs-ride="carousel" data-bs-interval="6000" data-bs-pause="hover" data-bs-wrap="true">
             <div class="carousel-inner h-100">
                 <?php foreach ($heroAnnouncements as $idx => $ann): 
                     $slideCover = !empty($ann->cover_image) ? client_asset_url($baseUrl, $ann->cover_image) : '';
@@ -134,18 +134,20 @@ require __DIR__ . '/inc/header.php';
                         $slideDesc = mb_substr($slideDesc, 0, 220) . (mb_strlen($slideDesc) > 220 ? '…' : '');
                     }
                     $slideDate = $ann->published_at ? date('d M Y', strtotime($ann->published_at)) : ($ann->created_at ? date('d M Y', strtotime($ann->created_at)) : '');
+                    $slideTitle = htmlspecialchars($ann->title);
                 ?>
-                <div class="carousel-item h-100 <?= $idx === 0 ? 'active' : '' ?>">
+                <div class="carousel-item h-100 <?= $idx === 0 ? 'active' : '' ?>" role="group" aria-roledescription="slide" aria-label="<?= $slideTitle ?>" data-bs-interval="6000">
                     <?php if ($slideCover): ?>
-                    <div class="hero-bg" style="background-image: url('<?= htmlspecialchars($slideCover) ?>');"></div>
+                    <div class="hero-bg hero-bg-img" style="background-image: url('<?= htmlspecialchars($slideCover) ?>');"></div>
                     <?php else: ?>
                     <div class="hero-bg hero-bg-default"></div>
                     <?php endif; ?>
+                    <div class="hero-slide-overlay" aria-hidden="true"></div>
                     <div class="container h-100 d-flex align-items-end">
                         <div class="row w-100 align-items-end">
-                            <div class="col-lg-7">
+                            <div class="col-lg-7 hero-slide-content">
                                 <span class="badge-location d-block mb-2">Annonce</span>
-                                <h1 class="mb-3"><?= htmlspecialchars($ann->title) ?></h1>
+                                <h1 class="mb-3"><?= $slideTitle ?></h1>
                                 <p class="meta mb-2"><?= $slideDate ?></p>
                                 <?php if ($slideDesc !== ''): ?>
                                 <p class="lead mb-4"><?= htmlspecialchars($slideDesc) ?></p>
@@ -158,15 +160,15 @@ require __DIR__ . '/inc/header.php';
                 <?php endforeach; ?>
             </div>
             <?php if (count($heroAnnouncements) > 1): ?>
-            <button class="carousel-control-prev" type="button" data-bs-target="#heroAnnouncementsCarousel" data-bs-slide="prev" aria-label="Précédent">
+            <button class="carousel-control-prev" type="button" data-bs-target="#heroAnnouncementsCarousel" data-bs-slide="prev" aria-label="Annonce précédente">
                 <span class="carousel-control-prev-icon" aria-hidden="true"></span>
             </button>
-            <button class="carousel-control-next" type="button" data-bs-target="#heroAnnouncementsCarousel" data-bs-slide="next" aria-label="Suivant">
+            <button class="carousel-control-next" type="button" data-bs-target="#heroAnnouncementsCarousel" data-bs-slide="next" aria-label="Annonce suivante">
                 <span class="carousel-control-next-icon" aria-hidden="true"></span>
             </button>
-            <div class="carousel-indicators">
+            <div class="carousel-indicators" role="tablist">
                 <?php foreach ($heroAnnouncements as $idx => $ann): ?>
-                <button type="button" data-bs-target="#heroAnnouncementsCarousel" data-bs-slide-to="<?= $idx ?>" <?= $idx === 0 ? 'class="active" aria-current="true"' : '' ?> aria-label="Annonce <?= $idx + 1 ?>"></button>
+                <button type="button" role="tab" data-bs-target="#heroAnnouncementsCarousel" data-bs-slide-to="<?= $idx ?>" <?= $idx === 0 ? 'class="active" aria-current="true"' : '' ?> aria-label="Annonce <?= $idx + 1 ?> : <?= htmlspecialchars(mb_substr($ann->title, 0, 50)) ?><?= mb_strlen($ann->title) > 50 ? '…' : '' ?>" aria-selected="<?= $idx === 0 ? 'true' : 'false' ?>"></button>
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>

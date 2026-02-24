@@ -203,9 +203,24 @@ body, html {
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
+    transition: opacity 0.6s ease;
+}
+.hero-bg.hero-bg-img {
+    animation: hero-bg-zoom 20s ease-out infinite alternate;
+}
+@keyframes hero-bg-zoom {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.08); }
 }
 .hero-bg-default {
     background: linear-gradient(135deg, var(--msf-blue-dark) 0%, #2d2d4e 100%);
+}
+.hero-slide-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
+    pointer-events: none;
 }
 .hero::before { z-index: 1; }
 /* L'overlay ne doit pas bloquer les clics sur le carousel (bouton Lire la suite) */
@@ -213,18 +228,39 @@ body, html {
 
 /* Hero carousel (3 dernières annonces) */
 .hero-carousel { position: relative; }
-.hero-carousel .carousel { position: absolute; inset: 0; z-index: 0; }
-.hero-carousel .carousel-inner { height: 100%; }
+.hero-carousel.hero-has-cover { min-height: 70vh; }
+.hero-carousel .carousel { position: absolute; inset: 0; z-index: 0; min-height: 70vh; }
+.hero-carousel .carousel-inner { height: 100%; min-height: 70vh; }
 .hero-carousel .carousel-item { position: relative; min-height: 70vh; height: 100%; }
 .hero-carousel .carousel-item .hero-bg { position: absolute; inset: 0; z-index: 0; }
-.hero-carousel .carousel-item .container { position: relative; z-index: 2; padding-bottom: 3rem; }
+.hero-carousel .carousel-item .container { position: relative; z-index: 2; padding-bottom: 3rem; pointer-events: auto; }
+/* Contrôles prev/next */
 .hero-carousel .carousel-control-prev,
-.hero-carousel .carousel-control-next { z-index: 3; width: 4rem; opacity: 0.9; }
+.hero-carousel .carousel-control-next {
+    z-index: 3; width: 4rem; height: 4rem; margin: auto 0.5rem;
+    opacity: 0.85; pointer-events: auto;
+    background: rgba(0,0,0,0.25); border-radius: 50%;
+    transition: opacity 0.2s ease, background 0.2s ease;
+}
 .hero-carousel .carousel-control-prev:hover,
-.hero-carousel .carousel-control-next:hover { opacity: 1; }
-.hero-carousel .carousel-indicators { z-index: 3; margin-bottom: 1.5rem; }
-.hero-carousel .carousel-indicators button { width: 10px; height: 10px; border-radius: 50%; background-color: rgba(255,255,255,0.6); border: none; }
-.hero-carousel .carousel-indicators button.active { background-color: #fff; }
+.hero-carousel .carousel-control-next:hover { opacity: 1; background: rgba(0,0,0,0.4); }
+.hero-carousel .carousel-control-prev:focus-visible,
+.hero-carousel .carousel-control-next:focus-visible {
+    outline: 2px solid #fff; outline-offset: 2px;
+}
+/* Indicateurs */
+.hero-carousel .carousel-indicators { z-index: 3; margin-bottom: 1.5rem; pointer-events: auto; gap: 0.5rem; }
+.hero-carousel .carousel-indicators button {
+    width: 10px; height: 10px; border-radius: 50%;
+    background-color: rgba(255,255,255,0.5); border: 2px solid rgba(255,255,255,0.8);
+    cursor: pointer; transition: transform 0.2s ease, background 0.2s ease;
+}
+.hero-carousel .carousel-indicators button:hover { background-color: rgba(255,255,255,0.8); transform: scale(1.15); }
+.hero-carousel .carousel-indicators button.active { background-color: #fff; transform: scale(1.2); }
+.hero-carousel .carousel-indicators button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+/* Animation légère du contenu à l’affichage du slide */
+.hero-carousel .carousel-item .hero-slide-content { opacity: 0; transform: translateY(12px); transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s; }
+.hero-carousel .carousel-item.active .hero-slide-content { opacity: 1; transform: translateY(0); }
 .hero .container { position: relative; z-index: 1; min-height: 70vh; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 3rem; }
 .hero .badge-location { color: rgba(255,255,255,0.85); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
 .hero h1 { color: #fff; font-weight: 700; font-size: clamp(1.75rem, 4vw, 2.75rem); text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
@@ -549,3 +585,51 @@ body, html {
 .page-content .content-prose ul { margin-bottom: 1.25rem; padding-left: 1.5rem; }
 .page-content .content-prose a { color: var(--pam-blue); text-decoration: none; }
 .page-content .content-prose a:hover { text-decoration: underline; }
+
+/* About page – organisation & structure (Organizational Management) */
+.about-page .about-org-description { font-size: 1.05rem; line-height: 1.75; color: #333; max-width: 720px; }
+.about-page .about-contact-card { max-width: 560px; }
+.about-page .about-contact-card a { color: var(--msf-blue-dark); font-weight: 500; }
+.about-page .about-contact-card a:hover { color: var(--msf-red); }
+.about-structure-icon { font-size: 1.5rem; flex-shrink: 0; }
+.about-structure-block { border-radius: 10px; transition: box-shadow 0.2s ease; }
+.about-structure-block:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
+.about-services-list { border-left: 2px solid rgba(29, 28, 62, 0.15); padding-left: 1rem; }
+.about-service-item { padding-left: 0.25rem; }
+.about-service-name { color: var(--msf-blue-dark); }
+.about-units-list { font-size: 0.9rem; color: #555; }
+.about-unit-item { border-bottom: none !important; }
+.about-entities-list li:last-child { border-bottom: none !important; }
+.about-entities .about-entities-list { margin-bottom: 0; }
+@media (max-width: 767.98px) {
+    .about-page .about-contact-card .row { --bs-gutter-x: 0.75rem; }
+    .about-structure-block .card-body { padding: 1rem !important; }
+    .about-services-list { padding-left: 0.75rem; }
+    .about-units-list { margin-left: 0.5rem !important; }
+}
+
+/* Responsibility page – documents & engagements */
+.responsibility-page .responsibility-category-card { border-radius: 10px; transition: box-shadow 0.2s ease; }
+.responsibility-page .responsibility-category-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
+.responsibility-doc-item:last-child { border-bottom: none !important; }
+.responsibility-commitment-card { border-radius: 10px; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.responsibility-commitment-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.08) !important; }
+.responsibility-commitment-icon { font-size: 2rem; }
+@media (max-width: 767.98px) {
+    .responsibility-page .responsibility-category-card .card-body { padding: 1rem !important; }
+    .responsibility-commitment-card .card-body { padding: 1.25rem !important; }
+}
+
+/* Media & resources page */
+.media-resources-page .media-category-card { border-radius: 10px; transition: box-shadow 0.2s ease; }
+.media-resources-page .media-category-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
+.media-resources-page .media-doc-item { border-radius: 8px; transition: box-shadow 0.2s ease; }
+.media-resources-page .media-doc-item:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.media-resources-page .media-attachments-table td a { color: var(--msf-blue-dark); text-decoration: none; }
+.media-resources-page .media-attachments-table td a:hover { text-decoration: underline; }
+@media (max-width: 767.98px) {
+    .media-resources-page .media-category-card .card-body { padding: 1rem !important; }
+    .media-resources-page .media-attachments-table { font-size: 0.9rem; }
+    .media-resources-page .media-attachments-table th:nth-child(2),
+    .media-resources-page .media-attachments-table td:nth-child(2) { display: none; }
+}
