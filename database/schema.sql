@@ -787,6 +787,12 @@ CREATE TABLE IF NOT EXISTS `announcement` (
   CONSTRAINT `fk_announcement_author` FOREIGN KEY (`author_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Lier les conversations à une annonce (intégré depuis migrate_conversation_announcement.sql)
+ALTER TABLE `conversation`
+  ADD COLUMN `announcement_id` INT UNSIGNED DEFAULT NULL AFTER `channel_id`,
+  ADD KEY `idx_conversation_announcement` (`announcement_id`),
+  ADD CONSTRAINT `fk_conversation_announcement` FOREIGN KEY (`announcement_id`) REFERENCES `announcement` (`id`) ON DELETE SET NULL;
+
 CREATE TABLE IF NOT EXISTS `comment` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `user_id` INT UNSIGNED NOT NULL,

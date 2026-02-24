@@ -573,7 +573,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                         <?php endforeach; ?>
                     </ul>
                 <?php else: ?>
-                    <p class="text-muted mb-0">Aucune conversation liée.<?= !empty($conversation_has_announcement_link) ? ' Créez-en une avec le formulaire ci-dessus.' : ' Exécutez la migration <code>migrate_conversation_announcement.sql</code> pour lier des conversations à cette annonce.' ?></p>
+                    <p class="text-muted mb-0">Aucune conversation liée.<?= !empty($conversation_has_announcement_link) ? ' Créez-en une avec le formulaire ci-dessus.' : ' Le schéma <code>database/schema.sql</code> inclut la liaison conversation–annonce.' ?></p>
                 <?php endif; ?>
             </div>
         </div>

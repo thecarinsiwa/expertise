@@ -51,6 +51,7 @@ $EXPECTED_TABLES = [
     'mission_type' => 'Gestion de missions',
     'mission_status' => 'Gestion de missions',
     'mission' => 'Gestion de missions',
+    'mission_bailleur' => 'Gestion de missions',
     'mission_order' => 'Gestion de missions',
     'objective' => 'Gestion de missions',
     'mission_plan' => 'Gestion de missions',
@@ -107,7 +108,17 @@ if ($action === 'init_db') {
             // Exécuter le SQL instruction par instruction pour éviter les erreurs PDO::exec avec plusieurs statements
             $statements = array_filter(array_map('trim', explode(';', $sql)));
             foreach ($statements as $stmt) {
-                $pdo->exec($stmt);
+                if ($stmt === '') continue;
+                try {
+                    $pdo->exec($stmt);
+                } catch (PDOException $e) {
+                    // Ignorer colonne/clé déjà existantes (schéma ré-appliqué)
+                    $msg = $e->getMessage();
+                    if (strpos($msg, 'Duplicate column') !== false || strpos($msg, 'Duplicate key') !== false || strpos($msg, 'already exists') !== false) {
+                        continue;
+                    }
+                    throw $e;
+                }
             }
 
             $actionMsg = 'Base de données et schéma initialisés avec succès !';
@@ -930,7 +941,7 @@ function humanSize(int $bytes): string
             <span class="sep">|</span>
             <span style="font-size:.8rem;color:var(--muted);">
                 <i class="bi bi-info-circle"></i>
-                Schéma source : <code style="color:var(--yellow)">database/schema_final.sql</code>
+                Schéma source : <code style="color:var(--yellow)">database/schema.sql</code>
             </span>
         </div>
     <?php endif; ?>

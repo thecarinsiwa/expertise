@@ -3,7 +3,7 @@ require_once __DIR__ . '/../admin/inc/db.php';
 $stmt = $pdo->query("SHOW TABLES");
 print_r($stmt->fetchAll(PDO::FETCH_COLUMN));
 
-$tables = ['mission_order', 'mission_report', 'mission_expense'];
+$tables = ['mission_order', 'mission_report', 'mission_expense', 'mission_bailleur', 'conversation'];
 foreach ($tables as $t) {
     try {
         echo "\nTable: $t\n";

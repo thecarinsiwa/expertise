@@ -2,6 +2,7 @@
 /**
  * Expertise - Correctif de la structure de la base de données
  * Ce script ajoute les colonnes manquantes dans les tables existantes.
+ * Pour une installation neuve, utiliser database/schema.sql (ou ?action=init_db dans l'API).
  */
 
 $DB_HOST = 'localhost';
