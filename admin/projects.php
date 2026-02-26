@@ -2,6 +2,7 @@
 $pageTitle = 'Projets & Tâches – Administration';
 $currentNav = 'projects';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.projects.view');
 require __DIR__ . '/inc/db.php';
 
 $list = [];

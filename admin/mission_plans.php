@@ -3,6 +3,7 @@
  * Gestion des Plannings de Missions (Steps/Étapes)
  */
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.mission_plans.view');
 require __DIR__ . '/inc/db.php';
 
 $pageTitle = 'Plannings de Mission – Administration';

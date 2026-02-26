@@ -2,6 +2,7 @@
 $pageTitle = 'Rôles & Accès – Administration';
 $currentNav = 'roles';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.roles.view');
 require __DIR__ . '/inc/db.php';
 
 $rolesList = [];
@@ -22,6 +23,7 @@ if ($pdo) {
     // --- TRAITEMENT POST ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['delete_id'])) {
+            require_permission('admin.roles.delete');
             $delId = (int) $_POST['delete_id'];
             $pdo->prepare("DELETE FROM role WHERE id = ?")->execute([$delId]);
             header('Location: roles.php?msg=deleted');
@@ -38,6 +40,7 @@ if ($pdo) {
                 $error = 'Nom et code sont obligatoires.';
             } else {
                 if ($id > 0) {
+                    require_permission('admin.roles.modify');
                     $stmt = $pdo->prepare("UPDATE role SET name = ?, code = ?, description = ?, organisation_id = ? WHERE id = ?");
                     $stmt->execute([$name, $code, $description ?: null, $organisation_id, $id]);
                     $pdo->prepare("DELETE FROM role_permission WHERE role_id = ?")->execute([$id]);
@@ -50,6 +53,7 @@ if ($pdo) {
                     $success = 'Rôle mis à jour.';
                     $action = 'view';
                 } else {
+                    require_permission('admin.roles.add');
                     $stmt = $pdo->prepare("INSERT INTO role (name, code, description, organisation_id, is_system) VALUES (?, ?, ?, ?, 0)");
                     $stmt->execute([$name, $code, $description ?: null, $organisation_id]);
                     $newId = (int) $pdo->lastInsertId();
@@ -146,14 +150,14 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
         <div class="d-flex gap-2">
             <?php if ($detail && !$isForm): ?>
                 <?php if (!$detail->is_system): ?>
-                    <a href="roles.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
+                    <?php if (has_permission('admin.roles.modify')): ?><a href="roles.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+                    <?php if (has_permission('admin.roles.delete')): ?><button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal"><i class="bi bi-trash me-1"></i> Supprimer</button><?php endif; ?>
                 <?php endif; ?>
                 <a href="roles.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
                 <a href="roles.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="roles.php?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Créer un rôle</a>
+                <?php if (has_permission('admin.roles.add')): ?><a href="roles.php?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Créer un rôle</a><?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -172,7 +176,7 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
     <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
 <?php endif; ?>
 
-<?php if ($isForm): ?>
+<?php if ($isForm && (($action === 'add' && has_permission('admin.roles.add')) || ($action === 'edit' && has_permission('admin.roles.modify')))): ?>
     <!-- Formulaire Ajout / Édition rôle -->
     <div class="admin-card admin-section-card mb-4">
         <form method="POST" action="<?= $id ? 'roles.php?action=edit&id=' . $id : 'roles.php?action=add' ?>">
@@ -315,14 +319,14 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
 
         <div class="mt-4 d-flex gap-2">
             <?php if (!$detail->is_system): ?>
-                <a href="roles.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
+                <?php if (has_permission('admin.roles.modify')): ?><a href="roles.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+                <?php if (has_permission('admin.roles.delete')): ?><button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal"><i class="bi bi-trash me-1"></i> Supprimer</button><?php endif; ?>
             <?php endif; ?>
             <a href="roles.php" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
         </div>
     </div>
 
-    <?php if (!$detail->is_system): ?>
+    <?php if (!$detail->is_system && has_permission('admin.roles.delete')): ?>
     <div class="modal fade" id="deleteRoleModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content border-0 shadow">
@@ -380,8 +384,8 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                         <li><a class="dropdown-item" href="roles.php?id=<?= (int) $r->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
-                                        <li><a class="dropdown-item" href="roles.php?action=edit&id=<?= (int) $r->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
-                                        <?php if (!$r->is_system): ?>
+                                        <?php if (has_permission('admin.roles.modify')): ?><li><a class="dropdown-item" href="roles.php?action=edit&id=<?= (int) $r->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li><?php endif; ?>
+                                        <?php if (!$r->is_system && has_permission('admin.roles.delete')): ?>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form method="POST" onsubmit="return confirm('Supprimer ce rôle ?');">

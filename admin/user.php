@@ -5,6 +5,7 @@
 $pageTitle = 'Utilisateurs – Administration';
 $currentNav = 'users';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.users.view');
 require __DIR__ . '/inc/db.php';
 
 $userList = [];
@@ -25,6 +26,7 @@ if ($pdo) {
     // --- TRAITEMENT POST ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['delete_id'])) {
+            require_permission('admin.users.delete');
             $delId = (int) $_POST['delete_id'];
             if ($delId !== (int) ($_SESSION['admin_id'] ?? 0)) {
                 $pdo->prepare("DELETE FROM user WHERE id = ?")->execute([$delId]);
@@ -49,6 +51,7 @@ if ($pdo) {
                 $error = 'Adresse e-mail invalide.';
             } elseif ($id > 0) {
                 // Mise à jour
+                require_permission('admin.users.modify');
                 $check = $pdo->prepare("SELECT id FROM user WHERE email = ? AND id != ?");
                 $check->execute([$email, $id]);
                 if ($check->fetch()) {
@@ -80,6 +83,7 @@ if ($pdo) {
                 }
             } else {
                 // Création
+                require_permission('admin.users.add');
                 if ($password === '') {
                     $error = 'Un mot de passe est obligatoire pour créer un utilisateur.';
                 } elseif (strlen($password) < 8) {
@@ -181,15 +185,15 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail && !$isForm): ?>
-                <a href="user.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0)): ?>
+                <?php if (has_permission('admin.users.modify')): ?><a href="user.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+                <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0) && has_permission('admin.users.delete')): ?>
                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
                 <?php endif; ?>
                 <a href="user.php" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
                 <a href="user.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="user.php?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a>
+                <?php if (has_permission('admin.users.add')): ?><a href="user.php?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a><?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -208,7 +212,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
     <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
 <?php endif; ?>
 
-<?php if ($isForm): ?>
+<?php if ($isForm && (($action === 'add' && has_permission('admin.users.add')) || ($action === 'edit' && has_permission('admin.users.modify')))): ?>
     <div class="admin-card admin-section-card mb-4">
         <form method="POST" action="<?= $id ? 'user.php?action=edit&id=' . $id : 'user.php?action=add' ?>">
             <input type="hidden" name="save_user" value="1">
@@ -295,14 +299,14 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
             <p class="mb-0"><a href="staff.php?user_id=<?= (int) $detail->id ?>" class="btn btn-sm btn-admin-outline"><i class="bi bi-people me-1"></i> Voir la fiche personnel</a></p>
         <?php endif; ?>
         <div class="mt-4 d-flex gap-2">
-            <a href="user.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-            <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0)): ?>
+            <?php if (has_permission('admin.users.modify')): ?><a href="user.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+            <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0) && has_permission('admin.users.delete')): ?>
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
             <?php endif; ?>
             <a href="user.php" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
         </div>
     </div>
-    <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0)): ?>
+    <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0) && has_permission('admin.users.delete')): ?>
     <div class="modal fade" id="deleteUserModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content border-0 shadow">
@@ -364,7 +368,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
                                     <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                         <li><a class="dropdown-item" href="user.php?id=<?= (int) $u->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
-                                        <li><a class="dropdown-item" href="user.php?action=edit&id=<?= (int) $u->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                        <?php if (has_permission('admin.users.modify')): ?><li><a class="dropdown-item" href="user.php?action=edit&id=<?= (int) $u->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li><?php endif; ?>
                                     </ul>
                                 </div>
                             </td>
@@ -380,7 +384,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
             <i class="bi bi-people d-block mb-3" style="font-size: 3rem;"></i>
             <h5>Aucun utilisateur</h5>
             <p class="text-muted mb-4">Créez le premier compte utilisateur.</p>
-            <a href="user.php?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a>
+            <?php if (has_permission('admin.users.add')): ?><a href="user.php?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a><?php endif; ?>
         </div>
     </div>
 <?php endif; ?>

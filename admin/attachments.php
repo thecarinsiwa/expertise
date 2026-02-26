@@ -2,6 +2,7 @@
 $pageTitle = 'Pièces jointes – Administration';
 $currentNav = 'attachments';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.attachments.view');
 require __DIR__ . '/inc/db.php';
 
 $list = [];

@@ -2,6 +2,7 @@
 $pageTitle = 'Bailleurs de fonds – Administration';
 $currentNav = 'bailleurs';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.bailleurs.view');
 require __DIR__ . '/inc/db.php';
 
 $list = [];

@@ -2,6 +2,7 @@
 $pageTitle = 'Organisations – Administration';
 $currentNav = 'organisations';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.organisations.view');
 require __DIR__ . '/inc/db.php';
 
 $list = [];
@@ -16,6 +17,7 @@ if ($pdo) {
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['delete_id'])) {
+            require_permission('admin.organisations.delete');
             $delId = (int) $_POST['delete_id'];
             try {
                 $pdo->prepare("DELETE FROM organisation WHERE id = ?")->execute([$delId]);
@@ -39,11 +41,13 @@ if ($pdo) {
                 $error = 'Le nom est obligatoire.';
             } else {
                 if ($id > 0) {
+                    require_permission('admin.organisations.modify');
                     $stmt = $pdo->prepare("UPDATE organisation SET name = ?, code = ?, description = ?, address = ?, phone = ?, email = ?, website = ?, is_active = ? WHERE id = ?");
                     $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $is_active, $id]);
                     $success = 'Organisation mise à jour.';
                     $action = 'view';
                 } else {
+                    require_permission('admin.organisations.add');
                     $stmt = $pdo->prepare("INSERT INTO organisation (name, code, description, address, phone, email, website, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                     $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $is_active]);
                     header('Location: organisations.php?id=' . $pdo->lastInsertId() . '&msg=created');
@@ -118,13 +122,13 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
-                <a href="organisations.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                <?php if (has_permission('admin.organisations.modify')): ?><a href="organisations.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
                 <a href="units.php?organisation_id=<?= (int) $detail->id ?>" class="btn btn-admin-outline"><i class="bi bi-diagram-3 me-1"></i> Unités & Services</a>
                 <a href="organisations.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
                 <a href="organisations.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="organisations.php?action=add" class="btn btn-admin-primary"><i class="bi bi-building-add me-1"></i> Nouvelle organisation</a>
+                <?php if (has_permission('admin.organisations.add')): ?><a href="organisations.php?action=add" class="btn btn-admin-primary"><i class="bi bi-building-add me-1"></i> Nouvelle organisation</a><?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -161,7 +165,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
     </div>
 <?php endif; ?>
 
-<?php if ($isForm): ?>
+<?php if ($isForm && (($action === 'add' && has_permission('admin.organisations.add')) || ($action === 'edit' && has_permission('admin.organisations.modify')))): ?>
     <div class="admin-card admin-section-card">
         <form method="POST" action="<?= $id ? 'organisations.php?action=edit&id=' . $id : 'organisations.php?action=add' ?>">
             <input type="hidden" name="save_organisation" value="1">
@@ -229,12 +233,13 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             <div class="col-auto"><span class="badge bg-secondary"><?= (int)($detail->count_users ?? 0) ?> utilisateur(s)</span></div>
         </div>
         <div class="mt-4 d-flex gap-2">
-            <a href="organisations.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+            <?php if (has_permission('admin.organisations.modify')): ?><a href="organisations.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
             <a href="units.php?organisation_id=<?= (int) $detail->id ?>" class="btn btn-admin-outline"><i class="bi bi-diagram-3 me-1"></i> Unités & Services</a>
             <a href="organisations.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
-            <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteOrgModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
+            <?php if (has_permission('admin.organisations.delete')): ?><button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteOrgModal"><i class="bi bi-trash me-1"></i> Supprimer</button><?php endif; ?>
         </div>
     </div>
+    <?php if (has_permission('admin.organisations.delete')): ?>
     <div class="modal fade" id="deleteOrgModal" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content border-0 shadow">
@@ -255,6 +260,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             </div>
         </div>
     </div>
+    <?php endif; ?>
 <?php elseif (count($list) > 0): ?>
     <div class="admin-card admin-section-card">
         <div class="table-responsive">
@@ -280,8 +286,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                     <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
                                         <li><a class="dropdown-item" href="organisations.php?id=<?= (int) $o->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
-                                        <li><a class="dropdown-item" href="organisations.php?action=edit&id=<?= (int) $o->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                        <?php if (has_permission('admin.organisations.modify')): ?><li><a class="dropdown-item" href="organisations.php?action=edit&id=<?= (int) $o->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li><?php endif; ?>
                                         <li><a class="dropdown-item" href="units.php?organisation_id=<?= (int) $o->id ?>"><i class="bi bi-diagram-3 me-2"></i> Unités & Services</a></li>
+                                        <?php if (has_permission('admin.organisations.delete')): ?>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form method="POST" onsubmit="return confirm('Supprimer cette organisation ?');">
@@ -289,6 +296,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                                 <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Supprimer</button>
                                             </form>
                                         </li>
+                                        <?php endif; ?>
                                     </ul>
                                 </div>
                             </td>

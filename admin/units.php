@@ -2,6 +2,7 @@
 $pageTitle = 'Unités & Services – Administration';
 $currentNav = 'units';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.units.view');
 require __DIR__ . '/inc/db.php';
 
 $organisations = [];
@@ -61,18 +62,21 @@ if ($pdo) {
         if ($organisationId <= 0 && $currentOrg) $organisationId = (int) $currentOrg->id;
 
         if (isset($_POST['delete_department'])) {
+            require_permission('admin.units.delete');
             $id = (int) $_POST['delete_department'];
             $pdo->prepare("DELETE FROM department WHERE id = ? AND organisation_id = ?")->execute([$id, $organisationId]);
             header('Location: units.php?organisation_id=' . $organisationId . '&msg=deleted');
             exit;
         }
         if (isset($_POST['delete_service'])) {
+            require_permission('admin.units.delete');
             $id = (int) $_POST['delete_service'];
             $pdo->prepare("DELETE FROM service WHERE id = ?")->execute([$id]);
             header('Location: units.php?organisation_id=' . $organisationId . '&msg=deleted');
             exit;
         }
         if (isset($_POST['delete_unit'])) {
+            require_permission('admin.units.delete');
             $id = (int) $_POST['delete_unit'];
             $pdo->prepare("DELETE FROM unit WHERE id = ?")->execute([$id]);
             header('Location: units.php?organisation_id=' . $organisationId . '&msg=deleted');
@@ -88,10 +92,12 @@ if ($pdo) {
             $is_active = isset($_POST['is_active']) ? 1 : 0;
             if ($name !== '') {
                 if ($id > 0) {
+                    require_permission('admin.units.modify');
                     $pdo->prepare("UPDATE department SET name = ?, code = ?, description = ?, head_user_id = ?, is_active = ? WHERE id = ? AND organisation_id = ?")
                         ->execute([$name, $code, $description, $head_user_id, $is_active, $id, $organisationId]);
                     $success = 'Département mis à jour.';
                 } else {
+                    require_permission('admin.units.add');
                     $pdo->prepare("INSERT INTO department (organisation_id, name, code, description, head_user_id, is_active) VALUES (?, ?, ?, ?, ?, ?)")
                         ->execute([$organisationId, $name, $code, $description, $head_user_id, $is_active]);
                     $success = 'Département créé.';
@@ -110,10 +116,12 @@ if ($pdo) {
             $is_active = isset($_POST['is_active']) ? 1 : 0;
             if ($name !== '' && $department_id > 0) {
                 if ($id > 0) {
+                    require_permission('admin.units.modify');
                     $pdo->prepare("UPDATE service SET department_id = ?, name = ?, code = ?, description = ?, is_active = ? WHERE id = ?")
                         ->execute([$department_id, $name, $code, $description, $is_active, $id]);
                     $success = 'Service mis à jour.';
                 } else {
+                    require_permission('admin.units.add');
                     $pdo->prepare("INSERT INTO service (department_id, name, code, description, is_active) VALUES (?, ?, ?, ?, ?)")
                         ->execute([$department_id, $name, $code, $description, $is_active]);
                     $success = 'Service créé.';
@@ -132,10 +140,12 @@ if ($pdo) {
             $is_active = isset($_POST['is_active']) ? 1 : 0;
             if ($name !== '' && $service_id > 0) {
                 if ($id > 0) {
+                    require_permission('admin.units.modify');
                     $pdo->prepare("UPDATE unit SET service_id = ?, name = ?, code = ?, description = ?, is_active = ? WHERE id = ?")
                         ->execute([$service_id, $name, $code, $description, $is_active, $id]);
                     $success = 'Unité mise à jour.';
                 } else {
+                    require_permission('admin.units.add');
                     $pdo->prepare("INSERT INTO unit (service_id, name, code, description, is_active) VALUES (?, ?, ?, ?, ?)")
                         ->execute([$service_id, $name, $code, $description, $is_active]);
                     $success = 'Unité créée.';

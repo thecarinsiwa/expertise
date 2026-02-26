@@ -2,6 +2,7 @@
 $pageTitle = 'Commentaires – Administration';
 $currentNav = 'comments';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.comments.view');
 require __DIR__ . '/inc/db.php';
 
 $list = [];

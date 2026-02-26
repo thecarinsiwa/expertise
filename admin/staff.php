@@ -2,6 +2,7 @@
 $pageTitle = 'Personnel – Administration';
 $currentNav = 'staff';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.staff.view');
 require __DIR__ . '/inc/db.php';
 
 $staffList = [];

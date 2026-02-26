@@ -6,6 +6,7 @@ $pageTitle = 'Administration – Expertise';
 $currentNav = 'dashboard';
 
 require_once __DIR__ . '/inc/auth.php'; // Protection avant tout
+require_permission('admin.dashboard');
 require __DIR__ . '/inc/db.php';
 
 $stats = [

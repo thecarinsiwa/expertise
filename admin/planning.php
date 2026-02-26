@@ -5,6 +5,7 @@
 $pageTitle = 'Planning & KPI – Gestion';
 $currentNav = 'planning';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.planning.view');
 require __DIR__ . '/inc/db.php';
 
 $error = '';

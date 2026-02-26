@@ -323,85 +323,129 @@ require_once __DIR__ . '/auth.php';
             </a>
         </div>
         <nav class="admin-sidebar-nav">
+            <?php if (has_permission('admin.dashboard')): ?>
             <a href="index.php" class="nav-link<?= $currentNav === 'dashboard' ? ' active' : '' ?>">
                 <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
             </a>
+            <?php endif; ?>
 
             <div class="admin-sidebar-label">Structure</div>
+            <?php if (has_permission('admin.organisations.view')): ?>
             <a href="organisations.php" class="nav-link<?= $currentNav === 'organisations' ? ' active' : '' ?>">
                 <i class="bi bi-building"></i><span>Organisations</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.units.view')): ?>
             <a href="units.php" class="nav-link<?= $currentNav === 'units' ? ' active' : '' ?>">
                 <i class="bi bi-diagram-3"></i><span>Unités & Services</span>
             </a>
+            <?php endif; ?>
 
             <div class="admin-sidebar-label">RH & Sécurité</div>
+            <?php if (has_permission('admin.users.view')): ?>
             <a href="user.php" class="nav-link<?= $currentNav === 'users' ? ' active' : '' ?>">
                 <i class="bi bi-person-badge"></i><span>Utilisateurs</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.staff.view')): ?>
             <a href="staff.php" class="nav-link<?= $currentNav === 'staff' ? ' active' : '' ?>">
                 <i class="bi bi-people"></i><span>Personnel</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.roles.view')): ?>
             <a href="roles.php" class="nav-link<?= $currentNav === 'roles' ? ' active' : '' ?>">
                 <i class="bi bi-shield-lock"></i><span>Rôles & Accès</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.security.view')): ?>
             <a href="security.php" class="nav-link<?= $currentNav === 'security' ? ' active' : '' ?>">
                 <i class="bi bi-shield-check"></i><span>Sécurité</span>
             </a>
+            <?php endif; ?>
 
             <div class="admin-sidebar-label">Opérations</div>
+            <?php if (has_permission('admin.projects.view')): ?>
             <a href="projects.php" class="nav-link<?= $currentNav === 'projects' ? ' active' : '' ?>">
                 <i class="bi bi-kanban"></i><span>Projets & Tâches</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.programmes.view')): ?>
             <a href="programmes.php" class="nav-link<?= $currentNav === 'programmes' ? ' active' : '' ?>">
                 <i class="bi bi-folder2"></i><span>Programmes</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.portfolios.view')): ?>
             <a href="portfolios.php" class="nav-link<?= $currentNav === 'portfolios' ? ' active' : '' ?>">
                 <i class="bi bi-folder"></i><span>Portfolios</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.bailleurs.view')): ?>
             <a href="bailleurs.php" class="nav-link<?= $currentNav === 'bailleurs' ? ' active' : '' ?>">
                 <i class="bi bi-bank"></i><span>Bailleurs de fonds</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.missions.view')): ?>
             <a href="missions.php" class="nav-link<?= $currentNav === 'missions' ? ' active' : '' ?>">
                 <i class="bi bi-geo-alt"></i><span>Missions</span>
             </a>
+            <?php endif; ?>
 
         
             <div class="admin-sidebar-label">Communication</div>
+            <?php if (has_permission('admin.announcements.view')): ?>
             <a href="announcements.php" class="nav-link<?= $currentNav === 'announcements' ? ' active' : '' ?>">
                 <i class="bi bi-megaphone"></i><span>Annonces</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.channels.view')): ?>
             <a href="channels.php" class="nav-link<?= $currentNav === 'channels' ? ' active' : '' ?>">
                 <i class="bi bi-chat-dots"></i><span>Canaux</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.conversations.view')): ?>
             <a href="conversations.php" class="nav-link<?= $currentNav === 'conversations' ? ' active' : '' ?>">
                 <i class="bi bi-chat-text"></i><span>Conversations</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.notifications.view')): ?>
             <a href="notifications.php" class="nav-link<?= $currentNav === 'notifications' ? ' active' : '' ?>">
                 <i class="bi bi-bell"></i><span>Notifications</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.comments.view')): ?>
             <a href="comments.php" class="nav-link<?= $currentNav === 'comments' ? ' active' : '' ?>">
                 <i class="bi bi-chat-quote"></i><span>Commentaires</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.attachments.view')): ?>
             <a href="attachments.php" class="nav-link<?= $currentNav === 'attachments' ? ' active' : '' ?>">
                 <i class="bi bi-paperclip"></i><span>Pièces jointes</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.communication_history.view')): ?>
             <a href="communication_history.php" class="nav-link<?= $currentNav === 'communication_history' ? ' active' : '' ?>">
                 <i class="bi bi-clock-history"></i><span>Historique</span>
             </a>
+            <?php endif; ?>
 
             <div class="admin-sidebar-label">Gestion</div>
+            <?php if (has_permission('admin.documents.view')): ?>
             <a href="documents.php" class="nav-link<?= $currentNav === 'documents' ? ' active' : '' ?>">
                 <i class="bi bi-file-earmark-text"></i><span>Documents</span>
             </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.planning.view')): ?>
             <a href="planning.php" class="nav-link<?= $currentNav === 'planning' ? ' active' : '' ?>">
                 <i class="bi bi-calendar3"></i><span>Planning & KPI</span>
             </a>
+            <?php endif; ?>
 
             <div class="admin-sidebar-label">Système</div>
+            <?php if (has_permission('admin.dashboard')): ?>
             <a href="#" class="nav-link<?= $currentNav === 'settings' ? ' active' : '' ?>">
                 <i class="bi bi-gear"></i><span>Paramètres</span>
             </a>
+            <?php endif; ?>
         </nav>
         <div class="admin-sidebar-footer">
             <?php if (!empty($_SESSION['admin_email'])): ?>

@@ -55,6 +55,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['admin_email'] = $user->email;
                 $_SESSION['admin_role'] = $user->role;
 
+                // RBAC : charger les permissions de l'utilisateur (union de tous ses rôles)
+                $stmtPerm = $pdo->prepare("
+                    SELECT DISTINCT p.code
+                    FROM permission p
+                    JOIN role_permission rp ON p.id = rp.permission_id
+                    JOIN user_role ur ON ur.role_id = rp.role_id
+                    WHERE ur.user_id = ?
+                ");
+                $stmtPerm->execute([$user->id]);
+                $_SESSION['admin_permissions'] = [];
+                while ($row = $stmtPerm->fetch(PDO::FETCH_OBJ)) {
+                    $_SESSION['admin_permissions'][] = $row->code;
+                }
+
                 // Redirection sécurisée (même domaine uniquement)
                 $safe = filter_var($redirect, FILTER_VALIDATE_URL) === false
                     ? $redirect

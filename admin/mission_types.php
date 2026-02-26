@@ -3,6 +3,7 @@
  * Gestion des Types de Missions
  */
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.mission_types.view');
 require __DIR__ . '/inc/db.php';
 
 $pageTitle = 'Types de Mission – Administration';

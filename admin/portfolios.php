@@ -2,6 +2,7 @@
 $pageTitle = 'Portfolios – Administration';
 $currentNav = 'portfolios';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.portfolios.view');
 require __DIR__ . '/inc/db.php';
 
 $list = [];

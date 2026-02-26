@@ -2,6 +2,7 @@
 $pageTitle = 'Conversations – Administration';
 $currentNav = 'conversations';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.conversations.view');
 require __DIR__ . '/inc/db.php';
 
 $list = [];

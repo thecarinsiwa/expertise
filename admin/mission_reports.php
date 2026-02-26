@@ -3,6 +3,7 @@
  * Gestion des Rapports de Missions
  */
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.mission_reports.view');
 require __DIR__ . '/inc/db.php';
 
 $pageTitle = 'Rapports de Mission – Administration';

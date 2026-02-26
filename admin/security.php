@@ -2,6 +2,7 @@
 $pageTitle = 'Sécurité – Administration';
 $currentNav = 'security';
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.security.view');
 require __DIR__ . '/inc/db.php';
 
 $sessions = [];
@@ -13,9 +14,10 @@ $error = '';
 $success = '';
 
 if ($pdo) {
-    // --- TRAITEMENT POST (suppressions) ---
+    // --- TRAITEMENT POST ---
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (isset($_POST['delete_session_id'])) {
+            require_permission('admin.security.modify');
             $sid = $_POST['delete_session_id'] ?? '';
             if (preg_match('/^[a-zA-Z0-9_-]+$/', $sid)) {
                 try {
@@ -28,6 +30,7 @@ if ($pdo) {
             }
         }
         if (isset($_POST['delete_activity_id'])) {
+            require_permission('admin.security.modify');
             $aid = (int) ($_POST['delete_activity_id'] ?? 0);
             if ($aid > 0) {
                 try {
@@ -40,6 +43,7 @@ if ($pdo) {
             }
         }
         if (isset($_POST['delete_audit_id'])) {
+            require_permission('admin.security.modify');
             $aid = (int) ($_POST['delete_audit_id'] ?? 0);
             if ($aid > 0) {
                 try {
@@ -52,6 +56,7 @@ if ($pdo) {
             }
         }
         if (isset($_POST['clear_old_activity'])) {
+            require_permission('admin.security.modify');
             $days = (int) ($_POST['days'] ?? 90);
             if ($days >= 1 && $days <= 365) {
                 try {
@@ -65,6 +70,7 @@ if ($pdo) {
             }
         }
         if (isset($_POST['clear_old_audit'])) {
+            require_permission('admin.security.modify');
             $days = (int) ($_POST['days'] ?? 90);
             if ($days >= 1 && $days <= 365) {
                 try {

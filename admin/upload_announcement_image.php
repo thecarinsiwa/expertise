@@ -5,6 +5,7 @@
  */
 header('Content-Type: application/json; charset=utf-8');
 require_once __DIR__ . '/inc/auth.php';
+require_permission('admin.announcements.add');
 
 $allowed = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 $allowedExt = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
