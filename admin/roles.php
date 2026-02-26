@@ -206,7 +206,15 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-bold">Permissions</label>
-                    <div class="border rounded p-3 bg-light" style="max-height: 280px; overflow-y: auto;">
+                    <div class="border rounded p-3 bg-light permissions-block">
+                        <?php if (!empty($allPermissions)): ?>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-3 pb-2 border-bottom">
+                            <input type="text" id="permFilter" class="form-control form-control-sm" placeholder="Filtrer les permissions…" style="max-width: 220px;">
+                            <span class="text-muted small">|</span>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="permCheckAll">Tout cocher</button>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="permUncheckAll">Tout décocher</button>
+                        </div>
+                        <div id="permissionsList" style="max-height: 380px; overflow-y: auto;">
                         <?php
                         $byModule = [];
                         foreach ($allPermissions as $p) {
@@ -214,21 +222,33 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
                             if (!isset($byModule[$m])) $byModule[$m] = [];
                             $byModule[$m][] = $p;
                         }
+                        $actionOrder = ['view' => 0, 'add' => 1, 'modify' => 2, 'delete' => 3];
                         foreach ($byModule as $module => $perms):
+                            usort($perms, function ($a, $b) use ($actionOrder) {
+                                $suffixA = preg_replace('/^admin\.[^.]+\./', '', $a->code);
+                                $suffixB = preg_replace('/^admin\.[^.]+\./', '', $b->code);
+                                return ($actionOrder[$suffixA] ?? 99) <=> ($actionOrder[$suffixB] ?? 99);
+                            });
                         ?>
-                            <div class="mb-3">
-                                <strong class="d-block mb-2"><?= htmlspecialchars($module) ?></strong>
-                                <div class="d-flex flex-wrap gap-2">
+                            <div class="permission-module mb-3" data-module="<?= htmlspecialchars($module) ?>">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <strong class="d-block"><?= htmlspecialchars($module) ?></strong>
+                                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none perm-module-check" data-module="<?= htmlspecialchars($module) ?>" title="Tout cocher pour ce bloc">Cocher tout</button>
+                                    <span class="text-muted">·</span>
+                                    <button type="button" class="btn btn-sm btn-link p-0 text-decoration-none perm-module-uncheck" data-module="<?= htmlspecialchars($module) ?>" title="Tout décocher pour ce bloc">Décocher tout</button>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2 gap-md-3">
                                     <?php foreach ($perms as $p): ?>
-                                        <div class="form-check">
-                                            <input type="checkbox" name="permission_ids[]" id="perm_<?= (int) $p->id ?>" class="form-check-input" value="<?= (int) $p->id ?>" <?= in_array($p->id, $detailPermIds) ? 'checked' : '' ?>>
-                                            <label class="form-check-label small" for="perm_<?= (int) $p->id ?>"><?= htmlspecialchars($p->code) ?></label>
+                                        <div class="form-check permission-item" data-name="<?= htmlspecialchars(mb_strtolower($p->name)) ?>" data-code="<?= htmlspecialchars(mb_strtolower($p->code)) ?>">
+                                            <input type="checkbox" name="permission_ids[]" id="perm_<?= (int) $p->id ?>" class="form-check-input perm-cb" value="<?= (int) $p->id ?>" data-module="<?= htmlspecialchars($module) ?>" <?= in_array($p->id, $detailPermIds) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="perm_<?= (int) $p->id ?>" title="Code : <?= htmlspecialchars($p->code) ?>"><?= htmlspecialchars($p->name) ?></label>
                                         </div>
                                     <?php endforeach; ?>
                                 </div>
                             </div>
                         <?php endforeach; ?>
-                        <?php if (empty($allPermissions)): ?>
+                        </div>
+                        <?php else: ?>
                             <p class="text-muted small mb-0">Aucune permission définie en base. Créez-en via le schéma ou les paramètres.</p>
                         <?php endif; ?>
                     </div>
@@ -297,7 +317,7 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
                 <p class="mb-1"><strong><?= htmlspecialchars($module) ?></strong></p>
                 <p class="mb-3">
                     <?php foreach ($perms as $p): ?>
-                        <span class="badge bg-secondary-subtle text-secondary border me-1" title="<?= htmlspecialchars($p->name) ?>"><?= htmlspecialchars($p->code) ?></span>
+                        <span class="badge bg-secondary-subtle text-secondary border me-1" title="Code : <?= htmlspecialchars($p->code) ?>"><?= htmlspecialchars($p->name) ?></span>
                     <?php endforeach; ?>
                 </p>
             <?php endforeach; ?>
@@ -425,6 +445,9 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
     .dataTables_wrapper .pagination .page-item.active .page-link { background-color: var(--admin-sidebar); border-color: var(--admin-sidebar); color: #fff; }
     .dataTables_wrapper .pagination .page-link { color: var(--admin-sidebar); border-radius: 6px; margin: 0 2px; }
     .dataTables_info { font-size: 0.85rem; color: var(--admin-muted); }
+    .permissions-block .permission-item { transition: opacity .15s ease; }
+    .permissions-block .permission-item.perm-hidden { display: none !important; }
+    .permissions-block .permission-module.perm-module-hidden { display: none !important; }
 </style>
 
 <footer class="admin-main-footer">
@@ -442,6 +465,51 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
                 order: [[0, "asc"]],
                 pageLength: 10,
                 dom: '<"d-flex justify-content-between align-items-center mb-3"f>t<"d-flex justify-content-between align-items-center mt-3"ip>'
+            });
+        }
+
+        var permFilter = document.getElementById('permFilter');
+        var permissionsList = document.getElementById('permissionsList');
+        if (permFilter && permissionsList) {
+            permFilter.addEventListener('input', function() {
+                var q = (this.value || '').trim().toLowerCase();
+                var modules = permissionsList.querySelectorAll('.permission-module');
+                modules.forEach(function(mod) {
+                    var items = mod.querySelectorAll('.permission-item');
+                    var visibleCount = 0;
+                    items.forEach(function(item) {
+                        var show = !q || (item.dataset.name && item.dataset.name.indexOf(q) !== -1) || (item.dataset.code && item.dataset.code.indexOf(q) !== -1);
+                        item.classList.toggle('perm-hidden', !show);
+                        if (show) visibleCount++;
+                    });
+                    mod.classList.toggle('perm-module-hidden', visibleCount === 0);
+                });
+            });
+
+            var checkAll = document.getElementById('permCheckAll');
+            var uncheckAll = document.getElementById('permUncheckAll');
+            if (checkAll) checkAll.addEventListener('click', function() {
+                permissionsList.querySelectorAll('.perm-cb').forEach(function(cb) {
+                    if (!cb.closest('.permission-item') || !cb.closest('.permission-item').classList.contains('perm-hidden')) cb.checked = true;
+                });
+            });
+            if (uncheckAll) uncheckAll.addEventListener('click', function() {
+                permissionsList.querySelectorAll('.perm-cb').forEach(function(cb) { cb.checked = false; });
+            });
+
+            permissionsList.querySelectorAll('.perm-module-check').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var mod = this.dataset.module;
+                    permissionsList.querySelectorAll('.permission-module[data-module="' + mod + '"] .perm-cb').forEach(function(cb) {
+                        if (!cb.closest('.permission-item') || !cb.closest('.permission-item').classList.contains('perm-hidden')) cb.checked = true;
+                    });
+                });
+            });
+            permissionsList.querySelectorAll('.perm-module-uncheck').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var mod = this.dataset.module;
+                    permissionsList.querySelectorAll('.permission-module[data-module="' + mod + '"] .perm-cb').forEach(function(cb) { cb.checked = false; });
+                });
             });
         }
     });
