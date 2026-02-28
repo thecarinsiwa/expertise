@@ -3,7 +3,8 @@ session_start();
 $pageTitle = 'Mission';
 $organisation = null;
 $mission = null;
-$baseUrl = '';
+$scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
+$baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
 
@@ -71,7 +72,7 @@ $coverUrl = $hasCover ? client_asset_url($baseUrl, $mission->cover_image) : '';
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                 </nav>
                 <span class="mission-detail-badge"><?= htmlspecialchars($mission->location ?: 'Mission') ?></span>
                 <?php if ($mission->type_name || $mission->status_name): ?>
@@ -96,7 +97,7 @@ $coverUrl = $hasCover ? client_asset_url($baseUrl, $mission->cover_image) : '';
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark"><?= htmlspecialchars($mission->location ?: 'Mission') ?></span>
                 <?php if ($mission->type_name || $mission->status_name): ?>
@@ -121,6 +122,11 @@ $coverUrl = $hasCover ? client_asset_url($baseUrl, $mission->cover_image) : '';
 
         <div class="mission-detail-body">
             <div class="container">
+                <?php if ($hasCover): ?>
+                <div class="mission-detail-cover-wrap mb-4">
+                    <img src="<?= htmlspecialchars($coverUrl) ?>" alt="<?= htmlspecialchars($mission->title) ?>" class="mission-detail-cover-img img-fluid rounded">
+                </div>
+                <?php endif; ?>
                 <div class="mission-detail-grid">
                     <article class="mission-detail-main">
                         <?php if (!empty($mission->description)): ?>

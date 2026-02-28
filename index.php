@@ -75,6 +75,24 @@ try {
     ");
     if ($stmt) $recentAnnouncements = $stmt->fetchAll();
 
+    $homeStaff = [];
+    $homeBailleurs = [];
+    $orgId = (int) $pdo->query("SELECT id FROM organisation WHERE is_active = 1 LIMIT 1")->fetchColumn();
+    if ($orgId) {
+        $stmt = $pdo->prepare("
+            SELECT s.id, s.job_title, s.department, s.photo, u.first_name, u.last_name
+            FROM staff s
+            JOIN user u ON s.user_id = u.id
+            WHERE s.organisation_id = ? AND s.is_active = 1 AND u.is_active = 1
+            ORDER BY u.last_name ASC, u.first_name ASC
+            LIMIT 12
+        ");
+        $stmt->execute([$orgId]);
+        if ($stmt) $homeStaff = $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+    $stmt = $pdo->query("SELECT id, name, logo FROM bailleur WHERE is_active = 1 ORDER BY name ASC LIMIT 12");
+    if ($stmt) $homeBailleurs = $stmt->fetchAll(PDO::FETCH_OBJ);
+
     $statsMissions = 0;
     $statsLocations = 0;
     $statsAnnouncements = 0;
@@ -89,16 +107,51 @@ try {
         if ($stmt) $statsAnnouncements = (int) $stmt->fetchColumn();
         $stmt = $pdo->query("SELECT DISTINCT location FROM mission WHERE organisation_id = $orgId AND location IS NOT NULL AND TRIM(location) != '' ORDER BY location LIMIT 8");
         if ($stmt) $recentLocations = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $mapLocations = [];
+        try {
+            $stmt = $pdo->prepare("SELECT id, title, location, latitude, longitude FROM mission WHERE organisation_id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL AND location IS NOT NULL AND TRIM(location) != '' ORDER BY updated_at DESC LIMIT 50");
+            $stmt->execute([$orgId]);
+            $mapLocations = $stmt->fetchAll(PDO::FETCH_OBJ);
+        } catch (PDOException $e) {}
     }
 } catch (PDOException $e) {
     $pdo = null;
 }
 if (!isset($recentMissions)) $recentMissions = [];
 if (!isset($recentAnnouncements)) $recentAnnouncements = [];
+if (!isset($homeStaff)) $homeStaff = [];
+if (!isset($homeBailleurs)) $homeBailleurs = [];
 if (!isset($statsMissions)) $statsMissions = 0;
 if (!isset($statsLocations)) $statsLocations = 0;
 if (!isset($statsAnnouncements)) $statsAnnouncements = 0;
 if (!isset($recentLocations)) $recentLocations = [];
+if (!isset($mapLocations)) $mapLocations = [];
+// Pays d'intervention (dernière partie du lieu, ex. "Evinayong, Guinée équatoriale" -> "Guinée équatoriale") pour colorer la carte
+$interventionCountryNames = [];
+foreach ($recentLocations as $loc) {
+    $parts = array_map('trim', explode(',', $loc));
+    if (!empty($parts)) {
+        $country = end($parts);
+        if ($country !== '') $interventionCountryNames[$country] = true;
+    }
+}
+$interventionCountryNames = array_keys($interventionCountryNames);
+// Correspondance noms français -> noms GeoJSON (Natural Earth / datasets ADMIN)
+$countryFrToEn = [
+    'Guinée équatoriale' => 'Equatorial Guinea',
+    'République démocratique du Congo' => 'Democratic Republic of the Congo', 'RDC' => 'Democratic Republic of the Congo',
+    'Soudan du Sud' => 'South Sudan',
+    'Soudan' => 'Sudan',
+    'Yémen' => 'Yemen',
+    'France' => 'France',
+    'Congo' => 'Republic of the Congo',
+    'République du Congo' => 'Republic of the Congo',
+];
+$interventionCountriesGeoJson = [];
+foreach ($interventionCountryNames as $fr) {
+    $en = $countryFrToEn[$fr] ?? $fr;
+    $interventionCountriesGeoJson[] = $en;
+}
 if (!isset($heroAnnouncements)) $heroAnnouncements = [];
 
 // Photos depuis la BDD (hero + cartes missions)
@@ -330,17 +383,91 @@ require __DIR__ . '/inc/header.php';
                 <h2 class="section-heading mb-0">Où nous travaillons</h2>
                 <a href="<?= $baseUrl ?>where-we-work.php" class="btn-view-all">Voir la carte et les lieux</a>
             </div>
-            <?php if (count($recentLocations) > 0): ?>
-                <p class="text-muted mb-3">Parmi nos lieux d'intervention :</p>
-                <ul class="index-where-list">
-                    <?php foreach ($recentLocations as $loc): ?>
-                        <li><a href="<?= $baseUrl ?>missions.php?location=<?= urlencode($loc) ?>"><?= htmlspecialchars($loc) ?></a></li>
-                    <?php endforeach; ?>
-                </ul>
-            <?php else: ?>
-                <p class="text-muted mb-0">Découvrez nos zones d'intervention et les missions par pays ou région.</p>
-            <?php endif; ?>
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div id="index-where-map" class="index-where-map rounded overflow-hidden"
+                         data-base-url="<?= htmlspecialchars($baseUrl) ?>"
+                         data-locations="<?= htmlspecialchars(json_encode($mapLocations)) ?>"
+                         data-countries="<?= htmlspecialchars(json_encode($interventionCountriesGeoJson)) ?>"
+                         style="height: 320px; background: #e9ecef;"></div>
+                </div>
+                <div class="col-lg-5 d-flex flex-column justify-content-center">
+                    <?php if (count($recentLocations) > 0): ?>
+                        <p class="text-muted mb-2">Parmi nos lieux d'intervention :</p>
+                        <ul class="index-where-list mb-0">
+                            <?php foreach ($recentLocations as $loc): ?>
+                                <li><a href="<?= $baseUrl ?>missions.php?location=<?= urlencode($loc) ?>"><?= htmlspecialchars($loc) ?></a></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    <?php else: ?>
+                        <p class="text-muted mb-0">Découvrez nos zones d'intervention et les missions par pays ou région.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
         </div>
+    </section>
+
+    <!-- Le personnel -->
+    <section class="container py-5 border-top" id="personnel">
+        <div class="d-flex flex-wrap justify-content-center justify-content-md-between align-items-center mb-4 pt-4 gap-2">
+            <h2 class="section-heading mb-0 text-center text-md-start">Le personnel</h2>
+            <a href="<?= $baseUrl ?>about.php#equipe" class="btn-view-all">Voir tout</a>
+        </div>
+        <?php if (count($homeStaff) > 0): ?>
+            <div class="row g-4 justify-content-center">
+                <?php foreach ($homeStaff as $s):
+                    $staffPhotoUrl = !empty($s->photo) ? client_asset_url($baseUrl, $s->photo) : '';
+                    $staffName = trim(($s->first_name ?? '') . ' ' . ($s->last_name ?? ''));
+                ?>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="card card-staff h-100 text-center">
+                            <?php if ($staffPhotoUrl): ?>
+                                <div class="card-staff-img mx-auto rounded-circle" style="background-image: url('<?= htmlspecialchars($staffPhotoUrl) ?>');"></div>
+                            <?php else: ?>
+                                <div class="card-staff-img card-staff-img-placeholder mx-auto rounded-circle"><i class="bi bi-person"></i></div>
+                            <?php endif; ?>
+                            <div class="card-body py-2">
+                                <h3 class="card-title h6 mb-1"><?= htmlspecialchars($staffName) ?></h3>
+                                <?php if (!empty($s->job_title)): ?>
+                                    <p class="card-meta small mb-0"><?= htmlspecialchars($s->job_title) ?></p>
+                                <?php endif; ?>
+                                <?php if (!empty($s->department)): ?>
+                                    <p class="card-meta small mb-0 text-muted"><?= htmlspecialchars($s->department) ?></p>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p class="text-muted text-center mb-0">Aucun personnel affiché pour le moment.</p>
+        <?php endif; ?>
+    </section>
+
+    <!-- Nos bailleurs -->
+    <section class="container py-5 border-top" id="bailleurs">
+        <div class="d-flex flex-wrap justify-content-center align-items-center mb-4 pt-4">
+            <h2 class="section-heading mb-0 text-center">Nos bailleurs</h2>
+        </div>
+        <?php if (count($homeBailleurs) > 0): ?>
+            <div class="row g-4 align-items-center justify-content-center">
+                <?php foreach ($homeBailleurs as $b):
+                    $bailleurLogoUrl = !empty($b->logo) ? client_asset_url($baseUrl, $b->logo) : '';
+                ?>
+                    <div class="col-6 col-md-4 col-lg-3">
+                        <div class="card card-bailleur h-100 d-flex align-items-center justify-content-center p-3">
+                            <?php if ($bailleurLogoUrl): ?>
+                                <img src="<?= htmlspecialchars($bailleurLogoUrl) ?>" alt="<?= htmlspecialchars($b->name) ?>" class="card-bailleur-logo img-fluid" loading="lazy">
+                            <?php else: ?>
+                                <span class="card-bailleur-name text-center"><?= htmlspecialchars($b->name) ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p class="text-muted text-center mb-0">Aucun bailleur affiché pour le moment.</p>
+        <?php endif; ?>
     </section>
 
     <!-- Appel à l'action -->
@@ -351,5 +478,56 @@ require __DIR__ . '/inc/header.php';
             <a href="<?= $baseUrl ?>contact.php" class="btn btn-cta-primary">Nous contacter</a>
         </div>
     </section>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+    (function() {
+        var mapEl = document.getElementById('index-where-map');
+        if (!mapEl || typeof L === 'undefined') return;
+        var baseUrl = mapEl.getAttribute('data-base-url') || '';
+        var locations = [];
+        var interventionCountries = [];
+        try { locations = JSON.parse(mapEl.getAttribute('data-locations') || '[]'); } catch(e) {}
+        try { interventionCountries = JSON.parse(mapEl.getAttribute('data-countries') || '[]'); } catch(e) {}
+        var map = L.map('index-where-map').setView([2, 20], 3);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+
+        var countriesLayer = null;
+        if (interventionCountries.length > 0) {
+            var countrySet = {};
+            interventionCountries.forEach(function(c) { countrySet[c] = true; });
+            fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+                .then(function(r) { return r.json(); })
+                .then(function(geojson) {
+                    countriesLayer = L.geoJSON(geojson, {
+                        style: function(feature) {
+                            var name = (feature.properties && (feature.properties.ADMIN || feature.properties.name)) || '';
+                            var isIntervention = countrySet[name];
+                            return {
+                                fillColor: isIntervention ? '#0071BC' : '#e8e8e8',
+                                fillOpacity: isIntervention ? 0.45 : 0.25,
+                                color: isIntervention ? '#1D1C3E' : '#ccc',
+                                weight: isIntervention ? 1.2 : 0.6
+                            };
+                        }
+                    }).addTo(map);
+                })
+                .catch(function() {});
+        }
+
+        function escapeHtml(s) { if (s == null) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        var bounds = null;
+        locations.forEach(function(m) {
+            var lat = parseFloat(m.latitude), lng = parseFloat(m.longitude);
+            if (isNaN(lat) || isNaN(lng)) return;
+            var popup = '<a href="' + baseUrl + 'mission.php?id=' + m.id + '">' + escapeHtml(m.title || 'Mission') + '</a>';
+            if (m.location) popup += '<br><small class="text-muted">' + escapeHtml(m.location) + '</small>';
+            L.marker([lat, lng]).addTo(map).bindPopup(popup);
+            if (!bounds) bounds = L.latLngBounds([lat, lng], [lat, lng]); else bounds.extend([lat, lng]);
+        });
+        if (bounds && locations.length > 0) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 10 });
+    })();
+    </script>
 
 <?php require __DIR__ . '/inc/footer.php'; ?>

@@ -65,6 +65,55 @@ try {
 }
 $totalPages = $totalMissions > 0 ? (int) ceil($totalMissions / $perPage) : 1;
 
+// Données pour la carte en tête de page
+$mapCenterLat = 2;
+$mapCenterLng = 20;
+$mapZoom = 3;
+$mapLocations = [];
+$mapCountries = [];
+if ($pdo) {
+    if ($locationFilter !== '') {
+        try {
+            $stmt = $pdo->prepare("SELECT id, title, location, latitude, longitude FROM mission m WHERE m.organisation_id = (SELECT id FROM organisation WHERE is_active = 1 LIMIT 1) AND m.location = ? AND m.latitude IS NOT NULL AND m.longitude IS NOT NULL LIMIT 1");
+            $stmt->execute([$locationFilter]);
+            $firstWithCoords = $stmt->fetch(PDO::FETCH_OBJ);
+            if ($firstWithCoords) {
+                $mapCenterLat = (float) $firstWithCoords->latitude;
+                $mapCenterLng = (float) $firstWithCoords->longitude;
+                $mapZoom = 8;
+                $mapLocations = [$firstWithCoords];
+            }
+        } catch (PDOException $e) {
+            // Colonnes latitude/longitude absentes (migration add_mission_location_coords.sql non exécutée)
+        }
+        $parts = array_map('trim', explode(',', $locationFilter));
+        $countryName = !empty($parts) ? end($parts) : '';
+        $countryFrToEn = [
+            'Guinée équatoriale' => 'Equatorial Guinea', 'République démocratique du Congo' => 'Democratic Republic of the Congo', 'RDC' => 'Democratic Republic of the Congo',
+            'Soudan du Sud' => 'South Sudan', 'Soudan' => 'Sudan', 'Yémen' => 'Yemen', 'France' => 'France',
+            'Congo' => 'Republic of the Congo', 'République du Congo' => 'Republic of the Congo',
+        ];
+        if ($countryName !== '') $mapCountries = [$countryFrToEn[$countryName] ?? $countryName];
+    } else {
+        $stmt = $pdo->query("SELECT DISTINCT location FROM mission WHERE organisation_id = (SELECT id FROM organisation WHERE is_active = 1 LIMIT 1) AND location IS NOT NULL AND TRIM(location) != '' ORDER BY location LIMIT 20");
+        $recentLocs = $stmt ? $stmt->fetchAll(PDO::FETCH_COLUMN) : [];
+        $countryFrToEn = [
+            'Guinée équatoriale' => 'Equatorial Guinea', 'République démocratique du Congo' => 'Democratic Republic of the Congo', 'RDC' => 'Democratic Republic of the Congo',
+            'Soudan du Sud' => 'South Sudan', 'Soudan' => 'Sudan', 'Yémen' => 'Yemen', 'France' => 'France',
+            'Congo' => 'Republic of the Congo', 'République du Congo' => 'Republic of the Congo',
+        ];
+        foreach ($recentLocs as $loc) {
+            $parts = array_map('trim', explode(',', $loc));
+            if (!empty($parts)) {
+                $c = end($parts);
+                $en = $countryFrToEn[$c] ?? $c;
+                $mapCountries[$en] = true;
+            }
+        }
+        $mapCountries = array_keys($mapCountries);
+    }
+}
+
 $missionsQueryString = [];
 if ($searchQ !== '') $missionsQueryString['q'] = $searchQ;
 if ($locationFilter !== '') $missionsQueryString['location'] = $locationFilter;
@@ -75,6 +124,16 @@ require_once __DIR__ . '/inc/asset_url.php';
 require __DIR__ . '/inc/head.php';
 require __DIR__ . '/inc/header.php';
 ?>
+
+    <!-- Carte des lieux d'intervention -->
+    <div id="missions-page-map" class="missions-page-map"
+         data-base-url="<?= htmlspecialchars($baseUrl) ?>"
+         data-locations="<?= htmlspecialchars(json_encode($mapLocations)) ?>"
+         data-countries="<?= htmlspecialchars(json_encode($mapCountries ?? [])) ?>"
+         data-center-lat="<?= (float) $mapCenterLat ?>"
+         data-center-lng="<?= (float) $mapCenterLng ?>"
+         data-zoom="<?= (int) $mapZoom ?>"
+         style="height: 320px; width: 100%; background: #e9ecef;"></div>
 
     <section class="py-5">
         <div class="container">
@@ -160,5 +219,53 @@ require __DIR__ . '/inc/header.php';
             <?php endif; ?>
         </div>
     </section>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script>
+    (function() {
+        var mapEl = document.getElementById('missions-page-map');
+        if (!mapEl || typeof L === 'undefined') return;
+        var baseUrl = mapEl.getAttribute('data-base-url') || '';
+        var locations = [];
+        var countries = [];
+        var centerLat = parseFloat(mapEl.getAttribute('data-center-lat')) || 2;
+        var centerLng = parseFloat(mapEl.getAttribute('data-center-lng')) || 20;
+        var zoom = parseInt(mapEl.getAttribute('data-zoom'), 10) || 3;
+        try { locations = JSON.parse(mapEl.getAttribute('data-locations') || '[]'); } catch(e) {}
+        try { countries = JSON.parse(mapEl.getAttribute('data-countries') || '[]'); } catch(e) {}
+        var map = L.map('missions-page-map').setView([centerLat, centerLng], zoom);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+        if (countries.length > 0) {
+            var countrySet = {};
+            countries.forEach(function(c) { countrySet[c] = true; });
+            fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
+                .then(function(r) { return r.json(); })
+                .then(function(geojson) {
+                    L.geoJSON(geojson, {
+                        style: function(feature) {
+                            var name = (feature.properties && (feature.properties.ADMIN || feature.properties.name)) || '';
+                            var isIntervention = countrySet[name];
+                            return {
+                                fillColor: isIntervention ? '#0071BC' : '#e8e8e8',
+                                fillOpacity: isIntervention ? 0.45 : 0.25,
+                                color: isIntervention ? '#1D1C3E' : '#ccc',
+                                weight: isIntervention ? 1.2 : 0.6
+                            };
+                        }
+                    }).addTo(map);
+                })
+                .catch(function() {});
+        }
+        function escapeHtml(s) { if (s == null) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+        locations.forEach(function(m) {
+            var lat = parseFloat(m.latitude), lng = parseFloat(m.longitude);
+            if (isNaN(lat) || isNaN(lng)) return;
+            var popup = '<a href="' + baseUrl + 'mission.php?id=' + m.id + '">' + escapeHtml(m.title || 'Mission') + '</a>';
+            if (m.location) popup += '<br><small class="text-muted">' + escapeHtml(m.location) + '</small>';
+            L.marker([lat, lng]).addTo(map).bindPopup(popup);
+        });
+    })();
+    </script>
 
 <?php require __DIR__ . '/inc/footer.php'; ?>

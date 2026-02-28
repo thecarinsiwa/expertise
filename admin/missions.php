@@ -34,6 +34,14 @@ try {
     $bailleurs = [];
 }
 
+$missionHasLocationCoords = false;
+if ($pdo) {
+    try {
+        $cols = $pdo->query("SHOW COLUMNS FROM mission WHERE Field IN ('latitude','longitude')")->fetchAll(PDO::FETCH_COLUMN);
+        $missionHasLocationCoords = (count($cols) === 2);
+    } catch (PDOException $e) {}
+}
+
 // --- TRAITEMENT DES ACTIONS (POST) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
     // SUPPRESSION
@@ -52,6 +60,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
         $reference = trim($_POST['reference'] ?? '');
         $description = trim($_POST['description'] ?? '');
         $location = trim($_POST['location'] ?? '');
+        $latitude = isset($_POST['latitude']) && $_POST['latitude'] !== '' ? (float) $_POST['latitude'] : null;
+        $longitude = isset($_POST['longitude']) && $_POST['longitude'] !== '' ? (float) $_POST['longitude'] : null;
         $start_date = !empty($_POST['start_date']) ? $_POST['start_date'] : null;
         $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
         $mission_type_id = !empty($_POST['mission_type_id']) ? (int) $_POST['mission_type_id'] : null;
@@ -87,23 +97,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
 
                 if ($id > 0) {
                     // Update
-                    $stmt = $pdo->prepare("
-                        UPDATE mission SET 
-                        title = ?, reference = ?, description = ?, 
-                        cover_image = ?, location = ?, start_date = ?, end_date = ?, 
-                        mission_type_id = ?, mission_status_id = ?,
-                        updated_at = NOW()
-                        WHERE id = ?
-                    ");
-                    $stmt->execute([$title, $reference, $description, $cover_image, $location, $start_date, $end_date, $mission_type_id, $mission_status_id, $id]);
+                    if ($missionHasLocationCoords) {
+                        $stmt = $pdo->prepare("
+                            UPDATE mission SET 
+                            title = ?, reference = ?, description = ?, 
+                            cover_image = ?, location = ?, latitude = ?, longitude = ?, start_date = ?, end_date = ?, 
+                            mission_type_id = ?, mission_status_id = ?,
+                            updated_at = NOW()
+                            WHERE id = ?
+                        ");
+                        $stmt->execute([$title, $reference, $description, $cover_image, $location, $latitude, $longitude, $start_date, $end_date, $mission_type_id, $mission_status_id, $id]);
+                    } else {
+                        $stmt = $pdo->prepare("
+                            UPDATE mission SET 
+                            title = ?, reference = ?, description = ?, 
+                            cover_image = ?, location = ?, start_date = ?, end_date = ?, 
+                            mission_type_id = ?, mission_status_id = ?,
+                            updated_at = NOW()
+                            WHERE id = ?
+                        ");
+                        $stmt->execute([$title, $reference, $description, $cover_image, $location, $start_date, $end_date, $mission_type_id, $mission_status_id, $id]);
+                    }
                     $missionId = $id;
                 } else {
                     // Insert
-                    $stmt = $pdo->prepare("
-                        INSERT INTO mission (organisation_id, title, reference, description, cover_image, location, start_date, end_date, mission_type_id, mission_status_id, created_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                    ");
-                    $stmt->execute([$organisation_id, $title, $reference, $description, $cover_image, $location, $start_date, $end_date, $mission_type_id, $mission_status_id]);
+                    if ($missionHasLocationCoords) {
+                        $stmt = $pdo->prepare("
+                            INSERT INTO mission (organisation_id, title, reference, description, cover_image, location, latitude, longitude, start_date, end_date, mission_type_id, mission_status_id, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                        ");
+                        $stmt->execute([$organisation_id, $title, $reference, $description, $cover_image, $location, $latitude, $longitude, $start_date, $end_date, $mission_type_id, $mission_status_id]);
+                    } else {
+                        $stmt = $pdo->prepare("
+                            INSERT INTO mission (organisation_id, title, reference, description, cover_image, location, start_date, end_date, mission_type_id, mission_status_id, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
+                        ");
+                        $stmt->execute([$organisation_id, $title, $reference, $description, $cover_image, $location, $start_date, $end_date, $mission_type_id, $mission_status_id]);
+                    }
                     $missionId = $pdo->lastInsertId();
                 }
 
@@ -400,6 +430,10 @@ require __DIR__ . '/inc/header.php';
     </ol>
 </nav>
 
+<?php if ($action === 'add' || $action === 'edit'): ?>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<?php endif; ?>
+
 <header class="admin-header">
     <div class="d-flex flex-wrap justify-content-between align-items-start gap-2">
         <div>
@@ -579,9 +613,15 @@ require __DIR__ . '/inc/header.php';
                             <label class="form-label fw-bold">Lieu / Destination</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-geo-alt"></i></span>
-                                <input type="text" name="location" class="form-control"
+                                <input type="text" name="location" id="mission_location" class="form-control"
                                     value="<?= htmlspecialchars($detail->location ?? '') ?>"
                                     placeholder="ex: Kinshasa, RDC">
+                            </div>
+                            <input type="hidden" name="latitude" id="mission_latitude" value="<?= isset($detail->latitude) && $detail->latitude !== null ? htmlspecialchars($detail->latitude) : '' ?>">
+                            <input type="hidden" name="longitude" id="mission_longitude" value="<?= isset($detail->longitude) && $detail->longitude !== null ? htmlspecialchars($detail->longitude) : '' ?>">
+                            <div class="mt-2">
+                                <p class="small text-muted mb-1">Cliquez sur la carte pour pointer le lieu (le nom du lieu sera rempli automatiquement).</p>
+                                <div id="mission_location_map" style="height: 280px; border-radius: 8px; background: #e9ecef;"></div>
                             </div>
                         </div>
                         <div class="col-md-6">
@@ -1759,6 +1799,51 @@ require __DIR__ . '/inc/header.php';
                 ['view', ['fullscreen', 'codeview', 'help']]
             ]
         });
+
+        // Carte Lieu / Destination : pointer sur la carte pour remplir le lieu (Leaflet chargé à la demande)
+        if (document.getElementById('mission_location_map')) {
+            var mapEl = document.getElementById('mission_location_map');
+            var latIn = document.getElementById('mission_latitude');
+            var lngIn = document.getElementById('mission_longitude');
+            var locIn = document.getElementById('mission_location');
+            if (latIn && lngIn && locIn) {
+                var script = document.createElement('script');
+                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                script.crossOrigin = 'anonymous';
+                script.onload = function() {
+                    var lat = latIn.value ? parseFloat(latIn.value) : -4.3217;
+                    var lng = lngIn.value ? parseFloat(lngIn.value) : 15.3125;
+                    var map = L.map('mission_location_map').setView([lat, lng], latIn.value ? 12 : 4);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+                    var marker = null;
+                    if (latIn.value && lngIn.value) {
+                        marker = L.marker([lat, lng]).addTo(map);
+                    }
+                    map.on('click', function(e) {
+                        var ll = e.latlng;
+                        if (marker) marker.setLatLng(ll); else marker = L.marker(ll).addTo(map);
+                        latIn.value = ll.lat; lngIn.value = ll.lng;
+                        locIn.value = 'Recherche du lieu…';
+                        locIn.classList.add('text-muted');
+                        fetch('https://nominatim.openstreetmap.org/reverse?lat=' + ll.lat + '&lon=' + ll.lng + '&format=json&addressdetails=1', {
+                            headers: { 'Accept': 'application/json', 'User-Agent': 'ExpertiseMissionAdmin/1.0' }
+                        }).then(function(r) { return r.json(); }).then(function(data) {
+                            locIn.classList.remove('text-muted');
+                            if (!data) { locIn.value = ''; return; }
+                            var addr = data.address || {};
+                            var city = addr.city || addr.town || addr.village || addr.municipality || addr.county || addr.state;
+                            var country = addr.country;
+                            var suggested = city && country ? (city + ', ' + country) : (city || country || data.name || data.display_name || '');
+                            locIn.value = suggested;
+                        }).catch(function() {
+                            locIn.classList.remove('text-muted');
+                            locIn.value = '';
+                        });
+                    });
+                };
+                document.head.appendChild(script);
+            }
+        }
 
         // Gestion des Onglets (Stepper)
         const tabs = ['tab-general', 'tab-objectives', 'tab-team', 'tab-steps', 'tab-orders', 'tab-reports', 'tab-expenses'];

@@ -599,6 +599,8 @@ CREATE TABLE IF NOT EXISTS `mission` (
   `start_date` DATE,
   `end_date` DATE,
   `location` VARCHAR(255),
+  `latitude` DECIMAL(10,8) DEFAULT NULL COMMENT 'Latitude du lieu',
+  `longitude` DECIMAL(11,8) DEFAULT NULL COMMENT 'Longitude du lieu',
   `created_by_user_id` INT UNSIGNED DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -1347,8 +1349,5 @@ SELECT 1, id FROM `permission`;
 INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
 SELECT 2, id FROM `permission`;
 
--- Rôle système Client pour l'espace client (inscription publique, tableau de bord)
--- Organisation 1 = Expertise Humanitaire et Sociale SARL (défaut)
-INSERT IGNORE INTO `role` (`id`, `organisation_id`, `name`, `code`, `is_system`)
-VALUES (5, 1, 'Client', 'client', 1);
+
 
