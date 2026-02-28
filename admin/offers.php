@@ -471,6 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             <th>Date</th>
                             <th>Statut</th>
                             <th>CV</th>
+                            <th>Profil</th>
                             <th class="text-end">Actions</th>
                         </tr>
                     </thead>
@@ -484,6 +485,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <td><?= date('d/m/Y H:i', strtotime($app->created_at)) ?></td>
                                 <td><span class="badge bg-secondary"><?= $applicationStatusLabels[$app->status] ?? $app->status ?></span></td>
                                 <td><?= !empty($app->cv_path) ? '<a href="../' . htmlspecialchars($app->cv_path) . '" target="_blank"><i class="bi bi-file-earmark-pdf"></i> CV</a>' : '—' ?></td>
+                                <td><a href="candidate_profile.php?user_id=<?= (int) $app->user_id ?>" target="_blank" class="btn btn-sm btn-admin-outline"><i class="bi bi-person-badge me-1"></i>Voir le profil</a></td>
                                 <td class="text-end">
                                     <?php if (has_permission('admin.offers.modify')): ?>
                                         <form method="POST" class="d-inline">
@@ -499,7 +501,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 </td>
                             </tr>
                             <?php if (!empty($app->message)): ?>
-                                <tr><td colspan="5" class="small text-muted bg-light"><?= nl2br(htmlspecialchars($app->message)) ?></td></tr>
+                                <tr><td colspan="6" class="small text-muted bg-light"><?= nl2br(htmlspecialchars($app->message)) ?></td></tr>
                             <?php endif; ?>
                         <?php endforeach; ?>
                     </tbody>

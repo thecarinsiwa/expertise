@@ -92,6 +92,14 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
+                    <a href="profile.php" class="client-action-card">
+                        <span class="client-action-icon"><i class="bi bi-person-badge"></i></span>
+                        <h3 class="client-action-title">Mon profil / Mon CV</h3>
+                        <p class="client-action-desc">Compléter et réutiliser votre CV pour les offres</p>
+                        <span class="client-action-link">Mon profil <i class="bi bi-arrow-right"></i></span>
+                    </a>
+                </div>
+                <div class="col-sm-6 col-lg-4">
                     <a href="<?= htmlspecialchars($baseUrl) ?>index.php" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-house"></i></span>
                         <h3 class="client-action-title">Site principal</h3>

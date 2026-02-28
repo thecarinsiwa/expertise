@@ -36,6 +36,20 @@ if ($pdo) {
         $existingApplication = $stmt->fetch();
         $alreadyApplied = $existingApplication !== false;
     }
+
+    $clientProfile = null;
+    try {
+        $stmt = $pdo->prepare("SELECT id, cv_path FROM profile WHERE user_id = ?");
+        $stmt->execute([$clientId]);
+        $clientProfile = $stmt->fetch(PDO::FETCH_OBJ);
+    } catch (PDOException $e) {
+        try {
+            $stmt = $pdo->prepare("SELECT id FROM profile WHERE user_id = ?");
+            $stmt->execute([$clientId]);
+            $clientProfile = $stmt->fetch(PDO::FETCH_OBJ);
+            if ($clientProfile) $clientProfile->cv_path = null;
+        } catch (PDOException $e2) {}
+    }
 }
 
 if (!$offer) {
@@ -45,7 +59,12 @@ if (!$offer) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
     $message = trim($_POST['message'] ?? '');
+    $use_profile_cv = !empty($_POST['use_profile_cv']);
     $cv_path = $existingApplication && !empty($existingApplication->cv_path) ? $existingApplication->cv_path : null;
+
+    if ($use_profile_cv && $clientProfile && !empty($clientProfile->cv_path)) {
+        $cv_path = $clientProfile->cv_path;
+    }
 
     if (!empty($_FILES['cv']['name'])) {
         $allowed = ['pdf', 'doc', 'docx'];
@@ -136,9 +155,17 @@ require __DIR__ . '/../inc/header.php';
                                     <textarea name="message" id="message" class="form-control" rows="5" placeholder="Présentez-vous ou précisez votre motivation…"><?= htmlspecialchars($_POST['message'] ?? ($existingApplication->message ?? '')) ?></textarea>
                                 </div>
                                 <div class="mb-4">
-                                    <label for="cv" class="form-label fw-bold">CV (optionnel)</label>
-                                    <?php if ($existingApplication && !empty($existingApplication->cv_path)): ?>
-                                        <p class="small text-muted mb-2">CV actuel : <a href="<?= htmlspecialchars($baseUrl . $existingApplication->cv_path) ?>" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>Télécharger</a>. Envoyez un nouveau fichier pour le remplacer.</p>
+                                    <label class="form-label fw-bold">CV</label>
+                                    <?php if ($clientProfile && !empty($clientProfile->cv_path)): ?>
+                                        <div class="form-check mb-2">
+                                            <input type="checkbox" name="use_profile_cv" id="use_profile_cv" class="form-check-input" value="1" <?= (empty($_POST['cv_override']) && (!$existingApplication || empty($existingApplication->cv_path) || $existingApplication->cv_path === $clientProfile->cv_path)) ? 'checked' : '' ?>>
+                                            <label class="form-check-label" for="use_profile_cv">Utiliser le CV de mon profil</label>
+                                        </div>
+                                        <p class="small text-muted mb-2">CV de votre profil : <a href="<?= htmlspecialchars($baseUrl . $clientProfile->cv_path) ?>" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>Télécharger</a></p>
+                                        <p class="small text-muted mb-2">Ou joignez un autre fichier pour cette offre uniquement :</p>
+                                    <?php endif; ?>
+                                    <?php if ($existingApplication && !empty($existingApplication->cv_path) && (!$clientProfile || $existingApplication->cv_path !== ($clientProfile->cv_path ?? ''))): ?>
+                                        <p class="small text-muted mb-2">CV actuel pour cette candidature : <a href="<?= htmlspecialchars($baseUrl . $existingApplication->cv_path) ?>" target="_blank"><i class="bi bi-file-earmark-pdf me-1"></i>Télécharger</a>. Envoyez un nouveau fichier pour le remplacer.</p>
                                     <?php endif; ?>
                                     <input type="file" name="cv" id="cv" class="form-control" accept=".pdf,.doc,.docx">
                                     <div class="form-text">PDF, DOC ou DOCX — max. 5 Mo</div>
