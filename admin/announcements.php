@@ -15,10 +15,13 @@ $channels = [];
 $users = [];
 $activeOrganisationId = null;
 $announcement_comments = [];
+$comment_replies = [];
 $announcement_attachments = [];
 $announcement_notifications = [];
 $announcement_history = [];
 $announcement_conversations = [];
+$announcement_reactions = [];
+$announcement_reaction_counts = [];
 $conversation_has_announcement_link = false;
 
 if ($pdo) {
@@ -51,15 +54,32 @@ if ($pdo) {
         $announcementId = ($id > 0) ? $id : null;
         if ($announcementId && $_SERVER['REQUEST_METHOD'] === 'POST') {
             if (isset($_POST['add_comment'])) {
-                $user_id = (int) ($_POST['comment_user_id'] ?? 0);
+                $user_id = (int) ($_SESSION['admin_id'] ?? 0);
                 $body = trim($_POST['comment_body'] ?? '');
-                if ($user_id > 0 && $body !== '') {
+                $parent_comment_id = isset($_POST['parent_comment_id']) && $_POST['parent_comment_id'] !== '' ? (int) $_POST['parent_comment_id'] : null;
+                if ($user_id <= 0) {
+                    $error = 'Vous devez être connecté pour commenter.';
+                } elseif ($body !== '') {
                     try {
-                        $pdo->prepare("INSERT INTO comment (user_id, commentable_type, commentable_id, body) VALUES (?, 'announcement', ?, ?)")->execute([$user_id, $announcementId, $body]);
-                        $success = 'Commentaire ajouté.';
-                        try { $pdo->prepare("INSERT INTO communication_history (user_id, entity_type, entity_id, action) VALUES (?, 'announcement', ?, 'comment_created')")->execute([$user_id, $announcementId]); } catch (PDOException $e) {}
+                        if ($parent_comment_id > 0) {
+                            $check = $pdo->prepare("SELECT id FROM comment WHERE id = ? AND commentable_type = 'announcement' AND commentable_id = ?");
+                            $check->execute([$parent_comment_id, $announcementId]);
+                            if (!$check->fetch()) {
+                                $error = 'Commentaire parent invalide.';
+                            } else {
+                                $pdo->prepare("INSERT INTO comment (user_id, commentable_type, commentable_id, body, parent_comment_id) VALUES (?, 'announcement', ?, ?, ?)")->execute([$user_id, $announcementId, $body, $parent_comment_id]);
+                                $success = 'Réponse ajoutée.';
+                                try { $pdo->prepare("INSERT INTO communication_history (user_id, entity_type, entity_id, action) VALUES (?, 'announcement', ?, 'comment_created')")->execute([$user_id, $announcementId]); } catch (PDOException $e) {}
+                            }
+                        } else {
+                            $pdo->prepare("INSERT INTO comment (user_id, commentable_type, commentable_id, body) VALUES (?, 'announcement', ?, ?)")->execute([$user_id, $announcementId, $body]);
+                            $success = 'Commentaire ajouté.';
+                            try { $pdo->prepare("INSERT INTO communication_history (user_id, entity_type, entity_id, action) VALUES (?, 'announcement', ?, 'comment_created')")->execute([$user_id, $announcementId]); } catch (PDOException $e) {}
+                        }
                     } catch (PDOException $e) { $error = 'Erreur commentaire.'; }
-                } else { $error = 'Auteur et contenu obligatoires.'; }
+                } else {
+                    $error = $parent_comment_id > 0 ? 'Veuillez saisir votre réponse.' : 'Veuillez saisir votre commentaire.';
+                }
             }
             if (isset($_POST['delete_comment_id'])) {
                 $cid = (int) $_POST['delete_comment_id'];
@@ -209,9 +229,19 @@ if ($pdo) {
         $stmt->execute([$id]);
         $detail = $stmt->fetch();
         if ($detail) {
-            $stmt = $pdo->prepare("SELECT c.*, u.first_name, u.last_name, u.email FROM comment c JOIN user u ON c.user_id = u.id WHERE c.commentable_type = 'announcement' AND c.commentable_id = ? ORDER BY c.created_at DESC");
+            $stmt = $pdo->prepare("SELECT c.*, u.first_name, u.last_name, u.email FROM comment c JOIN user u ON c.user_id = u.id WHERE c.commentable_type = 'announcement' AND c.commentable_id = ? AND c.parent_comment_id IS NULL ORDER BY c.created_at ASC");
             $stmt->execute([$id]);
             $announcement_comments = $stmt->fetchAll();
+            $stmt = $pdo->prepare("SELECT c.*, u.first_name, u.last_name, u.email FROM comment c JOIN user u ON c.user_id = u.id WHERE c.commentable_type = 'announcement' AND c.commentable_id = ? AND c.parent_comment_id IS NOT NULL ORDER BY c.parent_comment_id, c.created_at ASC");
+            $stmt->execute([$id]);
+            $comment_replies_raw = $stmt->fetchAll();
+            $comment_replies = [];
+            foreach ($comment_replies_raw as $r) {
+                $pid = (int) $r->parent_comment_id;
+                if (!isset($comment_replies[$pid])) $comment_replies[$pid] = [];
+                $comment_replies[$pid][] = $r;
+            }
+            $total_comments_count = count($announcement_comments) + count($comment_replies_raw);
             $stmt = $pdo->prepare("SELECT a.*, u.first_name, u.last_name FROM attachment a JOIN user u ON a.uploaded_by_user_id = u.id WHERE a.attachable_type = 'announcement' AND a.attachable_id = ? ORDER BY a.created_at DESC");
             $stmt->execute([$id]);
             $announcement_attachments = $stmt->fetchAll();
@@ -229,6 +259,21 @@ if ($pdo) {
                 $announcement_conversations = $stmt->fetchAll();
             } else {
                 $announcement_conversations = [];
+            }
+            $announcement_reaction_counts = [];
+            $announcement_reactions = [];
+            try {
+                $stmt = $pdo->prepare("SELECT reaction_type, COUNT(*) AS cnt FROM announcement_reaction WHERE announcement_id = ? GROUP BY reaction_type");
+                $stmt->execute([$id]);
+                while ($row = $stmt->fetch(PDO::FETCH_OBJ)) {
+                    $announcement_reaction_counts[$row->reaction_type] = (int) $row->cnt;
+                }
+                $stmt = $pdo->prepare("SELECT ar.reaction_type, ar.created_at, u.first_name, u.last_name, u.email FROM announcement_reaction ar INNER JOIN user u ON ar.user_id = u.id WHERE ar.announcement_id = ? ORDER BY ar.created_at DESC");
+                $stmt->execute([$id]);
+                $announcement_reactions = $stmt->fetchAll();
+            } catch (PDOException $e) {
+                $announcement_reaction_counts = [];
+                $announcement_reactions = [];
             }
         }
     }
@@ -472,8 +517,13 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
     </div>
 
     <!-- Onglets / sections liées à l'annonce -->
+    <?php
+    $reactionsTotal = array_sum($announcement_reaction_counts);
+    $reactionLabels = ['like' => 'J\'aime', 'love' => 'J\'adore', 'celebrate' => 'Bravo'];
+    ?>
     <ul class="nav nav-tabs mt-4 mb-3 border-0 admin-header-tabs" id="announcementTabs" role="tablist">
-        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-comments" type="button"><i class="bi bi-chat-quote me-1"></i> Commentaires (<?= count($announcement_comments) ?>)</button></li>
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-comments" type="button"><i class="bi bi-chat-quote me-1"></i> Commentaires (<?= isset($total_comments_count) ? $total_comments_count : count($announcement_comments) ?>)</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-reactions" type="button"><i class="bi bi-heart me-1"></i> Réactions (<?= $reactionsTotal ?>)</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-attachments" type="button"><i class="bi bi-paperclip me-1"></i> Pièces jointes (<?= count($announcement_attachments) ?>)</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-notifications" type="button"><i class="bi bi-bell me-1"></i> Notifications (<?= count($announcement_notifications) ?>)</button></li>
         <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-conversations" type="button"><i class="bi bi-chat-text me-1"></i> Conversations (<?= count($announcement_conversations) ?>)</button></li>
@@ -486,22 +536,91 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <form method="POST" enctype="multipart/form-data" class="mb-4 p-3 bg-light rounded">
                     <input type="hidden" name="add_comment" value="1">
                     <div class="row g-2 align-items-end">
-                        <div class="col-md-3"><label class="form-label small mb-0">Auteur</label><select name="comment_user_id" class="form-select form-select-sm" required><option value="">— Choisir —</option><?php foreach ($users as $u): ?><option value="<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></option><?php endforeach; ?></select></div>
-                        <div class="col-md-6"><label class="form-label small mb-0">Commentaire</label><input type="text" name="comment_body" class="form-control form-control-sm" required placeholder="Votre commentaire"></div>
-                        <div class="col-md-2"><button type="submit" class="btn btn-admin-primary btn-sm w-100"><i class="bi bi-plus me-1"></i> Ajouter</button></div>
+                        <div class="col-md-9"><label class="form-label small mb-0">Commentaire</label><input type="text" name="comment_body" class="form-control form-control-sm" required placeholder="Votre commentaire"></div>
+                        <div class="col-md-3"><button type="submit" class="btn btn-admin-primary btn-sm w-100"><i class="bi bi-plus me-1"></i> Ajouter</button></div>
                     </div>
+                    <p class="form-text small mb-0 mt-1 text-muted">Publié avec votre compte : <strong><?= htmlspecialchars($_SESSION['admin_email'] ?? '') ?></strong></p>
                 </form>
                 <?php if (count($announcement_comments) > 0): ?>
                     <ul class="list-group list-group-flush">
-                        <?php foreach ($announcement_comments as $c): ?>
-                            <li class="list-group-item d-flex justify-content-between align-items-start">
-                                <div><strong><?= htmlspecialchars($c->last_name . ' ' . $c->first_name) ?></strong> <span class="text-muted small"><?= $c->created_at ? date('d/m/Y H:i', strtotime($c->created_at)) : '' ?></span><br><span class="text-break"><?= nl2br(htmlspecialchars($c->body)) ?></span></div>
-                                <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce commentaire ?');"><input type="hidden" name="delete_comment_id" value="<?= (int) $c->id ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                        <?php foreach ($announcement_comments as $c):
+                            $replies = $comment_replies[(int) $c->id] ?? [];
+                        ?>
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div><strong><?= htmlspecialchars($c->last_name . ' ' . $c->first_name) ?></strong> <span class="text-muted small"><?= $c->created_at ? date('d/m/Y H:i', strtotime($c->created_at)) : '' ?></span><br><span class="text-break"><?= nl2br(htmlspecialchars($c->body)) ?></span></div>
+                                    <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce commentaire ?');"><input type="hidden" name="delete_comment_id" value="<?= (int) $c->id ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                                </div>
+                                <?php if (count($replies) > 0): ?>
+                                    <ul class="list-unstyled ms-4 mt-2 ps-3 border-start border-2 border-light">
+                                        <?php foreach ($replies as $reply): ?>
+                                            <li class="mb-2 py-2">
+                                                <div class="d-flex justify-content-between align-items-start">
+                                                    <div><strong class="small"><?= htmlspecialchars($reply->last_name . ' ' . $reply->first_name) ?></strong> <span class="text-muted small"><?= $reply->created_at ? date('d/m/Y H:i', strtotime($reply->created_at)) : '' ?></span><br><span class="text-break small"><?= nl2br(htmlspecialchars($reply->body)) ?></span></div>
+                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette réponse ?');"><input type="hidden" name="delete_comment_id" value="<?= (int) $reply->id ?>"><button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button></form>
+                                                </div>
+                                            </li>
+                                        <?php endforeach; ?>
+                                    </ul>
+                                <?php endif; ?>
+                                <form method="POST" class="mt-2 pt-2 border-top border-light reply-form">
+                                    <input type="hidden" name="add_comment" value="1">
+                                    <input type="hidden" name="parent_comment_id" value="<?= (int) $c->id ?>">
+                                    <div class="row g-2 align-items-end">
+                                        <div class="col"><input type="text" name="comment_body" class="form-control form-control-sm" required placeholder="Votre réponse..."></div>
+                                        <div class="col-auto"><button type="submit" class="btn btn-admin-outline btn-sm"><i class="bi bi-reply me-1"></i> Envoyer</button></div>
+                                    </div>
+                                </form>
                             </li>
                         <?php endforeach; ?>
                     </ul>
                 <?php else: ?>
                     <p class="text-muted mb-0">Aucun commentaire. Utilisez le formulaire ci-dessus pour en ajouter.</p>
+                <?php endif; ?>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="tab-reactions" role="tabpanel">
+            <div class="admin-card admin-section-card">
+                <h5 class="card-title mb-3"><i class="bi bi-heart"></i> Réactions à cette annonce</h5>
+                <?php if ($reactionsTotal > 0): ?>
+                    <p class="text-muted small mb-3">Réactions des visiteurs (site client) et des utilisateurs connectés.</p>
+                    <div class="row g-3 mb-4">
+                        <?php foreach (['like', 'love', 'celebrate'] as $type): ?>
+                            <?php $cnt = $announcement_reaction_counts[$type] ?? 0; ?>
+                            <div class="col-md-4">
+                                <div class="p-3 border rounded d-flex align-items-center gap-3">
+                                    <?php
+                                    $icons = ['like' => 'bi-hand-thumbs-up', 'love' => 'bi-heart', 'celebrate' => 'bi-emoji-smile'];
+                                    $label = $reactionLabels[$type] ?? $type;
+                                    ?>
+                                    <span class="fs-4 text-primary"><i class="bi <?= $icons[$type] ?? 'bi-hand-thumbs-up' ?>"></i></span>
+                                    <div>
+                                        <div class="fw-bold"><?= htmlspecialchars($label) ?></div>
+                                        <div class="h4 mb-0"><?= $cnt ?></div>
+                                    </div>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                    <?php if (count($announcement_reactions) > 0): ?>
+                        <h6 class="mb-2">Détail des réactions</h6>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="bg-light"><tr><th>Utilisateur</th><th>Type</th><th>Date</th></tr></thead>
+                                <tbody>
+                                    <?php foreach ($announcement_reactions as $r): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars(trim(($r->first_name ?? '') . ' ' . ($r->last_name ?? '')) ?: $r->email ?? '—') ?></td>
+                                            <td><span class="badge bg-light text-dark"><?= htmlspecialchars($reactionLabels[$r->reaction_type] ?? $r->reaction_type) ?></span></td>
+                                            <td class="text-muted small"><?= $r->created_at ? date('d/m/Y H:i', strtotime($r->created_at)) : '—' ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <p class="text-muted mb-0">Aucune réaction pour le moment. Les réactions sont enregistrées lorsque les utilisateurs (clients ou admins) réagissent sur le <a href="../announcement.php?id=<?= (int) $detail->id ?>" target="_blank" rel="noopener">site client</a>.</p>
                 <?php endif; ?>
             </div>
         </div>
@@ -636,6 +755,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                         <li><hr class="dropdown-divider"></li>
                                         <li><h6 class="dropdown-header py-1">Accès rapide</h6></li>
                                         <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-comments"><i class="bi bi-chat-quote me-2"></i> Commentaires</a></li>
+                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-reactions"><i class="bi bi-heart me-2"></i> Réactions</a></li>
                                         <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-attachments"><i class="bi bi-paperclip me-2"></i> Pièces jointes</a></li>
                                         <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-notifications"><i class="bi bi-bell me-2"></i> Notifications</a></li>
                                         <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-conversations"><i class="bi bi-chat-text me-2"></i> Conversations</a></li>

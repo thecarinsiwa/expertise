@@ -66,6 +66,7 @@ body, html {
 .navbar-main .nav-center { display: flex; justify-content: center; gap: 0.5rem; flex: 1; }
 .navbar-main .nav-right { display: flex; align-items: center; gap: 0.5rem; }
 .navbar-main .nav-right .nav-link { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.navbar-main .nav-right .btn-read-more.nav-link-icon-only { padding: 0.5rem; min-width: 2.5rem; font-size: 1.25rem; line-height: 1; }
 .navbar-main .nav-right .nav-link.dropdown-toggle::after { display: none; }
 
 @media (max-width: 991.98px) {
@@ -271,9 +272,11 @@ body, html {
 
 /* Share */
 .share-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--msf-blue-dark); }
-.share-icon { width: 40px; height: 40px; border: 1px solid var(--msf-red); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: var(--msf-red); text-decoration: none; margin-right: 0.5rem; }
+.share-icon { width: 40px; height: 40px; border: 1px solid var(--msf-red); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: var(--msf-red); text-decoration: none; margin-right: 0.5rem; transition: background 0.2s, color 0.2s; }
 .share-icon:hover { background: var(--msf-red); color: #fff; }
-.copy-link { color: var(--msf-red); text-decoration: none; font-size: 0.9rem; }
+.share-sep { width: 1px; height: 24px; background: #dee2e6; margin: 0 0.5rem; vertical-align: middle; }
+.copy-link { color: var(--msf-red); text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem; }
+.copy-link:hover { color: var(--msf-blue-dark); text-decoration: underline; }
 
 /* Sections / Cards */
 .section-heading { font-size: 1.5rem; font-weight: 700; color: var(--msf-blue-dark); margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 0.03em; }
@@ -515,6 +518,21 @@ body, html {
     gap: 0.5rem;
 }
 .mission-detail-block-title .bi { font-size: 1rem; color: var(--msf-red); }
+
+/* Actualité : réactions et commentaires */
+.announcement-actions-label { font-weight: 600; color: var(--msf-blue-dark); font-size: 0.9rem; }
+.announcement-reactions-form { display: inline-flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.announcement-reaction-btn {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.4rem 0.75rem; border-radius: 999px; border: 1px solid #dee2e6;
+    background: #fff; color: #6c757d; font-size: 0.9rem; transition: background 0.2s, color 0.2s, border-color 0.2s;
+}
+.announcement-reaction-btn:hover { background: #f8f9fa; color: var(--msf-blue-dark); border-color: var(--msf-blue-dark); }
+.announcement-reaction-btn.active { background: rgba(255, 193, 7, 0.2); color: var(--msf-blue-dark); border-color: var(--msf-red); }
+.announcement-reaction-count { font-size: 0.8rem; font-weight: 600; }
+.announcement-comments .announcement-comment-item { padding-left: 0; }
+.announcement-comments .form-control { max-width: 100%; }
+
 .mission-detail-objectives { list-style: none; padding: 0; margin: 0; }
 .mission-detail-objective {
     display: flex;

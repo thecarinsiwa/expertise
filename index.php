@@ -8,16 +8,11 @@ $tagline = 'An international, independent medical humanitarian organisation';
 // Base URL du site (sous-dossier éventuel, ex. /expertise/)
 $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
-// URL absolue de la page pour partage
-$protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-$host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-$pathPrefix = trim($baseUrl, '/');
-$currentPageUrl = $protocol . '://' . $host . '/' . ($pathPrefix ? $pathPrefix . '/' : '') . 'index.php';
 
 require_once __DIR__ . '/inc/db.php';
 
 try {
-    $stmt = $pdo->query("SELECT name, description FROM organisation WHERE is_active = 1 LIMIT 1");
+    $stmt = $pdo->query("SELECT name, description, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url FROM organisation WHERE is_active = 1 LIMIT 1");
     if ($row = $stmt->fetch()) {
         $organisation = $row;
         $pageTitle = $row->name;
@@ -190,19 +185,39 @@ require __DIR__ . '/inc/header.php';
         <?php endif; ?>
     </section>
 
-    <!-- Partager (URL et titre dynamiques) -->
-    <div class="container py-4" data-share-url="<?= htmlspecialchars($currentPageUrl) ?>" data-share-title="<?= htmlspecialchars($pageTitle) ?>">
+    <!-- Médias sociaux de l'organisation -->
+    <?php
+    $hasSocial = $organisation && (
+        !empty($organisation->facebook_url) || !empty($organisation->linkedin_url) || !empty($organisation->twitter_url)
+        || !empty($organisation->instagram_url) || !empty($organisation->youtube_url)
+    );
+    ?>
+    <?php if ($hasSocial): ?>
+    <div class="container py-4 share-section">
         <div class="row align-items-center">
-            <div class="col-md-6">
-                <p class="share-label mb-2">Partager</p>
-                <a href="https://www.facebook.com/sharer/sharer.php?u=<?= urlencode($currentPageUrl) ?>" class="share-icon" aria-label="Partager sur Facebook" target="_blank" rel="noopener noreferrer"><i class="bi bi-facebook"></i></a>
-                <a href="https://twitter.com/intent/tweet?url=<?= urlencode($currentPageUrl) ?>&text=<?= urlencode($pageTitle) ?>" class="share-icon" aria-label="Partager sur X" target="_blank" rel="noopener noreferrer"><i class="bi bi-twitter-x"></i></a>
-                <a href="mailto:?subject=<?= urlencode($pageTitle) ?>&body=<?= urlencode($currentPageUrl) ?>" class="share-icon" aria-label="Partager par email"><i class="bi bi-envelope"></i></a>
-                <a href="#" class="share-icon share-print" aria-label="Imprimer" title="Imprimer"><i class="bi bi-printer"></i></a>
-                <a href="#" class="copy-link ms-1" data-copy-url="<?= htmlspecialchars($currentPageUrl) ?>" title="Copier l’adresse de la page"><i class="bi bi-link-45deg"></i> <span class="copy-link-text">Copier le lien</span></a>
+            <div class="col-12">
+                <p class="share-label mb-2">Suivez-nous</p>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <?php if (!empty($organisation->facebook_url)): ?>
+                        <a href="<?= htmlspecialchars($organisation->facebook_url) ?>" class="share-icon" aria-label="Facebook" target="_blank" rel="noopener noreferrer"><i class="bi bi-facebook"></i></a>
+                    <?php endif; ?>
+                    <?php if (!empty($organisation->twitter_url)): ?>
+                        <a href="<?= htmlspecialchars($organisation->twitter_url) ?>" class="share-icon" aria-label="X (Twitter)" target="_blank" rel="noopener noreferrer"><i class="bi bi-twitter-x"></i></a>
+                    <?php endif; ?>
+                    <?php if (!empty($organisation->linkedin_url)): ?>
+                        <a href="<?= htmlspecialchars($organisation->linkedin_url) ?>" class="share-icon" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer"><i class="bi bi-linkedin"></i></a>
+                    <?php endif; ?>
+                    <?php if (!empty($organisation->instagram_url)): ?>
+                        <a href="<?= htmlspecialchars($organisation->instagram_url) ?>" class="share-icon" aria-label="Instagram" target="_blank" rel="noopener noreferrer"><i class="bi bi-instagram"></i></a>
+                    <?php endif; ?>
+                    <?php if (!empty($organisation->youtube_url)): ?>
+                        <a href="<?= htmlspecialchars($organisation->youtube_url) ?>" class="share-icon" aria-label="YouTube" target="_blank" rel="noopener noreferrer"><i class="bi bi-youtube"></i></a>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
+    <?php endif; ?>
 
     <!-- À propos -->
     <section class="index-about py-5">

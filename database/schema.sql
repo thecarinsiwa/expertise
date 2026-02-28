@@ -819,7 +819,18 @@ CREATE TABLE IF NOT EXISTS `announcement` (
   CONSTRAINT `fk_announcement_author` FOREIGN KEY (`author_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Lier les conversations à une annonce (intégré depuis migrate_conversation_announcement.sql)
+CREATE TABLE IF NOT EXISTS `announcement_reaction` (
+  `announcement_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `reaction_type` VARCHAR(50) NOT NULL DEFAULT 'like',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`announcement_id`, `user_id`),
+  KEY `idx_announcement_reaction_user` (`user_id`),
+  CONSTRAINT `fk_announcement_reaction_announcement` FOREIGN KEY (`announcement_id`) REFERENCES `announcement` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_announcement_reaction_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Lier les conversations à une annonce
 ALTER TABLE `conversation`
   ADD COLUMN `announcement_id` INT UNSIGNED DEFAULT NULL AFTER `channel_id`,
   ADD KEY `idx_conversation_announcement` (`announcement_id`),
@@ -1221,7 +1232,8 @@ VALUES
 (1, 1, 'Super Administrateur', 'superadmin', 1),
 (2, 1, 'Administrateur', 'admin', 1),
 (3, 1, 'Manager', 'manager', 1),
-(4, 1, 'Collaborateur', 'staff', 1);
+(4, 1, 'Collaborateur', 'staff', 1),
+(5, 1, 'Client', 'client', 1);
 
 -- Default Permissions (RBAC: 4 actions per resource – voir, ajout, modifier, supprimer)
 INSERT IGNORE INTO `permission` (`module`, `code`, `name`) VALUES
@@ -1334,4 +1346,9 @@ SELECT 1, id FROM `permission`;
 -- Link Administrateur (role_id 2) to all permissions
 INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
 SELECT 2, id FROM `permission`;
+
+-- Rôle système Client pour l'espace client (inscription publique, tableau de bord)
+-- Organisation 1 = Expertise Humanitaire et Sociale SARL (défaut)
+INSERT IGNORE INTO `role` (`id`, `organisation_id`, `name`, `code`, `is_system`)
+VALUES (5, 1, 'Client', 'client', 1);
 
