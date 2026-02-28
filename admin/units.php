@@ -287,10 +287,24 @@ require __DIR__ . '/inc/header.php';
     <div class="admin-card admin-section-card text-center py-5 text-muted">
         Sélectionnez une organisation pour gérer ses départements, services et unités.
     </div>
-<?php else: ?>
-
-    <!-- Départements -->
+<?php else:
+    $activeTab = $formType ?: ($_GET['tab'] ?? 'department');
+?>
     <div class="admin-card admin-section-card mb-4">
+        <ul class="nav nav-tabs nav-tabs-admin mb-0" id="unitsTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link <?= $activeTab === 'department' ? 'active' : '' ?>" id="tab-department-btn" data-bs-toggle="tab" data-bs-target="#tab-department" type="button" role="tab">Départements</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link <?= $activeTab === 'service' ? 'active' : '' ?>" id="tab-service-btn" data-bs-toggle="tab" data-bs-target="#tab-service" type="button" role="tab">Services</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link <?= $activeTab === 'unit' ? 'active' : '' ?>" id="tab-unit-btn" data-bs-toggle="tab" data-bs-target="#tab-unit" type="button" role="tab">Unités</button>
+            </li>
+        </ul>
+        <div class="tab-content border border-top-0 rounded-bottom p-3" id="unitsTabContent">
+            <div class="tab-pane fade <?= $activeTab === 'department' ? 'show active' : '' ?>" id="tab-department" role="tabpanel">
+    <!-- Départements -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-title mb-0"><i class="bi bi-building me-2"></i>Départements</h5>
             <a href="units.php?organisation_id=<?= $organisationId ?>&type=department&form_action=add" class="btn btn-sm btn-admin-primary">Ajouter un département</a>
@@ -314,7 +328,7 @@ require __DIR__ . '/inc/header.php';
                         <textarea name="description" id="department_description" class="form-control"><?= htmlspecialchars(isset($editDepartment) ? ($editDepartment->description ?? '') : '') ?></textarea>
                         <script type="application/json" id="department_description_data"><?= json_encode(isset($editDepartment) ? ($editDepartment->description ?? '') : '') ?></script>
                     </div>
-                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units.php?organisation_id=<?= $organisationId ?>" class="btn btn-secondary btn-sm">Annuler</a></div>
+                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units.php?organisation_id=<?= $organisationId ?>&tab=department" class="btn btn-secondary btn-sm">Annuler</a></div>
                 </div>
             </form>
         <?php endif; ?>
@@ -346,10 +360,10 @@ require __DIR__ . '/inc/header.php';
         <?php else: ?>
             <p class="text-muted mb-0">Aucun département. <a href="units.php?organisation_id=<?= $organisationId ?>&type=department&form_action=add">Ajouter un département</a></p>
         <?php endif; ?>
-    </div>
+            </div>
 
+            <div class="tab-pane fade <?= $activeTab === 'service' ? 'show active' : '' ?>" id="tab-service" role="tabpanel">
     <!-- Services -->
-    <div class="admin-card admin-section-card mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-title mb-0"><i class="bi bi-gear me-2"></i>Services</h5>
             <a href="units.php?organisation_id=<?= $organisationId ?>&type=service&form_action=add" class="btn btn-sm btn-admin-primary">Ajouter un service</a>
@@ -373,7 +387,7 @@ require __DIR__ . '/inc/header.php';
                         <textarea name="description" id="service_description" class="form-control"><?= htmlspecialchars(isset($editService) ? ($editService->description ?? '') : '') ?></textarea>
                         <script type="application/json" id="service_description_data"><?= json_encode(isset($editService) ? ($editService->description ?? '') : '') ?></script>
                     </div>
-                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units.php?organisation_id=<?= $organisationId ?>" class="btn btn-secondary btn-sm">Annuler</a></div>
+                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units.php?organisation_id=<?= $organisationId ?>&tab=service" class="btn btn-secondary btn-sm">Annuler</a></div>
                 </div>
             </form>
         <?php endif; ?>
@@ -405,10 +419,10 @@ require __DIR__ . '/inc/header.php';
         <?php else: ?>
             <p class="text-muted mb-0">Aucun service. Créez d'abord un département, puis <a href="units.php?organisation_id=<?= $organisationId ?>&type=service&form_action=add">ajouter un service</a>.</p>
         <?php endif; ?>
-    </div>
+            </div>
 
+            <div class="tab-pane fade <?= $activeTab === 'unit' ? 'show active' : '' ?>" id="tab-unit" role="tabpanel">
     <!-- Unités -->
-    <div class="admin-card admin-section-card mb-4">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-title mb-0"><i class="bi bi-diagram-3 me-2"></i>Unités</h5>
             <a href="units.php?organisation_id=<?= $organisationId ?>&type=unit&form_action=add" class="btn btn-sm btn-admin-primary">Ajouter une unité</a>
@@ -432,7 +446,7 @@ require __DIR__ . '/inc/header.php';
                         <textarea name="description" id="unit_description" class="form-control"><?= htmlspecialchars(isset($editUnit) ? ($editUnit->description ?? '') : '') ?></textarea>
                         <script type="application/json" id="unit_description_data"><?= json_encode(isset($editUnit) ? ($editUnit->description ?? '') : '') ?></script>
                     </div>
-                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units.php?organisation_id=<?= $organisationId ?>" class="btn btn-secondary btn-sm">Annuler</a></div>
+                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units.php?organisation_id=<?= $organisationId ?>&tab=unit" class="btn btn-secondary btn-sm">Annuler</a></div>
                 </div>
             </form>
         <?php endif; ?>
@@ -464,8 +478,9 @@ require __DIR__ . '/inc/header.php';
         <?php else: ?>
             <p class="text-muted mb-0">Aucune unité. Créez d'abord un service, puis <a href="units.php?organisation_id=<?= $organisationId ?>&type=unit&form_action=add">ajouter une unité</a>.</p>
         <?php endif; ?>
+            </div>
+        </div>
     </div>
-
 <?php endif; ?>
 
 <?php if ($currentOrg && ($formType === 'department' && ($formAction === 'add' || $editDepartment)) || ($formType === 'service' && ($formAction === 'add' || $editService)) || ($formType === 'unit' && ($formAction === 'add' || $editUnit))): ?>
@@ -527,6 +542,9 @@ document.addEventListener('DOMContentLoaded', function() {
 <style>
     .admin-table th { background: #f8f9fa; padding: 0.6rem 0.5rem; font-size: 0.85rem; }
     .admin-table td { padding: 0.6rem 0.5rem; font-size: 0.9rem; }
+    #unitsTabs .nav-link { color: var(--admin-muted, #6c757d); font-weight: 500; border: none; border-bottom: 2px solid transparent; padding: 0.75rem 1rem; }
+    #unitsTabs .nav-link:hover { color: var(--admin-sidebar, #0d6efd); }
+    #unitsTabs .nav-link.active { color: var(--admin-sidebar, #0d6efd); background: transparent; border-bottom-color: var(--admin-sidebar, #0d6efd); }
 </style>
 
 <footer class="admin-main-footer">
