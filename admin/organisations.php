@@ -60,11 +60,15 @@ if ($pdo) {
             $youtube_url = trim($_POST['youtube_url'] ?? '') ?: null;
 
             $logo = null;
+            $cover_image = null;
             if ($id > 0) {
-                $cur = $pdo->prepare("SELECT logo FROM organisation WHERE id = ?");
+                $cur = $pdo->prepare("SELECT logo, cover_image FROM organisation WHERE id = ?");
                 $cur->execute([$id]);
                 $row = $cur->fetch();
-                if ($row && !empty($row->logo)) $logo = $row->logo;
+                if ($row) {
+                    if (!empty($row->logo)) $logo = $row->logo;
+                    if (!empty($row->cover_image)) $cover_image = $row->cover_image;
+                }
             }
             if (!empty($_FILES['logo']['name']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
                 $target_dir = __DIR__ . '/../uploads/organisations/';
@@ -77,14 +81,25 @@ if ($pdo) {
                     }
                 }
             }
+            if (!empty($_FILES['cover_image']['name']) && $_FILES['cover_image']['error'] === UPLOAD_ERR_OK) {
+                $target_dir = __DIR__ . '/../uploads/organisations/';
+                if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+                $ext = strtolower(pathinfo($_FILES['cover_image']['name'], PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                    $file_name = 'cover_' . ($id ?: 'new') . '_' . time() . '_' . uniqid() . '.' . $ext;
+                    if (move_uploaded_file($_FILES['cover_image']['tmp_name'], $target_dir . $file_name)) {
+                        $cover_image = 'uploads/organisations/' . $file_name;
+                    }
+                }
+            }
 
             if ($name === '') {
                 $error = 'Le nom est obligatoire.';
             } else {
                 if ($id > 0) {
                     require_permission('admin.organisations.modify');
-                    $stmt = $pdo->prepare("UPDATE organisation SET name = ?, code = ?, description = ?, address = ?, phone = ?, email = ?, website = ?, postal_code = ?, city = ?, country = ?, rccm = ?, nif = ?, sector = ?, notes = ?, logo = ?, facebook_url = ?, linkedin_url = ?, twitter_url = ?, instagram_url = ?, youtube_url = ?, is_active = ? WHERE id = ?");
-                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active, $id]);
+                    $stmt = $pdo->prepare("UPDATE organisation SET name = ?, code = ?, description = ?, address = ?, phone = ?, email = ?, website = ?, postal_code = ?, city = ?, country = ?, rccm = ?, nif = ?, sector = ?, notes = ?, logo = ?, cover_image = ?, facebook_url = ?, linkedin_url = ?, twitter_url = ?, instagram_url = ?, youtube_url = ?, is_active = ? WHERE id = ?");
+                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $cover_image, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active, $id]);
                     $pdo->prepare("DELETE FROM organisation_organisation_type WHERE organisation_id = ?")->execute([$id]);
                     $stmtTypes = $pdo->prepare("INSERT INTO organisation_organisation_type (organisation_id, type_code) VALUES (?, ?)");
                     foreach ($organisation_types as $tc) {
@@ -94,8 +109,8 @@ if ($pdo) {
                     $action = 'view';
                 } else {
                     require_permission('admin.organisations.add');
-                    $stmt = $pdo->prepare("INSERT INTO organisation (name, code, description, address, phone, email, website, postal_code, city, country, rccm, nif, sector, notes, logo, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active]);
+                    $stmt = $pdo->prepare("INSERT INTO organisation (name, code, description, address, phone, email, website, postal_code, city, country, rccm, nif, sector, notes, logo, cover_image, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $cover_image, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active]);
                     $newId = (int) $pdo->lastInsertId();
                     $stmtTypes = $pdo->prepare("INSERT INTO organisation_organisation_type (organisation_id, type_code) VALUES (?, ?)");
                     foreach ($organisation_types as $tc) {
@@ -237,7 +252,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-bold">Description</label>
-                    <textarea name="description" class="form-control" rows="2"><?= htmlspecialchars($detail->description ?? '') ?></textarea>
+                    <textarea name="description" id="organisation_description" class="form-control" rows="6" placeholder="Description de l'organisation (texte enrichi)"></textarea>
+                    <script type="application/json" id="organisation_description_data"><?= json_encode(isset($detail->description) ? $detail->description : '', JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?></script>
                 </div>
                 <div class="col-12">
                     <label class="form-label fw-bold">Adresse</label>
@@ -307,6 +323,16 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                     <?php endif; ?>
                     <input type="file" name="logo" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp">
                 </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Photo de couverture</label>
+                    <p class="text-muted small mb-1">Image d'en-tête affichée sur la page « Qui nous sommes » (bannière).</p>
+                    <?php if (!empty($detail->cover_image)): ?>
+                        <div class="mb-2">
+                            <img src="../<?= htmlspecialchars($detail->cover_image) ?>" alt="Couverture" class="rounded border" style="max-height: 120px; max-width: 100%; object-fit: cover;">
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="cover_image" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp">
+                </div>
                 <div class="col-12"><h6 class="text-muted mb-2">Réseaux sociaux</h6></div>
                 <div class="col-md-6">
                     <label class="form-label">Facebook</label>
@@ -341,6 +367,57 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             </div>
         </form>
     </div>
+    <style>.organisation-description-editor h1,.organisation-description-editor h2,.organisation-description-editor h3,.organisation-description-editor h4{ margin: 1rem 0 0.5rem; font-size: 1rem; font-weight: 600; } .organisation-description-editor p{ margin: 0.5rem 0; } .organisation-description-editor ul,.organisation-description-editor ol{ margin: 0.5rem 0; padding-left: 1.5rem; } .organisation-description-editor img{ max-width: 100%; height: auto; }</style>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (typeof $ !== 'undefined' && $.fn.summernote) {
+            $('#organisation_description').summernote({
+                placeholder: 'Description de l\'organisation (texte enrichi)...',
+                tabsize: 2,
+                height: 220,
+                toolbar: [
+                    ['style', ['style']],
+                    ['font', ['bold', 'italic', 'underline', 'clear']],
+                    ['para', ['ul', 'ol', 'paragraph']],
+                    ['table', ['table']],
+                    ['insert', ['link', 'picture']],
+                    ['view', ['fullscreen', 'codeview', 'help']]
+                ],
+                callbacks: {
+                    onImageUpload: function(files) {
+                        for (var i = 0; i < files.length; i++) {
+                            var data = new FormData();
+                            data.append('file', files[i]);
+                            $.ajax({
+                                url: 'upload_organisation_image.php',
+                                data: data,
+                                processData: false,
+                                contentType: false,
+                                type: 'POST',
+                                success: function(res) {
+                                    if (res && res.url) $('#organisation_description').summernote('insertImage', res.url);
+                                },
+                                error: function(xhr) {
+                                    try {
+                                        var r = (xhr.responseJSON || {});
+                                        alert(r.error || 'Erreur lors de l\'upload de l\'image.');
+                                    } catch (e) { alert('Erreur lors de l\'upload de l\'image.'); }
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+            var dataEl = document.getElementById('organisation_description_data');
+            if (dataEl) {
+                try {
+                    var content = dataEl.textContent ? JSON.parse(dataEl.textContent) : '';
+                    if (content) $('#organisation_description').summernote('code', content);
+                } catch (e) {}
+            }
+        }
+    });
+    </script>
 <?php endif; ?>
 
 <?php if ($detail && !$isForm): ?>
@@ -350,26 +427,33 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             <?php if (!empty($detail->logo)): ?>
                 <img src="../<?= htmlspecialchars($detail->logo) ?>" alt="Logo" class="rounded border flex-shrink-0" style="width: 80px; height: 80px; object-fit: contain;">
             <?php endif; ?>
+            <?php if (!empty($detail->cover_image)): ?>
+                <img src="../<?= htmlspecialchars($detail->cover_image) ?>" alt="Photo de couverture" class="rounded border flex-shrink-0" style="max-width: 280px; max-height: 120px; object-fit: cover;">
+            <?php endif; ?>
+            <?php $na = '-'; ?>
             <table class="admin-table mb-0 flex-grow-1">
             <tr><th style="width:180px;">Nom</th><td><?= htmlspecialchars($detail->name) ?></td></tr>
             <tr><th>Code</th><td><?= htmlspecialchars($detail->code ?? '—') ?></td></tr>
-            <tr><th>Description</th><td><?= nl2br(htmlspecialchars($detail->description ?? '—')) ?></td></tr>
-            <tr><th>Adresse</th><td><?= nl2br(htmlspecialchars($detail->address ?? '—')) ?></td></tr>
-            <tr><th>Code postal</th><td><?= htmlspecialchars($detail->postal_code ?? '—') ?></td></tr>
-            <tr><th>Ville</th><td><?= htmlspecialchars($detail->city ?? '—') ?></td></tr>
-            <tr><th>Pays</th><td><?= htmlspecialchars($detail->country ?? '—') ?></td></tr>
-            <tr><th>Téléphone</th><td><?= htmlspecialchars($detail->phone ?? '—') ?></td></tr>
-            <tr><th>Email</th><td><?= htmlspecialchars($detail->email ?? '—') ?></td></tr>
-            <tr><th>Site web</th><td><?= $detail->website ? '<a href="' . htmlspecialchars($detail->website) . '" target="_blank" rel="noopener">' . htmlspecialchars($detail->website) . '</a>' : '—' ?></td></tr>
-            <tr><th>RCCM</th><td><?= htmlspecialchars($detail->rccm ?? '—') ?></td></tr>
-            <tr><th>NIF</th><td><?= htmlspecialchars($detail->nif ?? '—') ?></td></tr>
+            <tr><th>Description</th><td><div class="organisation-description-view"><?php
+                $allowedDescTags = '<p><br><strong><b><em><i><u><a><ul><ol><li><h2><h3><h4><img><table><thead><tbody><tr><td><th><span><div>';
+                echo (isset($detail->description) && $detail->description !== '') ? strip_tags($detail->description, $allowedDescTags) : $na;
+            ?></div></td></tr>
+            <tr><th>Adresse</th><td><?= nl2br(htmlspecialchars($detail->address ?? $na)) ?></td></tr>
+            <tr><th>Code postal</th><td><?= htmlspecialchars($detail->postal_code ?? $na) ?></td></tr>
+            <tr><th>Ville</th><td><?= htmlspecialchars($detail->city ?? $na) ?></td></tr>
+            <tr><th>Pays</th><td><?= htmlspecialchars($detail->country ?? $na) ?></td></tr>
+            <tr><th>Téléphone</th><td><?= htmlspecialchars($detail->phone ?? $na) ?></td></tr>
+            <tr><th>Email</th><td><?= htmlspecialchars($detail->email ?? $na) ?></td></tr>
+            <tr><th>Site web</th><td><?= $detail->website ? '<a href="' . htmlspecialchars($detail->website) . '" target="_blank" rel="noopener">' . htmlspecialchars($detail->website) . '</a>' : $na ?></td></tr>
+            <tr><th>RCCM</th><td><?= htmlspecialchars($detail->rccm ?? $na) ?></td></tr>
+            <tr><th>NIF</th><td><?= htmlspecialchars($detail->nif ?? $na) ?></td></tr>
             <tr><th>Type(s) d'organisation</th><td>
                 <?php
                 $detailTypes = $detail->organisation_types ?? [];
                 if (!empty($detailTypes)) {
                     echo implode(', ', array_map(function ($code) use ($organisationTypes) { return $organisationTypes[$code] ?? $code; }, $detailTypes));
                 } else {
-                    echo '—';
+                    echo $na;
                 }
                 ?>
             </td></tr>

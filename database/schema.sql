@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `organisation` (
   `sector` VARCHAR(150) DEFAULT NULL COMMENT 'Secteur d''activité',
   `notes` TEXT DEFAULT NULL COMMENT 'Notes internes',
   `logo` VARCHAR(500) DEFAULT NULL COMMENT 'Logo de l''organisation',
+  `cover_image` VARCHAR(500) DEFAULT NULL COMMENT 'Photo de couverture (bannière)',
   `facebook_url` VARCHAR(500) DEFAULT NULL COMMENT 'Facebook',
   `linkedin_url` VARCHAR(500) DEFAULT NULL COMMENT 'LinkedIn',
   `twitter_url` VARCHAR(500) DEFAULT NULL COMMENT 'Twitter / X',

@@ -587,11 +587,72 @@ body, html {
 .page-content .content-prose a:hover { text-decoration: underline; }
 
 /* About page – organisation & structure (Organizational Management) */
+.about-hero {
+    position: relative;
+    min-height: 38vh;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    margin-top: -108px;
+    padding-top: 108px;
+}
+.about-hero-bg {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+.about-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(29, 28, 62, 0.88) 0%, rgba(29, 28, 62, 0.45) 50%, rgba(29, 28, 62, 0.2) 100%);
+}
+.about-hero-content {
+    position: relative;
+    z-index: 1;
+    padding-bottom: 2rem;
+    padding-top: 1.5rem;
+}
+.about-hero-breadcrumb { margin-bottom: 0.75rem; }
+.about-hero-breadcrumb a:hover { opacity: 0.9; }
+.about-hero-title {
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+.about-page.about-page-has-hero { padding-top: 2rem; }
+.about-page .about-org-description-html {
+    font-size: 1.05rem;
+    line-height: 1.75;
+}
+.about-page .about-org-description-html img { max-width: 100%; height: auto; border-radius: 6px; }
+.about-page .about-org-description-html p { margin-bottom: 1rem; }
+.about-page .about-org-description-html p:last-child { margin-bottom: 0; }
+.about-page .about-org-description-html ul, .about-page .about-org-description-html ol { margin-bottom: 1rem; padding-left: 1.5rem; }
+.about-page .about-org-description-html h2, .about-page .about-org-description-html h3 { color: var(--msf-blue-dark); margin-top: 1.25rem; margin-bottom: 0.5rem; }
+.about-page .about-org-description-html a { color: var(--pam-blue); text-decoration: none; }
+.about-page .about-org-description-html a:hover { text-decoration: underline; }
+
+.about-page .about-org-identity { border-radius: 10px; max-width: 720px; }
+.about-page .about-org-logo { width: 120px; height: 120px; object-fit: contain; border-radius: 8px; }
+.about-page .about-org-types { color: #555; font-size: 0.95rem; }
 .about-page .about-org-description { font-size: 1.05rem; line-height: 1.75; color: #333; max-width: 720px; }
-.about-page .about-contact-card { max-width: 560px; }
+.about-page .about-contact-card { max-width: 560px; border-radius: 10px; }
 .about-page .about-contact-card a { color: var(--msf-blue-dark); font-weight: 500; }
 .about-page .about-contact-card a:hover { color: var(--msf-red); }
+.about-page .about-org-social .about-social-link {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--msf-blue-dark); color: #fff !important;
+    font-size: 1.2rem; text-decoration: none; transition: opacity 0.2s, transform 0.2s;
+}
+.about-page .about-org-social .about-social-link:hover { opacity: 0.9; transform: scale(1.05); color: #fff !important; }
 .about-structure-icon { font-size: 1.5rem; flex-shrink: 0; }
+.about-structure-photo .about-dept-img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; }
+.about-svc-img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.about-unit-img { width: 28px; height: 28px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
 .about-structure-block { border-radius: 10px; transition: box-shadow 0.2s ease; }
 .about-structure-block:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
 .about-services-list { border-left: 2px solid rgba(29, 28, 62, 0.15); padding-left: 1rem; }
@@ -603,7 +664,9 @@ body, html {
 .about-entities .about-entities-list { margin-bottom: 0; }
 @media (max-width: 767.98px) {
     .about-page .about-contact-card .row { --bs-gutter-x: 0.75rem; }
+    .about-page .about-org-logo { width: 80px; height: 80px; }
     .about-structure-block .card-body { padding: 1rem !important; }
+    .about-structure-photo .about-dept-img { width: 60px; height: 60px; }
     .about-services-list { padding-left: 0.75rem; }
     .about-units-list { margin-left: 0.5rem !important; }
 }
