@@ -671,6 +671,24 @@ body, html {
     .about-units-list { margin-left: 0.5rem !important; }
 }
 
+/* About detail page (layout like project detail) */
+.about-detail .about-detail-logo-img { width: 100px; height: 100px; object-fit: contain; border-radius: 8px; }
+.about-detail .about-dept-thumb { object-fit: cover; flex-shrink: 0; }
+.about-detail .about-dept-icon { font-size: 1.5rem; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; }
+.about-detail .mission-detail-description.about-org-description-html img { max-width: 100%; height: auto; border-radius: 6px; }
+.about-detail .mission-detail-description.about-org-description-html p { margin-bottom: 1rem; }
+.about-detail .mission-detail-description.about-org-description-html p:last-child { margin-bottom: 0; }
+.about-detail .mission-detail-description.about-org-description-html h2,
+.about-detail .mission-detail-description.about-org-description-html h3 { color: var(--msf-blue-dark); margin-top: 1.25rem; margin-bottom: 0.5rem; }
+.about-detail .mission-detail-description.about-org-description-html a { color: var(--pam-blue); text-decoration: none; }
+.about-detail .mission-detail-description.about-org-description-html a:hover { text-decoration: underline; }
+.about-detail .about-sidebar-contact a { color: var(--msf-blue-dark); text-decoration: none; }
+.about-detail .about-sidebar-contact a:hover { text-decoration: underline; }
+.about-detail .about-structure-description { font-size: 0.9rem; line-height: 1.5; }
+.about-detail .about-structure-description img { max-width: 100%; height: auto; border-radius: 4px; }
+.about-detail .about-structure-description p { margin-bottom: 0.5rem; }
+.about-detail .about-structure-description p:last-child { margin-bottom: 0; }
+
 /* Responsibility page – documents & engagements */
 .responsibility-page .responsibility-category-card { border-radius: 10px; transition: box-shadow 0.2s ease; }
 .responsibility-page .responsibility-category-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
