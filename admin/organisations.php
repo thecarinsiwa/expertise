@@ -10,6 +10,13 @@ $detail = null;
 $stats = ['total' => 0, 'active' => 0];
 $error = '';
 $success = '';
+$organisationTypes = [
+    'company' => 'Société commerciale',
+    'association' => 'Association',
+    'ngo' => 'ONG',
+    'public' => 'Administration / Public',
+    'other' => 'Autre',
+];
 
 if ($pdo) {
     $action = $_GET['action'] ?? 'list';
@@ -35,22 +42,66 @@ if ($pdo) {
             $phone = trim($_POST['phone'] ?? '') ?: null;
             $email = trim($_POST['email'] ?? '') ?: null;
             $website = trim($_POST['website'] ?? '') ?: null;
+            $postal_code = trim($_POST['postal_code'] ?? '') ?: null;
+            $city = trim($_POST['city'] ?? '') ?: null;
+            $country = trim($_POST['country'] ?? '') ?: null;
+            $rccm = trim($_POST['rccm'] ?? '') ?: null;
+            $nif = trim($_POST['nif'] ?? '') ?: null;
+            $organisation_types = isset($_POST['organisation_types']) && is_array($_POST['organisation_types'])
+                ? array_intersect($_POST['organisation_types'], array_keys($organisationTypes)) : [];
+            $sector = trim($_POST['sector'] ?? '') ?: null;
+            $notes = trim($_POST['notes'] ?? '') ?: null;
             $is_active = isset($_POST['is_active']) ? 1 : 0;
+
+            $facebook_url = trim($_POST['facebook_url'] ?? '') ?: null;
+            $linkedin_url = trim($_POST['linkedin_url'] ?? '') ?: null;
+            $twitter_url = trim($_POST['twitter_url'] ?? '') ?: null;
+            $instagram_url = trim($_POST['instagram_url'] ?? '') ?: null;
+            $youtube_url = trim($_POST['youtube_url'] ?? '') ?: null;
+
+            $logo = null;
+            if ($id > 0) {
+                $cur = $pdo->prepare("SELECT logo FROM organisation WHERE id = ?");
+                $cur->execute([$id]);
+                $row = $cur->fetch();
+                if ($row && !empty($row->logo)) $logo = $row->logo;
+            }
+            if (!empty($_FILES['logo']['name']) && $_FILES['logo']['error'] === UPLOAD_ERR_OK) {
+                $target_dir = __DIR__ . '/../uploads/organisations/';
+                if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+                $ext = strtolower(pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                    $file_name = 'logo_' . ($id ?: 'new') . '_' . time() . '_' . uniqid() . '.' . $ext;
+                    if (move_uploaded_file($_FILES['logo']['tmp_name'], $target_dir . $file_name)) {
+                        $logo = 'uploads/organisations/' . $file_name;
+                    }
+                }
+            }
 
             if ($name === '') {
                 $error = 'Le nom est obligatoire.';
             } else {
                 if ($id > 0) {
                     require_permission('admin.organisations.modify');
-                    $stmt = $pdo->prepare("UPDATE organisation SET name = ?, code = ?, description = ?, address = ?, phone = ?, email = ?, website = ?, is_active = ? WHERE id = ?");
-                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $is_active, $id]);
+                    $stmt = $pdo->prepare("UPDATE organisation SET name = ?, code = ?, description = ?, address = ?, phone = ?, email = ?, website = ?, postal_code = ?, city = ?, country = ?, rccm = ?, nif = ?, sector = ?, notes = ?, logo = ?, facebook_url = ?, linkedin_url = ?, twitter_url = ?, instagram_url = ?, youtube_url = ?, is_active = ? WHERE id = ?");
+                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active, $id]);
+                    $pdo->prepare("DELETE FROM organisation_organisation_type WHERE organisation_id = ?")->execute([$id]);
+                    $stmtTypes = $pdo->prepare("INSERT INTO organisation_organisation_type (organisation_id, type_code) VALUES (?, ?)");
+                    foreach ($organisation_types as $tc) {
+                        $stmtTypes->execute([$id, $tc]);
+                    }
                     $success = 'Organisation mise à jour.';
                     $action = 'view';
                 } else {
                     require_permission('admin.organisations.add');
-                    $stmt = $pdo->prepare("INSERT INTO organisation (name, code, description, address, phone, email, website, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $is_active]);
-                    header('Location: organisations.php?id=' . $pdo->lastInsertId() . '&msg=created');
+                    $stmt = $pdo->prepare("INSERT INTO organisation (name, code, description, address, phone, email, website, postal_code, city, country, rccm, nif, sector, notes, logo, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active]);
+                    $newId = (int) $pdo->lastInsertId();
+                    $stmtTypes = $pdo->prepare("INSERT INTO organisation_organisation_type (organisation_id, type_code) VALUES (?, ?)");
+                    foreach ($organisation_types as $tc) {
+                        $stmtTypes->execute([$newId, $tc]);
+                    }
+                    header('Location: organisations.php?id=' . $newId . '&msg=created');
                     exit;
                 }
             }
@@ -62,6 +113,12 @@ if ($pdo) {
         $stmt->execute([$id]);
         $detail = $stmt->fetch();
         if ($detail) {
+            $detail->organisation_types = [];
+            $stmtTypes = $pdo->prepare("SELECT type_code FROM organisation_organisation_type WHERE organisation_id = ?");
+            $stmtTypes->execute([$id]);
+            while ($row = $stmtTypes->fetch()) {
+                $detail->organisation_types[] = $row->type_code;
+            }
             $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM department WHERE organisation_id = ?");
             $stmtCount->execute([$id]);
             $detail->count_departments = (int) $stmtCount->fetchColumn();
@@ -77,7 +134,7 @@ if ($pdo) {
     if (!$detail || $action === 'list') {
         $stats['total'] = (int) $pdo->query("SELECT COUNT(*) FROM organisation")->fetchColumn();
         $stats['active'] = (int) $pdo->query("SELECT COUNT(*) FROM organisation WHERE is_active = 1")->fetchColumn();
-        $stmt = $pdo->query("SELECT id, name, code, is_active, created_at FROM organisation ORDER BY name");
+        $stmt = $pdo->query("SELECT id, name, code, logo, is_active, created_at FROM organisation ORDER BY name");
         if ($stmt) $list = $stmt->fetchAll();
     }
 }
@@ -167,7 +224,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <?php if ($isForm && (($action === 'add' && has_permission('admin.organisations.add')) || ($action === 'edit' && has_permission('admin.organisations.modify')))): ?>
     <div class="admin-card admin-section-card">
-        <form method="POST" action="<?= $id ? 'organisations.php?action=edit&id=' . $id : 'organisations.php?action=add' ?>">
+        <form method="POST" action="<?= $id ? 'organisations.php?action=edit&id=' . $id : 'organisations.php?action=add' ?>" enctype="multipart/form-data">
             <input type="hidden" name="save_organisation" value="1">
             <div class="row g-3">
                 <div class="col-md-8">
@@ -198,6 +255,79 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                     <label class="form-label fw-bold">Site web</label>
                     <input type="url" name="website" class="form-control" value="<?= htmlspecialchars($detail->website ?? '') ?>" placeholder="https://">
                 </div>
+                <div class="col-12"><h6 class="text-muted mb-2">Coordonnées</h6></div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Code postal</label>
+                    <input type="text" name="postal_code" class="form-control" value="<?= htmlspecialchars($detail->postal_code ?? '') ?>">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Ville</label>
+                    <input type="text" name="city" class="form-control" value="<?= htmlspecialchars($detail->city ?? '') ?>" placeholder="ex: Kinshasa, Lubumbashi, Goma">
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Pays</label>
+                    <input type="text" name="country" class="form-control" value="<?= htmlspecialchars(isset($detail) ? ($detail->country ?? 'République Démocratique du Congo') : 'République Démocratique du Congo') ?>" placeholder="République Démocratique du Congo">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">RCCM</label>
+                    <input type="text" name="rccm" class="form-control" value="<?= htmlspecialchars($detail->rccm ?? '') ?>" placeholder="Registre de Commerce et de Crédit Mobilier">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">NIF</label>
+                    <input type="text" name="nif" class="form-control" value="<?= htmlspecialchars($detail->nif ?? '') ?>" placeholder="Numéro d'Identification Fiscal (DGI)">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Type(s) d'organisation</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <?php
+                        $selectedTypes = isset($detail) && isset($detail->organisation_types) ? $detail->organisation_types : [];
+                        foreach ($organisationTypes as $k => $v):
+                        ?>
+                            <div class="form-check">
+                                <input type="checkbox" name="organisation_types[]" id="org_type_<?= $k ?>" class="form-check-input" value="<?= htmlspecialchars($k) ?>" <?= in_array($k, $selectedTypes) ? 'checked' : '' ?>>
+                                <label class="form-check-label" for="org_type_<?= $k ?>"><?= $v ?></label>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Secteur d'activité</label>
+                    <input type="text" name="sector" class="form-control" value="<?= htmlspecialchars($detail->sector ?? '') ?>">
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Notes internes</label>
+                    <textarea name="notes" class="form-control" rows="3"><?= htmlspecialchars($detail->notes ?? '') ?></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Logo</label>
+                    <?php if (!empty($detail->logo)): ?>
+                        <div class="mb-2">
+                            <img src="../<?= htmlspecialchars($detail->logo) ?>" alt="Logo" class="rounded border" style="height: 60px; max-width: 120px; object-fit: contain;">
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="logo" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp">
+                </div>
+                <div class="col-12"><h6 class="text-muted mb-2">Réseaux sociaux</h6></div>
+                <div class="col-md-6">
+                    <label class="form-label">Facebook</label>
+                    <input type="url" name="facebook_url" class="form-control" value="<?= htmlspecialchars(isset($detail) ? ($detail->facebook_url ?? '') : '') ?>" placeholder="https://facebook.com/...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">LinkedIn</label>
+                    <input type="url" name="linkedin_url" class="form-control" value="<?= htmlspecialchars(isset($detail) ? ($detail->linkedin_url ?? '') : '') ?>" placeholder="https://linkedin.com/company/...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Twitter / X</label>
+                    <input type="url" name="twitter_url" class="form-control" value="<?= htmlspecialchars(isset($detail) ? ($detail->twitter_url ?? '') : '') ?>" placeholder="https://twitter.com/...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Instagram</label>
+                    <input type="url" name="instagram_url" class="form-control" value="<?= htmlspecialchars(isset($detail) ? ($detail->instagram_url ?? '') : '') ?>" placeholder="https://instagram.com/...">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">YouTube</label>
+                    <input type="url" name="youtube_url" class="form-control" value="<?= htmlspecialchars(isset($detail) ? ($detail->youtube_url ?? '') : '') ?>" placeholder="https://youtube.com/...">
+                </div>
                 <div class="col-12">
                     <div class="form-check">
                         <input type="checkbox" name="is_active" id="is_active_org" class="form-check-input" value="1" <?= ($detail && $detail->is_active) || !$detail ? 'checked' : '' ?>>
@@ -216,16 +346,56 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php if ($detail && !$isForm): ?>
     <div class="admin-card admin-section-card mb-4">
         <h5 class="card-title"><i class="bi bi-building"></i> Informations</h5>
-        <table class="admin-table mb-4">
+        <div class="d-flex flex-wrap gap-4 align-items-start mb-4">
+            <?php if (!empty($detail->logo)): ?>
+                <img src="../<?= htmlspecialchars($detail->logo) ?>" alt="Logo" class="rounded border flex-shrink-0" style="width: 80px; height: 80px; object-fit: contain;">
+            <?php endif; ?>
+            <table class="admin-table mb-0 flex-grow-1">
             <tr><th style="width:180px;">Nom</th><td><?= htmlspecialchars($detail->name) ?></td></tr>
             <tr><th>Code</th><td><?= htmlspecialchars($detail->code ?? '—') ?></td></tr>
             <tr><th>Description</th><td><?= nl2br(htmlspecialchars($detail->description ?? '—')) ?></td></tr>
             <tr><th>Adresse</th><td><?= nl2br(htmlspecialchars($detail->address ?? '—')) ?></td></tr>
+            <tr><th>Code postal</th><td><?= htmlspecialchars($detail->postal_code ?? '—') ?></td></tr>
+            <tr><th>Ville</th><td><?= htmlspecialchars($detail->city ?? '—') ?></td></tr>
+            <tr><th>Pays</th><td><?= htmlspecialchars($detail->country ?? '—') ?></td></tr>
             <tr><th>Téléphone</th><td><?= htmlspecialchars($detail->phone ?? '—') ?></td></tr>
             <tr><th>Email</th><td><?= htmlspecialchars($detail->email ?? '—') ?></td></tr>
             <tr><th>Site web</th><td><?= $detail->website ? '<a href="' . htmlspecialchars($detail->website) . '" target="_blank" rel="noopener">' . htmlspecialchars($detail->website) . '</a>' : '—' ?></td></tr>
+            <tr><th>RCCM</th><td><?= htmlspecialchars($detail->rccm ?? '—') ?></td></tr>
+            <tr><th>NIF</th><td><?= htmlspecialchars($detail->nif ?? '—') ?></td></tr>
+            <tr><th>Type(s) d'organisation</th><td>
+                <?php
+                $detailTypes = $detail->organisation_types ?? [];
+                if (!empty($detailTypes)) {
+                    echo implode(', ', array_map(function ($code) use ($organisationTypes) { return $organisationTypes[$code] ?? $code; }, $detailTypes));
+                } else {
+                    echo '—';
+                }
+                ?>
+            </td></tr>
+            <tr><th>Secteur d'activité</th><td><?= htmlspecialchars($detail->sector ?? '—') ?></td></tr>
             <tr><th>Statut</th><td><?= $detail->is_active ? '<span class="badge bg-success-subtle text-success border">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary border">Inactive</span>' ?></td></tr>
+            <?php
+            $socialUrls = [
+                'Facebook' => $detail->facebook_url ?? null,
+                'LinkedIn' => $detail->linkedin_url ?? null,
+                'Twitter / X' => $detail->twitter_url ?? null,
+                'Instagram' => $detail->instagram_url ?? null,
+                'YouTube' => $detail->youtube_url ?? null,
+            ];
+            $hasSocial = array_filter($socialUrls);
+            if (!empty($hasSocial)): ?>
+            <tr><th>Réseaux sociaux</th><td>
+                <?php foreach ($socialUrls as $label => $url): if (empty($url)) continue; ?>
+                    <a href="<?= htmlspecialchars($url) ?>" target="_blank" rel="noopener noreferrer" class="me-3"><?= htmlspecialchars($label) ?></a>
+                <?php endforeach; ?>
+            </td></tr>
+            <?php endif; ?>
+            <?php if (!empty($detail->notes)): ?>
+            <tr><th>Notes</th><td><span class="text-muted"><?= nl2br(htmlspecialchars($detail->notes)) ?></span></td></tr>
+            <?php endif; ?>
         </table>
+        </div>
         <h5 class="card-title"><i class="bi bi-diagram-3"></i> Synthèse</h5>
         <div class="row g-2 mb-4">
             <div class="col-auto"><span class="badge bg-primary"><?= (int)($detail->count_departments ?? 0) ?> département(s)</span></div>
@@ -277,7 +447,12 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                     <?php foreach ($list as $o): ?>
                         <tr>
                             <td>
-                                <a href="organisations.php?id=<?= (int) $o->id ?>"><?= htmlspecialchars($o->name) ?></a>
+                                <div class="d-flex align-items-center gap-2">
+                                    <?php if (!empty($o->logo)): ?>
+                                        <img src="../<?= htmlspecialchars($o->logo) ?>" alt="" class="rounded flex-shrink-0" style="width: 32px; height: 32px; object-fit: contain;">
+                                    <?php endif; ?>
+                                    <a href="organisations.php?id=<?= (int) $o->id ?>"><?= htmlspecialchars($o->name) ?></a>
+                                </div>
                             </td>
                             <td><?= htmlspecialchars($o->code ?? '—') ?></td>
                             <td><?= $o->is_active ? '<span class="badge bg-success-subtle text-success border">Active</span>' : '<span class="badge bg-secondary-subtle text-secondary border">Inactive</span>' ?></td>

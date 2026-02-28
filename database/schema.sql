@@ -20,11 +20,32 @@ CREATE TABLE IF NOT EXISTS `organisation` (
   `phone` VARCHAR(50),
   `email` VARCHAR(255),
   `website` VARCHAR(255),
+  `postal_code` VARCHAR(20) DEFAULT NULL COMMENT 'Code postal',
+  `city` VARCHAR(100) DEFAULT NULL COMMENT 'Ville',
+  `country` VARCHAR(100) DEFAULT NULL COMMENT 'Pays',
+  `rccm` VARCHAR(50) DEFAULT NULL COMMENT 'RCCM – Registre de Commerce et de Crédit Mobilier',
+  `nif` VARCHAR(50) DEFAULT NULL COMMENT 'NIF – Numéro d''Identification Fiscal (DGI)',
+  `sector` VARCHAR(150) DEFAULT NULL COMMENT 'Secteur d''activité',
+  `notes` TEXT DEFAULT NULL COMMENT 'Notes internes',
+  `logo` VARCHAR(500) DEFAULT NULL COMMENT 'Logo de l''organisation',
+  `facebook_url` VARCHAR(500) DEFAULT NULL COMMENT 'Facebook',
+  `linkedin_url` VARCHAR(500) DEFAULT NULL COMMENT 'LinkedIn',
+  `twitter_url` VARCHAR(500) DEFAULT NULL COMMENT 'Twitter / X',
+  `instagram_url` VARCHAR(500) DEFAULT NULL COMMENT 'Instagram',
+  `youtube_url` VARCHAR(500) DEFAULT NULL COMMENT 'YouTube',
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_organisation_code` (`code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `organisation_organisation_type` (
+  `organisation_id` INT UNSIGNED NOT NULL,
+  `type_code` VARCHAR(50) NOT NULL,
+  PRIMARY KEY (`organisation_id`, `type_code`),
+  KEY `idx_org_type_org` (`organisation_id`),
+  CONSTRAINT `fk_org_type_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS `organisational_entity` (
@@ -216,9 +237,16 @@ CREATE TABLE IF NOT EXISTS `staff` (
   `user_id` INT UNSIGNED NOT NULL,
   `organisation_id` INT UNSIGNED NOT NULL,
   `employee_number` VARCHAR(50),
+  `phone_extension` VARCHAR(20) DEFAULT NULL COMMENT 'Poste / Extension',
+  `work_email` VARCHAR(255) DEFAULT NULL COMMENT 'Email professionnel',
   `hire_date` DATE,
+  `end_date` DATE DEFAULT NULL COMMENT 'Date de fin de contrat',
   `employment_type` ENUM('full_time','part_time','contract','intern','freelance') DEFAULT 'full_time',
+  `department` VARCHAR(100) DEFAULT NULL COMMENT 'Département / Service',
+  `job_title` VARCHAR(150) DEFAULT NULL COMMENT 'Intitulé du poste',
   `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  `notes` TEXT DEFAULT NULL COMMENT 'Notes RH',
+  `photo` VARCHAR(500) DEFAULT NULL COMMENT 'Photo du personnel',
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

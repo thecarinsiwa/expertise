@@ -51,16 +51,41 @@ if ($pdo) {
             $user_id = (int) ($_POST['user_id'] ?? 0);
             $organisation_id = (int) ($_POST['organisation_id'] ?? 0) ?: null;
             $employee_number = trim($_POST['employee_number'] ?? '');
+            $phone_extension = trim($_POST['phone_extension'] ?? '');
+            $work_email = trim($_POST['work_email'] ?? '');
             $hire_date = !empty($_POST['hire_date']) ? $_POST['hire_date'] : null;
+            $end_date = !empty($_POST['end_date']) ? $_POST['end_date'] : null;
             $employment_type = $_POST['employment_type'] ?? 'full_time';
+            $department = trim($_POST['department'] ?? '');
+            $job_title = trim($_POST['job_title'] ?? '');
+            $notes = trim($_POST['notes'] ?? '');
             $is_active = isset($_POST['is_active']) ? 1 : 0;
             if (!in_array($employment_type, array_keys($employmentTypes))) $employment_type = 'full_time';
             if (!$organisation_id && $organisations) $organisation_id = (int) $organisations[0]->id;
             if (!$organisation_id) $organisation_id = 1;
 
+            $photo = null;
             if ($id > 0) {
-                $stmt = $pdo->prepare("UPDATE staff SET organisation_id = ?, employee_number = ?, hire_date = ?, employment_type = ?, is_active = ? WHERE id = ?");
-                $stmt->execute([$organisation_id, $employee_number ?: null, $hire_date, $employment_type, $is_active, $id]);
+                $cur = $pdo->prepare("SELECT photo FROM staff WHERE id = ?");
+                $cur->execute([$id]);
+                $row = $cur->fetch();
+                if ($row && !empty($row->photo)) $photo = $row->photo;
+            }
+            if (!empty($_FILES['photo']['name']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $target_dir = __DIR__ . '/../uploads/staff/';
+                if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+                $ext = strtolower(pathinfo($_FILES['photo']['name'], PATHINFO_EXTENSION));
+                if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
+                    $file_name = 'staff_' . ($id ?: 'new') . '_' . time() . '_' . uniqid() . '.' . $ext;
+                    if (move_uploaded_file($_FILES['photo']['tmp_name'], $target_dir . $file_name)) {
+                        $photo = 'uploads/staff/' . $file_name;
+                    }
+                }
+            }
+
+            if ($id > 0) {
+                $stmt = $pdo->prepare("UPDATE staff SET organisation_id = ?, employee_number = ?, phone_extension = ?, work_email = ?, hire_date = ?, end_date = ?, employment_type = ?, department = ?, job_title = ?, is_active = ?, notes = ?, photo = ? WHERE id = ?");
+                $stmt->execute([$organisation_id, $employee_number ?: null, $phone_extension ?: null, $work_email ?: null, $hire_date, $end_date, $employment_type, $department ?: null, $job_title ?: null, $is_active, $notes ?: null, $photo, $id]);
                 $success = 'Fiche personnel mise à jour.';
                 $action = 'view';
             } else {
@@ -70,9 +95,10 @@ if ($pdo) {
                     $exists->execute([$user_id, $organisation_id]);
                     if ($exists->fetch()) $error = 'Cet utilisateur est déjà membre du personnel pour cette organisation.';
                     else {
-                        $stmt = $pdo->prepare("INSERT INTO staff (user_id, organisation_id, employee_number, hire_date, employment_type, is_active) VALUES (?, ?, ?, ?, ?, ?)");
-                        $stmt->execute([$user_id, $organisation_id, $employee_number ?: null, $hire_date, $employment_type, $is_active]);
-                        header('Location: staff.php?id=' . $pdo->lastInsertId() . '&msg=created');
+                        $stmt = $pdo->prepare("INSERT INTO staff (user_id, organisation_id, employee_number, phone_extension, work_email, hire_date, end_date, employment_type, department, job_title, is_active, notes, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                        $stmt->execute([$user_id, $organisation_id, $employee_number ?: null, $phone_extension ?: null, $work_email ?: null, $hire_date, $end_date, $employment_type, $department ?: null, $job_title ?: null, $is_active, $notes ?: null, $photo]);
+                        $newId = (int) $pdo->lastInsertId();
+                        header('Location: staff.php?id=' . $newId . '&msg=created');
                         exit;
                     }
                 }
@@ -82,7 +108,7 @@ if ($pdo) {
 
     if ($id > 0) {
         $stmt = $pdo->prepare("
-            SELECT s.id, s.user_id, s.organisation_id, s.employee_number, s.hire_date, s.employment_type, s.is_active, s.created_at,
+            SELECT s.id, s.user_id, s.organisation_id, s.employee_number, s.phone_extension, s.work_email, s.hire_date, s.end_date, s.employment_type, s.department, s.job_title, s.is_active, s.notes, s.photo, s.created_at,
                    u.first_name, u.last_name, u.email, u.phone, u.is_active AS user_active, u.last_login_at,
                    o.name AS organisation_name
             FROM staff s
@@ -116,7 +142,7 @@ if ($pdo) {
         $dashStats['active'] = (int) $pdo->query("SELECT COUNT(*) FROM staff WHERE is_active = 1")->fetchColumn();
         $dashStats['inactive'] = $dashStats['total'] - $dashStats['active'];
         $stmt = $pdo->query("
-            SELECT s.id, s.employee_number, s.hire_date, s.employment_type, s.is_active,
+            SELECT s.id, s.employee_number, s.job_title, s.department, s.photo, s.hire_date, s.employment_type, s.is_active,
                    u.first_name, u.last_name, u.email,
                    o.name AS organisation_name,
                    (SELECT p.title FROM assignment a JOIN position p ON a.position_id = p.id WHERE a.staff_id = s.id AND a.is_primary = 1 LIMIT 1) AS primary_position
@@ -223,7 +249,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php if ($isForm): ?>
     <!-- Formulaire Ajout / Édition -->
     <div class="admin-card admin-section-card">
-        <form method="POST" action="<?= $id ? 'staff.php?action=edit&id=' . $id : 'staff.php?action=add' ?>">
+        <form method="POST" action="<?= $id ? 'staff.php?action=edit&id=' . $id : 'staff.php?action=add' ?>" enctype="multipart/form-data">
             <input type="hidden" name="save_staff" value="1">
             <div class="row g-3">
                 <?php if (!$id): ?>
@@ -257,6 +283,14 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                     <input type="text" name="employee_number" class="form-control" value="<?= htmlspecialchars($detail->employee_number ?? '') ?>" placeholder="ex: EMP-001">
                 </div>
                 <div class="col-md-6">
+                    <label class="form-label fw-bold">Poste / Extension</label>
+                    <input type="text" name="phone_extension" class="form-control" value="<?= htmlspecialchars($detail->phone_extension ?? '') ?>" placeholder="ex: 1234">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Email professionnel</label>
+                    <input type="email" name="work_email" class="form-control" value="<?= htmlspecialchars($detail->work_email ?? '') ?>" placeholder="prenom.nom@organisation.com">
+                </div>
+                <div class="col-md-6">
                     <label class="form-label fw-bold">Type de contrat</label>
                     <select name="employment_type" class="form-select">
                         <?php foreach ($employmentTypes as $k => $v): ?>
@@ -267,6 +301,31 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Date d'embauche</label>
                     <input type="date" name="hire_date" class="form-control" value="<?= $detail->hire_date ?? '' ?>">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Date de fin de contrat</label>
+                    <input type="date" name="end_date" class="form-control" value="<?= $detail->end_date ?? '' ?>">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Département / Service</label>
+                    <input type="text" name="department" class="form-control" value="<?= htmlspecialchars($detail->department ?? '') ?>" placeholder="ex: IT, RH">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Intitulé du poste</label>
+                    <input type="text" name="job_title" class="form-control" value="<?= htmlspecialchars($detail->job_title ?? '') ?>" placeholder="ex: Développeur senior">
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Notes RH</label>
+                    <textarea name="notes" class="form-control" rows="3" placeholder="Notes internes"><?= htmlspecialchars($detail->notes ?? '') ?></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-bold">Photo</label>
+                    <?php if (!empty($detail->photo)): ?>
+                        <div class="mb-2">
+                            <img src="../<?= htmlspecialchars($detail->photo) ?>" alt="Photo" class="rounded border" style="height: 80px; width: 80px; object-fit: cover;">
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="photo" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp">
                 </div>
                 <div class="col-12">
                     <div class="form-check">
@@ -287,7 +346,11 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
     <!-- Vue détail -->
     <div class="admin-card admin-section-card mb-4">
         <h5 class="card-title"><i class="bi bi-person-vcard"></i> Identité & compte</h5>
-        <table class="admin-table mb-4">
+        <div class="d-flex flex-wrap gap-4 align-items-start mb-4">
+            <?php if (!empty($detail->photo)): ?>
+                <img src="../<?= htmlspecialchars($detail->photo) ?>" alt="Photo" class="rounded border flex-shrink-0" style="width: 100px; height: 100px; object-fit: cover;">
+            <?php endif; ?>
+            <table class="admin-table mb-0 flex-grow-1">
             <tr>
                 <th style="width:180px;">Nom / Prénom</th>
                 <td><?= htmlspecialchars($detail->last_name . ' ' . $detail->first_name) ?></td>
@@ -309,12 +372,21 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <td><?= $detail->last_login_at ? date('d/m/Y H:i', strtotime($detail->last_login_at)) : '—' ?></td>
             </tr>
         </table>
+        </div>
 
         <h5 class="card-title"><i class="bi bi-briefcase"></i> RH</h5>
         <table class="admin-table mb-4">
             <tr>
                 <th style="width:180px;">N° employé</th>
                 <td><?= htmlspecialchars($detail->employee_number ?? '—') ?></td>
+            </tr>
+            <tr>
+                <th>Poste / Extension</th>
+                <td><?= htmlspecialchars($detail->phone_extension ?? '—') ?></td>
+            </tr>
+            <tr>
+                <th>Email professionnel</th>
+                <td><?= htmlspecialchars($detail->work_email ?? '—') ?></td>
             </tr>
             <tr>
                 <th>Type de contrat</th>
@@ -325,11 +397,29 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <td><?= $detail->hire_date ? date('d/m/Y', strtotime($detail->hire_date)) : '—' ?></td>
             </tr>
             <tr>
+                <th>Date de fin de contrat</th>
+                <td><?= $detail->end_date ? date('d/m/Y', strtotime($detail->end_date)) : '—' ?></td>
+            </tr>
+            <tr>
+                <th>Département / Service</th>
+                <td><?= htmlspecialchars($detail->department ?? '—') ?></td>
+            </tr>
+            <tr>
+                <th>Intitulé du poste</th>
+                <td><?= htmlspecialchars($detail->job_title ?? '—') ?></td>
+            </tr>
+            <tr>
                 <th>Statut</th>
                 <td>
                     <?php if ($detail->is_active): ?><span class="badge bg-success-subtle text-success border">Actif</span><?php else: ?><span class="badge bg-secondary-subtle text-secondary border">Inactif</span><?php endif; ?>
                 </td>
             </tr>
+            <?php if (!empty($detail->notes)): ?>
+            <tr>
+                <th>Notes RH</th>
+                <td><span class="text-muted"><?= nl2br(htmlspecialchars($detail->notes)) ?></span></td>
+            </tr>
+            <?php endif; ?>
         </table>
 
         <?php if (!empty($detail->roles)): ?>
@@ -414,18 +504,28 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                     <?php foreach ($staffList as $s): ?>
                         <tr>
                             <td>
-                                <h6 class="mb-0"><a href="staff.php?id=<?= (int) $s->id ?>"><?= htmlspecialchars($s->last_name . ' ' . $s->first_name) ?></a></h6>
-                                <div class="d-flex gap-2 align-items-center mt-1">
-                                    <span class="text-muted x-small"><?= htmlspecialchars($s->email) ?></span>
-                                    <?php if ($s->employee_number): ?>
-                                        <span class="opacity-25 text-muted small">|</span>
-                                        <span class="text-muted x-small">N° <?= htmlspecialchars($s->employee_number) ?></span>
+                                <div class="d-flex align-items-center gap-2">
+                                    <?php if (!empty($s->photo)): ?>
+                                        <img src="../<?= htmlspecialchars($s->photo) ?>" alt="" class="rounded-circle flex-shrink-0" style="width: 36px; height: 36px; object-fit: cover;">
                                     <?php endif; ?>
+                                    <div>
+                                        <h6 class="mb-0"><a href="staff.php?id=<?= (int) $s->id ?>"><?= htmlspecialchars($s->last_name . ' ' . $s->first_name) ?></a></h6>
+                                        <div class="d-flex gap-2 align-items-center mt-1">
+                                            <span class="text-muted x-small"><?= htmlspecialchars($s->email) ?></span>
+                                            <?php if ($s->employee_number): ?>
+                                                <span class="opacity-25 text-muted small">|</span>
+                                                <span class="text-muted x-small">N° <?= htmlspecialchars($s->employee_number) ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
                             <td>
                                 <div class="small fw-medium text-primary mb-1"><?= htmlspecialchars($s->organisation_name ?? '—') ?></div>
-                                <span class="text-muted x-small"><?= htmlspecialchars($s->primary_position ?? '—') ?></span>
+                                <span class="text-muted x-small"><?= htmlspecialchars($s->job_title ?: $s->primary_position ?? '—') ?></span>
+                                <?php if ($s->department): ?>
+                                    <span class="text-muted x-small"> · <?= htmlspecialchars($s->department) ?></span>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <span class="badge bg-secondary-subtle text-secondary border x-small"><?= $employmentTypes[$s->employment_type] ?? $s->employment_type ?></span>
