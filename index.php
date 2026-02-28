@@ -407,63 +407,111 @@ require __DIR__ . '/inc/header.php';
         </div>
     </section>
 
-    <!-- Le personnel -->
+    <!-- Notre équipe (carousel) -->
     <section class="container py-5 border-top" id="personnel">
         <div class="d-flex flex-wrap justify-content-center justify-content-md-between align-items-center mb-4 pt-4 gap-2">
-            <h2 class="section-heading mb-0 text-center text-md-start">Le personnel</h2>
+            <h2 class="section-heading mb-0 text-center text-md-start">Notre équipe</h2>
             <a href="<?= $baseUrl ?>about.php#equipe" class="btn-view-all">Voir tout</a>
         </div>
         <?php if (count($homeStaff) > 0): ?>
-            <div class="row g-4 justify-content-center">
-                <?php foreach ($homeStaff as $s):
-                    $staffPhotoUrl = !empty($s->photo) ? client_asset_url($baseUrl, $s->photo) : '';
-                    $staffName = trim(($s->first_name ?? '') . ' ' . ($s->last_name ?? ''));
-                ?>
-                    <div class="col-6 col-md-4 col-lg-3">
-                        <div class="card card-staff h-100 text-center">
-                            <?php if ($staffPhotoUrl): ?>
-                                <div class="card-staff-img mx-auto rounded-circle" style="background-image: url('<?= htmlspecialchars($staffPhotoUrl) ?>');"></div>
-                            <?php else: ?>
-                                <div class="card-staff-img card-staff-img-placeholder mx-auto rounded-circle"><i class="bi bi-person"></i></div>
-                            <?php endif; ?>
-                            <div class="card-body py-2">
-                                <h3 class="card-title h6 mb-1"><?= htmlspecialchars($staffName) ?></h3>
-                                <?php if (!empty($s->job_title)): ?>
-                                    <p class="card-meta small mb-0"><?= htmlspecialchars($s->job_title) ?></p>
-                                <?php endif; ?>
-                                <?php if (!empty($s->department)): ?>
-                                    <p class="card-meta small mb-0 text-muted"><?= htmlspecialchars($s->department) ?></p>
-                                <?php endif; ?>
-                            </div>
+            <div id="staffCarousel" class="carousel slide staff-carousel" data-bs-ride="carousel" data-bs-interval="6000" data-bs-pause="hover">
+                <div class="carousel-inner">
+                    <?php
+                    $staffChunks = array_chunk($homeStaff, 4);
+                    foreach ($staffChunks as $idx => $chunk):
+                    ?>
+                    <div class="carousel-item <?= $idx === 0 ? 'active' : '' ?>">
+                        <div class="row g-4 justify-content-center">
+                            <?php foreach ($chunk as $s):
+                                $staffPhotoUrl = !empty($s->photo) ? client_asset_url($baseUrl, $s->photo) : '';
+                                $staffName = trim(($s->first_name ?? '') . ' ' . ($s->last_name ?? ''));
+                            ?>
+                                <div class="col-12 col-sm-6 col-lg-3">
+                                    <div class="card card-staff h-100 text-center">
+                                        <?php if ($staffPhotoUrl): ?>
+                                            <div class="card-staff-img mx-auto rounded-circle" style="background-image: url('<?= htmlspecialchars($staffPhotoUrl) ?>');"></div>
+                                        <?php else: ?>
+                                            <div class="card-staff-img card-staff-img-placeholder mx-auto rounded-circle"><i class="bi bi-person"></i></div>
+                                        <?php endif; ?>
+                                        <div class="card-body py-2">
+                                            <h3 class="card-title h6 mb-1"><?= htmlspecialchars($staffName) ?></h3>
+                                            <?php if (!empty($s->job_title)): ?>
+                                                <p class="card-meta small mb-0"><?= htmlspecialchars($s->job_title) ?></p>
+                                            <?php endif; ?>
+                                            <?php if (!empty($s->department)): ?>
+                                                <p class="card-meta small mb-0 text-muted"><?= htmlspecialchars($s->department) ?></p>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </div>
+                <?php if (count($staffChunks) > 1): ?>
+                <button class="carousel-control-prev staff-carousel-control" type="button" data-bs-target="#staffCarousel" data-bs-slide="prev" aria-label="Équipe précédente">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                </button>
+                <button class="carousel-control-next staff-carousel-control" type="button" data-bs-target="#staffCarousel" data-bs-slide="next" aria-label="Équipe suivante">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                </button>
+                <div class="carousel-indicators staff-carousel-indicators">
+                    <?php foreach ($staffChunks as $idx => $chunk): ?>
+                    <button type="button" data-bs-target="#staffCarousel" data-bs-slide-to="<?= $idx ?>" <?= $idx === 0 ? 'class="active" aria-current="true"' : '' ?> aria-label="Slide <?= $idx + 1 ?>"></button>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <p class="text-muted text-center mb-0">Aucun personnel affiché pour le moment.</p>
         <?php endif; ?>
     </section>
 
-    <!-- Nos bailleurs -->
+    <!-- Nos bailleurs (carousel) -->
     <section class="container py-5 border-top" id="bailleurs">
         <div class="d-flex flex-wrap justify-content-center align-items-center mb-4 pt-4">
             <h2 class="section-heading mb-0 text-center">Nos bailleurs</h2>
         </div>
         <?php if (count($homeBailleurs) > 0): ?>
-            <div class="row g-4 align-items-center justify-content-center">
-                <?php foreach ($homeBailleurs as $b):
-                    $bailleurLogoUrl = !empty($b->logo) ? client_asset_url($baseUrl, $b->logo) : '';
-                ?>
-                    <div class="col-6 col-md-4 col-lg-3">
-                        <div class="card card-bailleur h-100 d-flex align-items-center justify-content-center p-3">
-                            <?php if ($bailleurLogoUrl): ?>
-                                <img src="<?= htmlspecialchars($bailleurLogoUrl) ?>" alt="<?= htmlspecialchars($b->name) ?>" class="card-bailleur-logo img-fluid" loading="lazy">
-                            <?php else: ?>
-                                <span class="card-bailleur-name text-center"><?= htmlspecialchars($b->name) ?></span>
-                            <?php endif; ?>
+            <div id="bailleursCarousel" class="carousel slide bailleurs-carousel" data-bs-ride="carousel" data-bs-interval="6000" data-bs-pause="hover">
+                <div class="carousel-inner">
+                    <?php
+                    $bailleursChunks = array_chunk($homeBailleurs, 4);
+                    foreach ($bailleursChunks as $idx => $chunk):
+                    ?>
+                    <div class="carousel-item <?= $idx === 0 ? 'active' : '' ?>">
+                        <div class="row g-4 align-items-center justify-content-center">
+                            <?php foreach ($chunk as $b):
+                                $bailleurLogoUrl = !empty($b->logo) ? client_asset_url($baseUrl, $b->logo) : '';
+                            ?>
+                                <div class="col-6 col-md-6 col-lg-3">
+                                    <div class="card card-bailleur h-100 d-flex align-items-center justify-content-center p-3">
+                                        <?php if ($bailleurLogoUrl): ?>
+                                            <img src="<?= htmlspecialchars($bailleurLogoUrl) ?>" alt="<?= htmlspecialchars($b->name) ?>" class="card-bailleur-logo img-fluid" loading="lazy">
+                                        <?php else: ?>
+                                            <span class="card-bailleur-name text-center"><?= htmlspecialchars($b->name) ?></span>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
                         </div>
                     </div>
-                <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </div>
+                <?php if (count($bailleursChunks) > 1): ?>
+                <button class="carousel-control-prev bailleurs-carousel-control" type="button" data-bs-target="#bailleursCarousel" data-bs-slide="prev" aria-label="Bailleurs précédents">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                </button>
+                <button class="carousel-control-next bailleurs-carousel-control" type="button" data-bs-target="#bailleursCarousel" data-bs-slide="next" aria-label="Bailleurs suivants">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                </button>
+                <div class="carousel-indicators bailleurs-carousel-indicators">
+                    <?php foreach ($bailleursChunks as $idx => $chunk): ?>
+                    <button type="button" data-bs-target="#bailleursCarousel" data-bs-slide-to="<?= $idx ?>" <?= $idx === 0 ? 'class="active" aria-current="true"' : '' ?> aria-label="Slide <?= $idx + 1 ?>"></button>
+                    <?php endforeach; ?>
+                </div>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <p class="text-muted text-center mb-0">Aucun bailleur affiché pour le moment.</p>

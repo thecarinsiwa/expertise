@@ -390,6 +390,11 @@ header('Content-Type: text/html; charset=UTF-8');
                 <i class="bi bi-geo-alt"></i><span>Missions</span>
             </a>
             <?php endif; ?>
+            <?php if (has_permission('admin.offers.view')): ?>
+            <a href="offers.php" class="nav-link<?= $currentNav === 'offers' ? ' active' : '' ?>">
+                <i class="bi bi-briefcase"></i><span>Nos offres</span>
+            </a>
+            <?php endif; ?>
 
         
             <div class="admin-sidebar-label">Communication</div>

@@ -26,6 +26,9 @@ if (!isset($organisation))
                 <li class="nav-item">
                     <a class="nav-link nav-mega-trigger" href="<?= $baseUrl ?>where-we-work.php" data-mega="mega-where"><span class="nav-link-text">Où nous travaillons</span><i class="bi bi-chevron-down nav-link-icon" aria-hidden="true"></i></a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="<?= $baseUrl ?>offres.php"><span class="nav-link-text">Nos offres</span></a>
+                </li>
             </ul>
             <div class="navbar-nav nav-right ms-auto">
                 <a class="nav-link" href="#" aria-label="Recherche"><i class="bi bi-search"></i></a>

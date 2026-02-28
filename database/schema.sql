@@ -1,7 +1,7 @@
 -- =============================================================================
 -- Expertise - MySQL Database Schema (English)
--- Modules: Organizational, Users/Staff, Project, Mission, Communication,
---          Security, Document, Planning & Tracking
+-- Modules: Organizational, Users/Staff, Project, Mission, Offers (Nos offres),
+--          Communication, Security, Document, Planning & Tracking
 -- =============================================================================
 
 SET NAMES utf8mb4;
@@ -729,6 +729,50 @@ CREATE TABLE IF NOT EXISTS `mission_assignment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
+-- Nos offres (liées à une mission, un projet ou à rien ; candidatures client)
+-- -----------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `offer` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `organisation_id` INT UNSIGNED NOT NULL,
+  `title` VARCHAR(255) NOT NULL,
+  `reference` VARCHAR(100) DEFAULT NULL,
+  `description` LONGTEXT,
+  `cover_image` VARCHAR(500) DEFAULT NULL,
+  `mission_id` INT UNSIGNED DEFAULT NULL,
+  `project_id` INT UNSIGNED DEFAULT NULL,
+  `status` ENUM('draft','published','closed') NOT NULL DEFAULT 'draft',
+  `published_at` DATE DEFAULT NULL,
+  `deadline_at` DATE DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_offer_organisation` (`organisation_id`),
+  KEY `idx_offer_mission` (`mission_id`),
+  KEY `idx_offer_project` (`project_id`),
+  KEY `idx_offer_status` (`status`),
+  CONSTRAINT `fk_offer_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_offer_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE SET NULL,
+  CONSTRAINT `fk_offer_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `offer_application` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `offer_id` INT UNSIGNED NOT NULL,
+  `user_id` INT UNSIGNED NOT NULL,
+  `message` TEXT DEFAULT NULL,
+  `cv_path` VARCHAR(500) DEFAULT NULL,
+  `status` ENUM('pending','reviewed','accepted','rejected') NOT NULL DEFAULT 'pending',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_offer_application_offer_user` (`offer_id`, `user_id`),
+  KEY `idx_offer_application_offer` (`offer_id`),
+  KEY `idx_offer_application_user` (`user_id`),
+  CONSTRAINT `fk_offer_application_offer` FOREIGN KEY (`offer_id`) REFERENCES `offer` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_offer_application_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
 -- 5. COMMUNICATION MANAGEMENT
 -- -----------------------------------------------------------------------------
 
@@ -1282,6 +1326,10 @@ INSERT IGNORE INTO `permission` (`module`, `code`, `name`) VALUES
 ('Missions', 'admin.missions.add', 'Missions – Ajout'),
 ('Missions', 'admin.missions.modify', 'Missions – Modifier'),
 ('Missions', 'admin.missions.delete', 'Missions – Supprimer'),
+('Nos offres', 'admin.offers.view', 'Nos offres – Voir'),
+('Nos offres', 'admin.offers.add', 'Nos offres – Ajout'),
+('Nos offres', 'admin.offers.modify', 'Nos offres – Modifier'),
+('Nos offres', 'admin.offers.delete', 'Nos offres – Supprimer'),
 ('Types de mission', 'admin.mission_types.view', 'Types de mission – Voir'),
 ('Types de mission', 'admin.mission_types.add', 'Types de mission – Ajout'),
 ('Types de mission', 'admin.mission_types.modify', 'Types de mission – Modifier'),

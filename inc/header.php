@@ -2,7 +2,7 @@
 if (!isset($baseUrl)) $baseUrl = '';
 if (!isset($organisation)) $organisation = null;
 ?>
-<body>
+<body id="top">
     <header class="site-header">
         <?php require __DIR__ . '/navbar.php'; ?>
     </header>
