@@ -5,6 +5,8 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 $organisation = null;
 $categoriesWithDocs = [];
+$responsibilityPage = null;
+$commitments = [];
 
 require_once __DIR__ . '/inc/db.php';
 
@@ -13,8 +15,31 @@ if ($pdo) {
     if ($row = $stmt->fetch()) $organisation = $row;
     if ($organisation) $pageTitle = 'Responsabilité — ' . $organisation->name;
 
-    $orgId = $organisation ? (int) $organisation->id : 0;
-    if ($orgId) {
+    $orgId = $organisation ? (int) $organisation->id : null;
+
+    // Load responsibility page intro (org-specific first, then global fallback)
+    try {
+        $stmt = $pdo->prepare("SELECT id, intro_block1, intro_block2 FROM responsibility_page WHERE organisation_id = ? OR organisation_id IS NULL ORDER BY organisation_id IS NULL ASC LIMIT 1");
+        $stmt->execute([$orgId]);
+        $responsibilityPage = $stmt->fetch(PDO::FETCH_OBJ);
+
+    // Load commitments: org-specific if any, else global
+    if ($orgId !== null) {
+        $stmt = $pdo->prepare("SELECT id, title, description, icon FROM responsibility_commitment WHERE organisation_id = ? ORDER BY sort_order ASC, id ASC");
+        $stmt->execute([$orgId]);
+        $commitments = $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+    if (empty($commitments)) {
+        $stmt = $pdo->query("SELECT id, title, description, icon FROM responsibility_commitment WHERE organisation_id IS NULL ORDER BY sort_order ASC, id ASC");
+        $commitments = $stmt ? $stmt->fetchAll(PDO::FETCH_OBJ) : [];
+    }
+    } catch (PDOException $e) {
+        $responsibilityPage = null;
+        $commitments = [];
+    }
+
+    $orgIdForDocs = $organisation ? (int) $organisation->id : 0;
+    if ($orgIdForDocs) {
         $stmt = $pdo->prepare("
             SELECT c.id, c.name, c.code, c.description
             FROM document_category c
@@ -25,7 +50,7 @@ if ($pdo) {
             )
             ORDER BY c.name
         ");
-        $stmt->execute([$orgId, $orgId]);
+        $stmt->execute([$orgIdForDocs, $orgIdForDocs]);
         $allCategories = $stmt->fetchAll(PDO::FETCH_OBJ);
 
         $responsibilityKeywords = ['responsabilite', 'responsabilité', 'ethique', 'éthique', 'diversite', 'diversité', 'inclusion', 'environnement', 'politique', 'rapport', 'engagement'];
@@ -48,7 +73,7 @@ if ($pdo) {
                     WHERE d.document_category_id = ? AND (d.organisation_id = ? OR d.organisation_id IS NULL)
                     ORDER BY d.updated_at DESC, d.title
                 ");
-                $stmt2->execute([$cat->id, $orgId]);
+                $stmt2->execute([$cat->id, $orgIdForDocs]);
                 $docs = $stmt2->fetchAll(PDO::FETCH_OBJ);
                 $versionIds = array_filter(array_map(function ($d) { return (int) $d->current_version_id; }, $docs));
                 $versions = [];
@@ -77,7 +102,7 @@ if ($pdo) {
                 GROUP BY c.id
                 ORDER BY c.name
             ");
-            $stmt->execute([$orgId, $orgId]);
+            $stmt->execute([$orgIdForDocs, $orgIdForDocs]);
             $fallbackCats = $stmt->fetchAll(PDO::FETCH_OBJ);
             foreach ($fallbackCats as $cat) {
                 $stmt2 = $pdo->prepare("
@@ -86,7 +111,7 @@ if ($pdo) {
                     WHERE d.document_category_id = ? AND (d.organisation_id = ? OR d.organisation_id IS NULL)
                     ORDER BY d.updated_at DESC, d.title
                 ");
-                $stmt2->execute([$cat->id, $orgId]);
+                $stmt2->execute([$cat->id, $orgIdForDocs]);
                 $docs = $stmt2->fetchAll(PDO::FETCH_OBJ);
                 $versionIds = array_filter(array_map(function ($d) { return (int) $d->current_version_id; }, $docs));
                 $versions = [];
@@ -119,8 +144,17 @@ require_once __DIR__ . '/inc/page-static.php';
             <h1 class="section-heading mb-4">Responsabilité</h1>
 
             <div class="content-prose mb-5">
-                <p>Politiques et rapports sur nos engagements éthiques, diversité et impact environnemental.</p>
-                <p>Notre responsabilité s'exerce vis-à-vis des personnes que nous accompagnons, de nos équipes et de l'environnement.</p>
+                <?php if ($responsibilityPage && (trim($responsibilityPage->intro_block1 ?? '') !== '' || trim($responsibilityPage->intro_block2 ?? '') !== '')): ?>
+                    <?php if (trim($responsibilityPage->intro_block1 ?? '') !== ''): ?>
+                    <p><?= nl2br(htmlspecialchars($responsibilityPage->intro_block1)) ?></p>
+                    <?php endif; ?>
+                    <?php if (trim($responsibilityPage->intro_block2 ?? '') !== ''): ?>
+                    <p><?= nl2br(htmlspecialchars($responsibilityPage->intro_block2)) ?></p>
+                    <?php endif; ?>
+                <?php else: ?>
+                    <p>Politiques et rapports sur nos engagements éthiques, diversité et impact environnemental.</p>
+                    <p>Notre responsabilité s'exerce vis-à-vis des personnes que nous accompagnons, de nos équipes et de l'environnement.</p>
+                <?php endif; ?>
             </div>
 
             <?php if (!empty($categoriesWithDocs)): ?>
@@ -172,33 +206,29 @@ require_once __DIR__ . '/inc/page-static.php';
             <section class="responsibility-commitments content-prose" aria-labelledby="responsibility-commitments-heading">
                 <h2 id="responsibility-commitments-heading" class="section-heading mb-4">Nos engagements</h2>
                 <div class="row g-4">
+                    <?php
+                    $defaultIcon = 'bi-file-earmark';
+                    if (!empty($commitments)):
+                        foreach ($commitments as $commitment):
+                            $iconClass = !empty($commitment->icon) ? $commitment->icon : $defaultIcon;
+                    ?>
                     <div class="col-md-4">
                         <div class="card border-0 h-100 shadow-sm responsibility-commitment-card">
                             <div class="card-body p-4">
-                                <div class="responsibility-commitment-icon mb-3"><i class="bi bi-shield-check text-primary"></i></div>
-                                <h3 class="h6 text-uppercase text-muted mb-2">Éthique et intégrité</h3>
-                                <p class="mb-0 small">Des politiques et dispositifs encadrent nos pratiques pour garantir l'intégrité de nos actions.</p>
+                                <div class="responsibility-commitment-icon mb-3"><i class="bi <?= htmlspecialchars($iconClass) ?> text-primary"></i></div>
+                                <h3 class="h6 text-uppercase text-muted mb-2"><?= htmlspecialchars($commitment->title) ?></h3>
+                                <p class="mb-0 small"><?= nl2br(htmlspecialchars($commitment->description ?? '')) ?></p>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card border-0 h-100 shadow-sm responsibility-commitment-card">
-                            <div class="card-body p-4">
-                                <div class="responsibility-commitment-icon mb-3"><i class="bi bi-people text-primary"></i></div>
-                                <h3 class="h6 text-uppercase text-muted mb-2">Diversité et inclusion</h3>
-                                <p class="mb-0 small">Nous œuvrons pour un environnement inclusif et une représentation équitable au sein de l'organisation.</p>
-                            </div>
-                        </div>
+                    <?php
+                        endforeach;
+                    else:
+                    ?>
+                    <div class="col-12">
+                        <p class="text-muted">Aucun engagement défini pour le moment.</p>
                     </div>
-                    <div class="col-md-4">
-                        <div class="card border-0 h-100 shadow-sm responsibility-commitment-card">
-                            <div class="card-body p-4">
-                                <div class="responsibility-commitment-icon mb-3"><i class="bi bi-globe2 text-primary"></i></div>
-                                <h3 class="h6 text-uppercase text-muted mb-2">Environnement</h3>
-                                <p class="mb-0 small">Nous nous efforçons de réduire l'impact environnemental de nos activités et de nos déplacements.</p>
-                            </div>
-                        </div>
-                    </div>
+                    <?php endif; ?>
                 </div>
             </section>
         </div>

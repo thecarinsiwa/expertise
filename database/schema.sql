@@ -1032,6 +1032,36 @@ CREATE TABLE IF NOT EXISTS `archiving` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
+-- 7b. RESPONSIBILITY PAGE CONTENT (public page: intro + engagement cards)
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `responsibility_page` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `organisation_id` INT UNSIGNED DEFAULT NULL COMMENT 'NULL = contenu par défaut',
+  `intro_block1` TEXT DEFAULT NULL,
+  `intro_block2` TEXT DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_responsibility_page_organisation` (`organisation_id`),
+  CONSTRAINT `fk_responsibility_page_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `responsibility_commitment` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `organisation_id` INT UNSIGNED DEFAULT NULL COMMENT 'NULL = global',
+  `title` VARCHAR(255) NOT NULL,
+  `description` TEXT DEFAULT NULL,
+  `icon` VARCHAR(100) DEFAULT NULL COMMENT 'Bootstrap Icons class e.g. bi-shield-check',
+  `sort_order` INT NOT NULL DEFAULT 0,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_responsibility_commitment_organisation` (`organisation_id`),
+  CONSTRAINT `fk_responsibility_commitment_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
 -- 8. PLANNING & TRACKING
 -- -----------------------------------------------------------------------------
 

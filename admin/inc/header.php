@@ -3,6 +3,7 @@ if (!isset($pageTitle))
     $pageTitle = 'Administration – Expertise';
 $currentNav = isset($currentNav) ? $currentNav : 'dashboard';
 require_once __DIR__ . '/auth.php';
+header('Content-Type: text/html; charset=UTF-8');
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -432,6 +433,11 @@ require_once __DIR__ . '/auth.php';
             <?php if (has_permission('admin.documents.view')): ?>
             <a href="documents.php" class="nav-link<?= $currentNav === 'documents' ? ' active' : '' ?>">
                 <i class="bi bi-file-earmark-text"></i><span>Documents</span>
+            </a>
+            <?php endif; ?>
+            <?php if (has_permission('admin.documents.view')): ?>
+            <a href="responsibility.php" class="nav-link<?= $currentNav === 'responsibility' ? ' active' : '' ?>">
+                <i class="bi bi-card-text"></i><span>Responsabilité</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.planning.view')): ?>
