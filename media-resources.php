@@ -29,7 +29,7 @@ if ($pdo) {
 
         foreach ($allCategories as $cat) {
             $stmt2 = $pdo->prepare("
-                SELECT d.id, d.title, d.description, d.document_type, d.current_version_id
+                SELECT d.id, d.title, d.description, d.document_type, d.cover_image, d.current_version_id
                 FROM document d
                 WHERE d.document_category_id = ? AND (d.organisation_id = ? OR d.organisation_id IS NULL)
                 ORDER BY d.updated_at DESC, d.title
@@ -89,12 +89,12 @@ function format_file_size($bytes) {
             <h1 class="section-heading mb-4">Médias & ressources</h1>
 
             <div class="content-prose mb-5">
-                <p>Documents, publications et ressources utiles.</p>
-                <p>Cette section rassemble les supports de communication, rapports et documents mis à disposition du public.</p>
-                <div class="mt-4 d-flex flex-wrap gap-2">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>index.php#actualites" class="btn btn-view-all">Actualités</a>
-                    <a href="<?= htmlspecialchars($baseUrl) ?>reports-finances.php" class="btn btn-view-all">Rapports et finances</a>
-                    <a href="<?= htmlspecialchars($baseUrl) ?>responsibility.php" class="btn btn-view-all">Responsabilité</a>
+                <p class="lead text-muted">Documents, publications et ressources utiles.</p>
+                <p class="mb-4">Cette section rassemble les supports de communication, rapports et documents mis à disposition du public.</p>
+                <div class="media-quick-links d-flex flex-wrap gap-2">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>index.php#actualites" class="btn btn-outline-primary btn-sm"><i class="bi bi-newspaper me-1"></i> Actualités</a>
+                    <a href="<?= htmlspecialchars($baseUrl) ?>reports-finances.php" class="btn btn-outline-primary btn-sm"><i class="bi bi-graph-up me-1"></i> Rapports et finances</a>
+                    <a href="<?= htmlspecialchars($baseUrl) ?>responsibility.php" class="btn btn-outline-primary btn-sm"><i class="bi bi-shield-check me-1"></i> Responsabilité</a>
                 </div>
             </div>
 
@@ -115,30 +115,55 @@ function format_file_size($bytes) {
                         <p class="text-muted small mb-3"><?= nl2br(htmlspecialchars($cat->description)) ?></p>
                         <?php endif; ?>
                         <div class="row g-3">
-                            <?php foreach ($cat->documents as $doc): ?>
+                            <?php foreach ($cat->documents as $doc):
+                                $version = $doc->version ?? null;
+                                $filePath = $version ? ($version->file_path ?? null) : null;
+                                $fileName = $version ? ($version->file_name ?? null) : null;
+                                $ext = $filePath ? strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) : '';
+                                $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+                                if (!empty($doc->cover_image)) {
+                                    $thumbUrl = client_asset_url($baseUrl, $doc->cover_image);
+                                } elseif ($isImage && $filePath) {
+                                    $thumbUrl = client_asset_url($baseUrl, $filePath);
+                                } else {
+                                    $thumbUrl = '';
+                                }
+                                $iconByExt = [
+                                    'pdf' => 'bi-file-earmark-pdf',
+                                    'doc' => 'bi-file-earmark-word', 'docx' => 'bi-file-earmark-word',
+                                    'xls' => 'bi-file-earmark-excel', 'xlsx' => 'bi-file-earmark-excel',
+                                    'ppt' => 'bi-file-ppt', 'pptx' => 'bi-file-ppt',
+                                    'txt' => 'bi-file-earmark-text', 'zip' => 'bi-file-earmark-zip',
+                                ];
+                                $thumbIcon = $iconByExt[$ext] ?? 'bi-file-earmark';
+                            ?>
                             <div class="col-12 col-md-6 col-lg-4">
-                                <div class="media-doc-item card border-0 bg-light h-100">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex align-items-start gap-2">
-                                            <i class="bi bi-file-earmark-text text-primary mt-1"></i>
-                                            <div class="flex-grow-1 min-w-0">
-                                                <span class="fw-semibold d-block text-truncate" title="<?= htmlspecialchars($doc->title) ?>"><?= htmlspecialchars($doc->title) ?></span>
-                                                <?php if (!empty($doc->document_type)): ?>
-                                                <span class="badge bg-secondary bg-opacity-25 text-dark small"><?= htmlspecialchars($doc->document_type) ?></span>
-                                                <?php endif; ?>
-                                                <?php if (!empty($doc->version)): ?>
-                                                <div class="mt-2">
-                                                    <?php
-                                                    $fileUrl = client_asset_url($baseUrl, $doc->version->file_path);
-                                                    $fileName = !empty($doc->version->file_name) ? $doc->version->file_name : basename($doc->version->file_path);
-                                                    $sz = format_file_size($doc->version->file_size ?? null);
-                                                    ?>
-                                                    <a href="<?= htmlspecialchars($fileUrl) ?>" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" download="<?= htmlspecialchars($fileName) ?>">
-                                                        <i class="bi bi-download me-1"></i> Télécharger<?= $sz ? ' (' . $sz . ')' : '' ?>
-                                                    </a>
-                                                </div>
-                                                <?php endif; ?>
-                                            </div>
+                                <div class="media-doc-item card border-0 shadow-sm h-100">
+                                    <div class="card-body p-3 d-flex align-items-stretch gap-3">
+                                        <div class="media-doc-thumb flex-shrink-0">
+                                            <?php if ($thumbUrl): ?>
+                                                <img src="<?= htmlspecialchars($thumbUrl) ?>" alt="" class="media-doc-thumb-img" loading="lazy">
+                                            <?php else: ?>
+                                                <div class="media-doc-thumb-icon"><i class="bi <?= $thumbIcon ?>"></i></div>
+                                            <?php endif; ?>
+                                        </div>
+                                        <div class="flex-grow-1 min-w-0 d-flex flex-column">
+                                            <span class="fw-semibold d-block text-truncate" title="<?= htmlspecialchars($doc->title) ?>"><?= htmlspecialchars($doc->title) ?></span>
+                                            <?php if (!empty($doc->document_type)): ?>
+                                            <span class="badge bg-secondary bg-opacity-25 text-dark small mt-1"><?= htmlspecialchars($doc->document_type) ?></span>
+                                            <?php endif; ?>
+                                            <?php if (!empty($doc->description)): ?>
+                                            <p class="text-muted small mb-2 mt-1 flex-grow-1"><?= htmlspecialchars(mb_substr($doc->description, 0, 80)) ?><?= mb_strlen($doc->description) > 80 ? '…' : '' ?></p>
+                                            <?php endif; ?>
+                                            <?php if ($version && !empty($filePath)): ?>
+                                            <?php
+                                                $fileUrl = client_asset_url($baseUrl, $filePath);
+                                                $sz = format_file_size($version->file_size ?? null);
+                                            ?>
+                                            <a href="<?= htmlspecialchars($fileUrl) ?>" class="btn btn-sm btn-outline-primary align-self-start" target="_blank" rel="noopener" download="<?= htmlspecialchars($fileName ?: basename($filePath)) ?>">
+                                                <i class="bi bi-download me-1"></i> Télécharger<?= $sz ? ' (' . $sz . ')' : '' ?>
+                                            </a>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
                                 </div>
@@ -159,11 +184,11 @@ function format_file_size($bytes) {
                     <table class="table table-hover align-middle media-attachments-table">
                         <thead class="table-light">
                             <tr>
+                                <th style="width: 48px;"></th>
                                 <th>Fichier</th>
-                                <th>Type</th>
                                 <th>Lié à</th>
                                 <th class="text-end">Taille</th>
-                                <th></th>
+                                <th class="text-end" style="width: 80px;"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -175,20 +200,27 @@ function format_file_size($bytes) {
                                 ? $baseUrl . 'mission.php?id=' . (int) $att->attachable_id
                                 : $baseUrl . 'announcement.php?id=' . (int) $att->attachable_id;
                             $typeLabel = $att->attachable_type === 'mission' ? 'Mission' : 'Annonce';
+                            $attExt = $att->file_name ? strtolower(pathinfo($att->file_name, PATHINFO_EXTENSION)) : '';
+                            $attIcon = 'bi-file-earmark';
+                            if (in_array($attExt, ['jpg','jpeg','png','gif','webp'])) $attIcon = 'bi-file-earmark-image';
+                            elseif ($attExt === 'pdf') $attIcon = 'bi-file-earmark-pdf';
+                            elseif (in_array($attExt, ['doc','docx'])) $attIcon = 'bi-file-earmark-word';
+                            elseif (in_array($attExt, ['xls','xlsx'])) $attIcon = 'bi-file-earmark-excel';
                             ?>
                             <tr>
-                                <td>
-                                    <i class="bi bi-paperclip text-muted me-2"></i>
-                                    <span title="<?= htmlspecialchars($att->file_name) ?>"><?= htmlspecialchars($att->file_name) ?></span>
+                                <td class="text-center">
+                                    <span class="media-attachment-icon"><i class="bi <?= $attIcon ?> text-primary"></i></span>
                                 </td>
-                                <td><span class="badge bg-light text-dark"><?= htmlspecialchars($att->mime_type ?? '—') ?></span></td>
+                                <td>
+                                    <span class="fw-medium" title="<?= htmlspecialchars($att->file_name) ?>"><?= htmlspecialchars($att->file_name) ?></span>
+                                </td>
                                 <td>
                                     <a href="<?= htmlspecialchars($parentUrl) ?>"><?= htmlspecialchars($parentTitle) ?></a>
                                     <span class="text-muted small">(<?= $typeLabel ?>)</span>
                                 </td>
                                 <td class="text-end text-muted small"><?= format_file_size($att->file_size) ?></td>
                                 <td class="text-end">
-                                    <a href="<?= htmlspecialchars($fileUrl) ?>" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" download="<?= htmlspecialchars($att->file_name) ?>">
+                                    <a href="<?= htmlspecialchars($fileUrl) ?>" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener" download="<?= htmlspecialchars($att->file_name) ?>" title="Télécharger">
                                         <i class="bi bi-download"></i>
                                     </a>
                                 </td>

@@ -981,6 +981,7 @@ CREATE TABLE IF NOT EXISTS `document` (
   `title` VARCHAR(255) NOT NULL,
   `description` TEXT,
   `document_type` VARCHAR(50),
+  `cover_image` VARCHAR(500) DEFAULT NULL COMMENT 'Photo de couverture (miniature)',
   `current_version_id` INT UNSIGNED DEFAULT NULL,
   `created_by_user_id` INT UNSIGNED DEFAULT NULL,
   `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

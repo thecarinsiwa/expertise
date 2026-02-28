@@ -68,7 +68,7 @@ if ($pdo) {
             }
             if ($match) {
                 $stmt2 = $pdo->prepare("
-                    SELECT d.id, d.title, d.description, d.document_type, d.current_version_id
+                    SELECT d.id, d.title, d.description, d.document_type, d.cover_image, d.current_version_id
                     FROM document d
                     WHERE d.document_category_id = ? AND (d.organisation_id = ? OR d.organisation_id IS NULL)
                     ORDER BY d.updated_at DESC, d.title
@@ -106,7 +106,7 @@ if ($pdo) {
             $fallbackCats = $stmt->fetchAll(PDO::FETCH_OBJ);
             foreach ($fallbackCats as $cat) {
                 $stmt2 = $pdo->prepare("
-                    SELECT d.id, d.title, d.description, d.document_type, d.current_version_id
+                    SELECT d.id, d.title, d.description, d.document_type, d.cover_image, d.current_version_id
                     FROM document d
                     WHERE d.document_category_id = ? AND (d.organisation_id = ? OR d.organisation_id IS NULL)
                     ORDER BY d.updated_at DESC, d.title
@@ -174,10 +174,41 @@ require_once __DIR__ . '/inc/page-static.php';
                         <p class="text-muted small mb-3"><?= nl2br(htmlspecialchars($cat->description)) ?></p>
                         <?php endif; ?>
                         <ul class="list-unstyled mb-0">
-                            <?php foreach ($cat->documents as $doc): ?>
-                            <li class="responsibility-doc-item d-flex align-items-start gap-2 py-2 border-bottom border-light">
-                                <i class="bi bi-file-earmark-text text-muted mt-1"></i>
-                                <div class="flex-grow-1">
+                            <?php foreach ($cat->documents as $doc):
+                                $version = $doc->version ?? null;
+                                $filePath = $version ? ($version->file_path ?? null) : null;
+                                $fileName = $version ? ($version->file_name ?? null) : null;
+                                $ext = $filePath ? strtolower(pathinfo($filePath, PATHINFO_EXTENSION)) : '';
+                                $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'], true);
+                                if (!empty($doc->cover_image)) {
+                                    $thumbUrl = client_asset_url($baseUrl, $doc->cover_image);
+                                } elseif ($isImage && $filePath) {
+                                    $thumbUrl = client_asset_url($baseUrl, $filePath);
+                                } else {
+                                    $thumbUrl = '';
+                                }
+                                $iconByExt = [
+                                    'pdf' => 'bi-file-earmark-pdf',
+                                    'doc' => 'bi-file-earmark-word',
+                                    'docx' => 'bi-file-earmark-word',
+                                    'xls' => 'bi-file-earmark-excel',
+                                    'xlsx' => 'bi-file-earmark-excel',
+                                    'ppt' => 'bi-file-ppt',
+                                    'pptx' => 'bi-file-ppt',
+                                    'txt' => 'bi-file-earmark-text',
+                                    'zip' => 'bi-file-earmark-zip',
+                                ];
+                                $thumbIcon = $iconByExt[$ext] ?? 'bi-file-earmark';
+                            ?>
+                            <li class="responsibility-doc-item d-flex align-items-stretch gap-3 py-3 border-bottom border-light">
+                                <div class="responsibility-doc-thumb flex-shrink-0">
+                                    <?php if ($thumbUrl): ?>
+                                        <img src="<?= htmlspecialchars($thumbUrl) ?>" alt="" class="responsibility-doc-thumb-img" loading="lazy">
+                                    <?php else: ?>
+                                        <div class="responsibility-doc-thumb-icon"><i class="bi <?= $thumbIcon ?>"></i></div>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="flex-grow-1 min-w-0">
                                     <span class="fw-semibold"><?= htmlspecialchars($doc->title) ?></span>
                                     <?php if (!empty($doc->document_type)): ?>
                                     <span class="badge bg-light text-dark ms-2 small"><?= htmlspecialchars($doc->document_type) ?></span>
@@ -185,11 +216,11 @@ require_once __DIR__ . '/inc/page-static.php';
                                     <?php if (!empty($doc->description)): ?>
                                     <p class="text-muted small mb-0 mt-1"><?= nl2br(htmlspecialchars(mb_substr($doc->description, 0, 200))) ?><?= mb_strlen($doc->description) > 200 ? '…' : '' ?></p>
                                     <?php endif; ?>
-                                    <?php if (!empty($doc->version) && !empty($doc->version->file_path)):
-                                        $fileUrl = client_asset_url($baseUrl, $doc->version->file_path);
-                                        $fileName = !empty($doc->version->file_name) ? $doc->version->file_name : basename($doc->version->file_path);
+                                    <?php if ($version && !empty($filePath)):
+                                        $fileUrl = client_asset_url($baseUrl, $filePath);
+                                        $dlFileName = $fileName ?: basename($filePath);
                                     ?>
-                                    <a href="<?= htmlspecialchars($fileUrl) ?>" class="btn btn-sm btn-outline-primary mt-2" target="_blank" rel="noopener" download="<?= htmlspecialchars($fileName) ?>">
+                                    <a href="<?= htmlspecialchars($fileUrl) ?>" class="btn btn-sm btn-outline-primary mt-2" target="_blank" rel="noopener" download="<?= htmlspecialchars($dlFileName) ?>">
                                         <i class="bi bi-download me-1"></i> Télécharger
                                     </a>
                                     <?php endif; ?>

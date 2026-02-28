@@ -76,8 +76,31 @@ if ($pdo) {
         } else {
             try {
                 if ($doc_id > 0) {
-                    $pdo->prepare("UPDATE document SET organisation_id = ?, document_category_id = ?, title = ?, description = ?, document_type = ?, created_by_user_id = ? WHERE id = ?")
-                        ->execute([$doc_org_id, $category_id, $title, $description, $document_type, $created_by, $doc_id]);
+                    $cover_path = null;
+                    $cover_file = $_FILES['cover_image'] ?? null;
+                    if ($cover_file && !empty($cover_file['tmp_name']) && $cover_file['error'] === UPLOAD_ERR_OK) {
+                        $img_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                        $ext = strtolower(pathinfo($cover_file['name'], PATHINFO_EXTENSION));
+                        if (in_array($ext, $img_ext, true)) {
+                            $cover_dir = dirname(__DIR__) . '/uploads/documents/covers/';
+                            if (!is_dir($cover_dir)) mkdir($cover_dir, 0755, true);
+                            $cover_name = 'doc_cover_' . $doc_id . '_' . date('Ymd_His') . '_' . substr(uniqid(), -6) . '.' . $ext;
+                            if (move_uploaded_file($cover_file['tmp_name'], $cover_dir . $cover_name)) {
+                                $cover_path = 'uploads/documents/covers/' . $cover_name;
+                            }
+                        }
+                    }
+                    $remove_cover = !empty($_POST['remove_cover_image']);
+                    if ($remove_cover) {
+                        $cover_path = null;
+                    }
+                    if ($cover_path !== null || $remove_cover) {
+                        $pdo->prepare("UPDATE document SET organisation_id = ?, document_category_id = ?, title = ?, description = ?, document_type = ?, cover_image = ?, created_by_user_id = ? WHERE id = ?")
+                            ->execute([$doc_org_id, $category_id, $title, $description, $document_type, $cover_path, $created_by, $doc_id]);
+                    } else {
+                        $pdo->prepare("UPDATE document SET organisation_id = ?, document_category_id = ?, title = ?, description = ?, document_type = ?, created_by_user_id = ? WHERE id = ?")
+                            ->execute([$doc_org_id, $category_id, $title, $description, $document_type, $created_by, $doc_id]);
+                    }
 
                     $version_added = false;
                     $file = $_FILES['document_file'] ?? null;
@@ -132,6 +155,7 @@ if ($pdo) {
                     $uploaded_file_name = null;
                     $uploaded_file_size = null;
                     $uploaded_mime_type = null;
+                    $cover_image_for_insert = null;
                     $file = $_FILES['document_file'] ?? null;
                     if ($file && !empty($file['tmp_name']) && $file['error'] === UPLOAD_ERR_OK) {
                         $allowed_ext = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'odt', 'ods', 'odp', 'csv', 'zip', 'png', 'jpg', 'jpeg', 'gif', 'webp'];
@@ -166,10 +190,23 @@ if ($pdo) {
                             $error = 'Erreur lors de l\'upload (code ' . $file['error'] . ').';
                         }
                     }
+                    $cover_file_new = $_FILES['cover_image'] ?? null;
+                    if ($cover_file_new && !empty($cover_file_new['tmp_name']) && $cover_file_new['error'] === UPLOAD_ERR_OK) {
+                        $img_ext = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+                        $ext = strtolower(pathinfo($cover_file_new['name'], PATHINFO_EXTENSION));
+                        if (in_array($ext, $img_ext, true)) {
+                            $cover_dir = dirname(__DIR__) . '/uploads/documents/covers/';
+                            if (!is_dir($cover_dir)) mkdir($cover_dir, 0755, true);
+                            $cover_name = 'doc_cover_' . date('Ymd_His') . '_' . substr(uniqid(), -6) . '.' . $ext;
+                            if (move_uploaded_file($cover_file_new['tmp_name'], $cover_dir . $cover_name)) {
+                                $cover_image_for_insert = 'uploads/documents/covers/' . $cover_name;
+                            }
+                        }
+                    }
 
                     if ($error === '') {
-                        $pdo->prepare("INSERT INTO document (organisation_id, document_category_id, title, description, document_type, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?)")
-                            ->execute([$doc_org_id, $category_id, $title, $description, $document_type, $created_by]);
+                        $pdo->prepare("INSERT INTO document (organisation_id, document_category_id, title, description, document_type, cover_image, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)")
+                            ->execute([$doc_org_id, $category_id, $title, $description, $document_type, $cover_image_for_insert, $created_by]);
                         $new_doc_id = (int) $pdo->lastInsertId();
 
                         if ($uploaded_path) {
@@ -518,6 +555,24 @@ require __DIR__ . '/inc/header.php';
                     <input type="text" name="document_type" class="form-control" value="<?= htmlspecialchars($detail->document_type ?? '') ?>" placeholder="Ex: PDF, Procédure">
                 </div>
                 <div class="col-12">
+                    <label class="form-label fw-bold">Photo de couverture (miniature)</label>
+                    <?php
+                    $cover_image = $detail->cover_image ?? null;
+                    $cover_url = $cover_image ? (rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/../' . $cover_image) : '';
+                    ?>
+                    <?php if ($cover_url && $detail): ?>
+                        <div class="mb-2">
+                            <img src="<?= htmlspecialchars($cover_url) ?>" alt="Couverture actuelle" class="img-thumbnail" style="max-height: 120px; max-width: 160px; object-fit: cover;">
+                        </div>
+                        <div class="form-check mb-2">
+                            <input type="checkbox" name="remove_cover_image" value="1" id="remove_cover_image" class="form-check-input">
+                            <label class="form-check-label" for="remove_cover_image">Supprimer la photo de couverture</label>
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="cover_image" class="form-control" accept=".jpg,.jpeg,.png,.gif,.webp">
+                    <div class="form-text">Image utilisée comme miniature (liste, page Responsabilité). JPG, PNG, GIF, WebP. Optionnel.</div>
+                </div>
+                <div class="col-12">
                     <label class="form-label fw-bold"><?= $detail ? 'Nouvelle version (optionnel)' : 'Fichier (optionnel)' ?></label>
                     <input type="file" name="document_file" class="form-control" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.odt,.ods,.odp,.csv,.zip,.png,.jpg,.jpeg,.gif,.webp">
                     <div class="form-text"><?= $detail ? 'Choisir un fichier pour ajouter une nouvelle version au document.' : '' ?> PDF, Word, Excel, PowerPoint, TXT, ODT, CSV, ZIP, images. Taille max : <?= ini_get('upload_max_filesize') ?: 'défaut serveur' ?>.</div>
@@ -543,6 +598,12 @@ require __DIR__ . '/inc/header.php';
             <tr><th>Organisation</th><td><?= htmlspecialchars($detail->organisation_name ?? '—') ?></td></tr>
             <tr><th>Catégorie</th><td><?= htmlspecialchars($detail->category_name ?? '—') ?></td></tr>
             <tr><th>Type</th><td><?= htmlspecialchars($detail->document_type ?? '—') ?></td></tr>
+            <tr><th>Photo de couverture</th><td>
+                <?php if (!empty($detail->cover_image)): ?>
+                    <?php $cover_url = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/../' . $detail->cover_image; ?>
+                    <img src="<?= htmlspecialchars($cover_url) ?>" alt="Couverture" class="img-thumbnail" style="max-height: 80px; max-width: 120px; object-fit: cover;">
+                <?php else: ?>—<?php endif; ?>
+            </td></tr>
             <tr><th>Description</th><td><?= nl2br(htmlspecialchars($detail->description ?? '—')) ?></td></tr>
         </table>
         <div class="mt-3 d-flex gap-2">
