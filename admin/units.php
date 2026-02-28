@@ -20,6 +20,7 @@ $editDepartment = null;
 $editService = null;
 $editUnit = null;
 $allUsers = [];
+$governanceContent = null;
 
 if ($pdo) {
     $organisations = $pdo->query("SELECT id, name, code FROM organisation ORDER BY name")->fetchAll();
@@ -54,6 +55,10 @@ if ($pdo) {
             ");
             $stmtUnit->execute([$organisationId]);
             $units = $stmtUnit->fetchAll();
+
+            $stmtGov = $pdo->prepare("SELECT id, intro_block1, intro_block2, section_instances_title, section_instances_text, section_bureaux_title, section_bureaux_text FROM governance_page WHERE organisation_id = ? LIMIT 1");
+            $stmtGov->execute([$organisationId]);
+            $governanceContent = $stmtGov->fetch(PDO::FETCH_OBJ);
         }
     }
 
@@ -203,6 +208,33 @@ if ($pdo) {
             }
         }
 
+        if (isset($_POST['save_governance']) && $organisationId > 0 && has_permission('admin.documents.modify')) {
+            $intro1 = trim($_POST['governance_intro_block1'] ?? '');
+            $intro2 = trim($_POST['governance_intro_block2'] ?? '');
+            $instTitle = trim($_POST['governance_section_instances_title'] ?? '') ?: null;
+            $instText = trim($_POST['governance_section_instances_text'] ?? '') ?: null;
+            $burTitle = trim($_POST['governance_section_bureaux_title'] ?? '') ?: null;
+            $burText = trim($_POST['governance_section_bureaux_text'] ?? '') ?: null;
+            try {
+                $stmt = $pdo->prepare("SELECT id FROM governance_page WHERE organisation_id = ? LIMIT 1");
+                $stmt->execute([$organisationId]);
+                $existing = $stmt->fetch(PDO::FETCH_OBJ);
+                if ($existing) {
+                    $pdo->prepare("UPDATE governance_page SET intro_block1 = ?, intro_block2 = ?, section_instances_title = ?, section_instances_text = ?, section_bureaux_title = ?, section_bureaux_text = ? WHERE id = ?")
+                        ->execute([$intro1, $intro2, $instTitle, $instText, $burTitle, $burText, $existing->id]);
+                } else {
+                    $pdo->prepare("INSERT INTO governance_page (organisation_id, intro_block1, intro_block2, section_instances_title, section_instances_text, section_bureaux_title, section_bureaux_text) VALUES (?, ?, ?, ?, ?, ?, ?)")
+                        ->execute([$organisationId, $intro1, $intro2, $instTitle, $instText, $burTitle, $burText]);
+                }
+                $success = 'Contenu de la page Gouvernance enregistré.';
+                $stmtGov = $pdo->prepare("SELECT id, intro_block1, intro_block2, section_instances_title, section_instances_text, section_bureaux_title, section_bureaux_text FROM governance_page WHERE organisation_id = ? LIMIT 1");
+                $stmtGov->execute([$organisationId]);
+                $governanceContent = $stmtGov->fetch(PDO::FETCH_OBJ);
+            } catch (PDOException $e) {
+                $error = 'Erreur gouvernance : ' . $e->getMessage();
+            }
+        }
+
         if ($success || $error) {
             if ($organisationId > 0) {
                 $stmt = $pdo->prepare("SELECT id, name, code FROM organisation WHERE id = ?");
@@ -217,6 +249,11 @@ if ($pdo) {
                 $stmtUnit = $pdo->prepare("SELECT u.id, u.name, u.code, u.photo, u.is_active, u.service_id, s.name AS service_name, d.name AS department_name FROM unit u JOIN service s ON u.service_id = s.id JOIN department d ON s.department_id = d.id WHERE d.organisation_id = ? ORDER BY d.name, s.name, u.name");
                 $stmtUnit->execute([$organisationId]);
                 $units = $stmtUnit->fetchAll();
+            }
+            if ($organisationId > 0) {
+                $stmtGov = $pdo->prepare("SELECT id, intro_block1, intro_block2, section_instances_title, section_instances_text, section_bureaux_title, section_bureaux_text FROM governance_page WHERE organisation_id = ? LIMIT 1");
+                $stmtGov->execute([$organisationId]);
+                $governanceContent = $stmtGov->fetch(PDO::FETCH_OBJ);
             }
         }
     }
@@ -300,6 +337,9 @@ require __DIR__ . '/inc/header.php';
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link <?= $activeTab === 'unit' ? 'active' : '' ?>" id="tab-unit-btn" data-bs-toggle="tab" data-bs-target="#tab-unit" type="button" role="tab">Unités</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link <?= $activeTab === 'governance' ? 'active' : '' ?>" id="tab-governance-btn" data-bs-toggle="tab" data-bs-target="#tab-governance" type="button" role="tab">Gouvernance</button>
             </li>
         </ul>
         <div class="tab-content border border-top-0 rounded-bottom p-3" id="unitsTabContent">
@@ -478,6 +518,49 @@ require __DIR__ . '/inc/header.php';
         <?php else: ?>
             <p class="text-muted mb-0">Aucune unité. Créez d'abord un service, puis <a href="units.php?organisation_id=<?= $organisationId ?>&type=unit&form_action=add">ajouter une unité</a>.</p>
         <?php endif; ?>
+            </div>
+
+            <div class="tab-pane fade <?= $activeTab === 'governance' ? 'show active' : '' ?>" id="tab-governance" role="tabpanel">
+    <!-- Gouvernance – contenu page Notre gouvernance -->
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0"><i class="bi bi-diagram-2 me-2"></i>Contenu de la page « Notre gouvernance »</h5>
+            <a href="../governance.php" target="_blank" class="btn btn-sm btn-admin-outline">Voir la page <i class="bi bi-box-arrow-up-right ms-1"></i></a>
+        </div>
+        <p class="text-muted small mb-3">Ce contenu s'affiche sur la page publique <strong>Notre gouvernance</strong> pour l'organisation sélectionnée.</p>
+        <form method="POST" class="p-3 bg-light rounded" accept-charset="UTF-8">
+            <input type="hidden" name="organisation_id" value="<?= $organisationId ?>">
+            <input type="hidden" name="save_governance" value="1">
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Introduction (bloc 1)</label>
+                    <textarea name="governance_intro_block1" class="form-control" rows="2"><?= htmlspecialchars($governanceContent?->intro_block1 ?? '') ?></textarea>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Introduction (bloc 2)</label>
+                    <textarea name="governance_intro_block2" class="form-control" rows="2"><?= htmlspecialchars($governanceContent?->intro_block2 ?? '') ?></textarea>
+                </div>
+                <div class="col-12"><hr class="my-2"></div>
+                <div class="col-md-6">
+                    <label class="form-label">Titre section « Instances »</label>
+                    <input type="text" name="governance_section_instances_title" class="form-control" value="<?= htmlspecialchars($governanceContent?->section_instances_title ?? '') ?>">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Texte section Instances</label>
+                    <textarea name="governance_section_instances_text" class="form-control" rows="2"><?= htmlspecialchars($governanceContent?->section_instances_text ?? '') ?></textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Titre section « Bureaux »</label>
+                    <input type="text" name="governance_section_bureaux_title" class="form-control" value="<?= htmlspecialchars($governanceContent?->section_bureaux_title ?? '') ?>">
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Texte section Bureaux</label>
+                    <textarea name="governance_section_bureaux_text" class="form-control" rows="2"><?= htmlspecialchars($governanceContent?->section_bureaux_text ?? '') ?></textarea>
+                </div>
+                <div class="col-12">
+                    <button type="submit" class="btn btn-admin-primary">Enregistrer le contenu Gouvernance</button>
+                </div>
+            </div>
+        </form>
             </div>
         </div>
     </div>

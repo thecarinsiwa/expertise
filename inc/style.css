@@ -706,6 +706,29 @@ body, html {
     .responsibility-doc-thumb-icon { font-size: 1.5rem; }
 }
 
+/* Reports & finances page */
+.reports-finances-page .reports-finances-section-card { border-radius: 10px; transition: box-shadow 0.2s ease, transform 0.2s ease; }
+.reports-finances-page .reports-finances-section-card:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.08) !important; transform: translateY(-2px); }
+.reports-finances-section-icon { font-size: 2rem; }
+.reports-finances-page .reports-finances-category-card { border-radius: 10px; transition: box-shadow 0.2s ease; }
+.reports-finances-page .reports-finances-category-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }
+.reports-finances-doc-item:last-child { border-bottom: none !important; }
+@media (max-width: 767.98px) {
+    .reports-finances-page .reports-finances-category-card .card-body { padding: 1rem !important; }
+    .reports-finances-section-icon { font-size: 1.5rem; }
+}
+
+/* Contact page */
+.contact-page .contact-card { border-radius: 12px; transition: box-shadow 0.2s ease; }
+.contact-page .contact-card:hover { box-shadow: 0 8px 28px rgba(0,0,0,0.08) !important; }
+.contact-details-list { padding-left: 0; }
+.contact-detail-item { display: flex; align-items: flex-start; gap: 0.75rem; }
+.contact-detail-icon { flex-shrink: 0; width: 1.25rem; text-align: center; color: var(--bs-primary, #0d6efd); margin-top: 0.15rem; }
+.contact-page .contact-detail-item a { color: var(--msf-blue-dark, #0d6efd); font-weight: 500; text-decoration: none; }
+.contact-page .contact-detail-item a:hover { text-decoration: underline; }
+.contact-social-links .contact-social-btn { width: 2.5rem; height: 2.5rem; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; }
+.contact-social-links .contact-social-btn:hover { background: var(--bs-primary); color: #fff; border-color: var(--bs-primary); }
+
 /* Media & resources page */
 .media-resources-page .media-category-card { border-radius: 10px; transition: box-shadow 0.2s ease; }
 .media-resources-page .media-category-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08) !important; }

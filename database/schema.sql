@@ -1063,6 +1063,46 @@ CREATE TABLE IF NOT EXISTS `responsibility_commitment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
+-- 7c. REPORTS & FINANCES PAGE CONTENT
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `reports_finances_page` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `organisation_id` INT UNSIGNED DEFAULT NULL COMMENT 'NULL = contenu par défaut',
+  `intro_block1` TEXT DEFAULT NULL,
+  `intro_block2` TEXT DEFAULT NULL,
+  `section_activity_title` VARCHAR(255) DEFAULT NULL,
+  `section_activity_text` TEXT DEFAULT NULL,
+  `section_finance_title` VARCHAR(255) DEFAULT NULL,
+  `section_finance_text` TEXT DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_reports_finances_page_organisation` (`organisation_id`),
+  CONSTRAINT `fk_reports_finances_page_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 7d. GOVERNANCE PAGE CONTENT
+-- -----------------------------------------------------------------------------
+
+CREATE TABLE IF NOT EXISTS `governance_page` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `organisation_id` INT UNSIGNED DEFAULT NULL COMMENT 'NULL = contenu par défaut',
+  `intro_block1` TEXT DEFAULT NULL,
+  `intro_block2` TEXT DEFAULT NULL,
+  `section_instances_title` VARCHAR(255) DEFAULT NULL,
+  `section_instances_text` TEXT DEFAULT NULL,
+  `section_bureaux_title` VARCHAR(255) DEFAULT NULL,
+  `section_bureaux_text` TEXT DEFAULT NULL,
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_governance_page_organisation` (`organisation_id`),
+  CONSTRAINT `fk_governance_page_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
 -- 8. PLANNING & TRACKING
 -- -----------------------------------------------------------------------------
 

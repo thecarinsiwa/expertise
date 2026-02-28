@@ -440,6 +440,11 @@ header('Content-Type: text/html; charset=UTF-8');
                 <i class="bi bi-card-text"></i><span>Responsabilité</span>
             </a>
             <?php endif; ?>
+            <?php if (has_permission('admin.documents.view')): ?>
+            <a href="reports_finances.php" class="nav-link<?= $currentNav === 'reports_finances' ? ' active' : '' ?>">
+                <i class="bi bi-graph-up-arrow"></i><span>Rapports et finances</span>
+            </a>
+            <?php endif; ?>
             <?php if (has_permission('admin.planning.view')): ?>
             <a href="planning.php" class="nav-link<?= $currentNav === 'planning' ? ' active' : '' ?>">
                 <i class="bi bi-calendar3"></i><span>Planning & KPI</span>
