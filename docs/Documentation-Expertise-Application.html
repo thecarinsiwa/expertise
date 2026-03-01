@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation Expertise — Plateforme organisationnelle</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --doc-primary: #0071BC;
+            --doc-secondary: #1D1C3E;
+            --doc-text: #333;
+            --doc-muted: #666;
+            --doc-bg: #f8f9fa;
+            --doc-border: #dee2e6;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Source Sans 3', sans-serif;
+            color: var(--doc-text);
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: #fff;
+        }
+        h1, h2, h3 { color: var(--doc-secondary); font-weight: 700; }
+        h1 { font-size: 1.75rem; border-bottom: 3px solid var(--doc-primary); padding-bottom: 0.5rem; margin-top: 0; }
+        h2 { font-size: 1.35rem; margin-top: 2.5rem; margin-bottom: 1rem; }
+        h3 { font-size: 1.1rem; margin-top: 1.5rem; }
+        p { margin: 0.75rem 0; }
+        ul, ol { margin: 0.75rem 0; padding-left: 1.5rem; }
+        .cover {
+            text-align: center;
+            padding: 3rem 0;
+            border-bottom: 1px solid var(--doc-border);
+        }
+        .cover h1 { border: none; font-size: 2rem; }
+        .cover .subtitle { color: var(--doc-muted); font-size: 1.1rem; margin-top: 0.5rem; }
+        .chapter { margin-top: 2.5rem; }
+        .chapter-num { color: var(--doc-primary); font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem; }
+        .diagram-wrap {
+            background: var(--doc-bg);
+            border: 1px solid var(--doc-border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.25rem 0;
+            overflow-x: auto;
+        }
+        .diagram-wrap .mermaid { display: flex; justify-content: center; }
+        .diagram-caption { font-size: 0.9rem; color: var(--doc-muted); margin-top: 0.75rem; text-align: center; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            font-size: 0.95rem;
+        }
+        th, td { border: 1px solid var(--doc-border); padding: 0.5rem 0.75rem; text-align: left; }
+        th { background: var(--doc-bg); font-weight: 600; }
+        .page-break { page-break-before: always; }
+        .toc { margin: 1.5rem 0; padding: 1rem; background: var(--doc-bg); border-radius: 8px; }
+        .toc ul { list-style: none; padding-left: 0; }
+        .toc li { margin: 0.35rem 0; }
+        .toc a { color: var(--doc-primary); text-decoration: none; }
+        .toc a:hover { text-decoration: underline; }
+        .note { background: #e8f4fc; border-left: 4px solid var(--doc-primary); padding: 0.75rem 1rem; margin: 1rem 0; font-size: 0.95rem; }
+        @media print {
+            body { padding: 1rem; max-width: none; }
+            .page-break { page-break-before: always; }
+            .diagram-wrap { break-inside: avoid; }
+            .cover { padding: 2rem 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="cover">
+    <h1>Documentation de l'application Expertise</h1>
+    <p class="subtitle">Plateforme organisationnelle humanitaire et sociale</p>
+    <p class="subtitle">Document explicatif avec schémas et diagrammes</p>
+    <p style="margin-top:1.5rem;"><img src="../assets/expertise-architecture-overview.png" alt="Vue d'ensemble de l'architecture Expertise" style="max-width:100%; height:auto; border:1px solid #dee2e6; border-radius:8px;" width="700" onerror="this.parentElement.style.display='none'; var c=document.getElementById('cover-caption'); if(c) c.style.display='none';"></p>
+    <p class="diagram-caption" id="cover-caption">Vue d'ensemble — Acteurs, site web et base de données</p>
+</div>
+
+<nav class="toc" aria-label="Sommaire">
+    <h2>Sommaire</h2>
+    <ul>
+        <li><strong>Chapitre 1 — Vue d'ensemble et architecture</strong></li>
+        <li><a href="#ch1-objectif">1.1 Objectif de l'application</a></li>
+        <li><a href="#ch1-acteurs">1.2 Acteurs et rôles</a></li>
+        <li><a href="#ch1-architecture">1.3 Architecture technique</a></li>
+        <li><a href="#ch1-modules">1.4 Modules fonctionnels</a></li>
+        <li><a href="#ch1-bdd">1.5 Schéma de données (simplifié)</a></li>
+        <li><strong>Chapitre 2 — Parcours et fonctionnalités</strong></li>
+        <li><a href="#ch2-public">2.1 Site public (visiteur)</a></li>
+        <li><a href="#ch2-admin">2.2 Back-office administration</a></li>
+        <li><a href="#ch2-client">2.3 Espace client et candidatures</a></li>
+        <li><a href="#ch2-flux">2.4 Flux de données principaux</a></li>
+        <li><strong>Chapitre 3 — Utilisation de l'espace client</strong></li>
+        <li><a href="#ch3-inscription">3.1 S'inscrire et se connecter</a></li>
+        <li><a href="#ch3-dashboard">3.2 Tableau de bord</a></li>
+        <li><a href="#ch3-postuler">3.3 Consulter les offres et postuler</a></li>
+        <li><a href="#ch3-candidatures">3.4 Mes candidatures</a></li>
+        <li><a href="#ch3-profil">3.5 Mon profil / Mon CV</a></li>
+        <li><strong>Chapitre 4 — Utilisation du back-office admin</strong></li>
+        <li><a href="#ch4-connexion">4.1 Connexion et tableau de bord</a></li>
+        <li><a href="#ch4-structure">4.2 Structure (organisations, unités)</a></li>
+        <li><a href="#ch4-rh">4.3 RH et sécurité (utilisateurs, personnel, rôles)</a></li>
+        <li><a href="#ch4-operations">4.4 Opérations (missions, offres, projets, bailleurs)</a></li>
+        <li><a href="#ch4-comm">4.5 Communication et gestion</a></li>
+        <li><strong>Conclusion</strong></li>
+        <li><a href="#conclusion">Conclusion</a></li>
+    </ul>
+</nav>
+
+<!-- ========== CHAPITRE 1 ========== -->
+<section class="chapter" id="chapitre-1">
+    <p class="chapter-num">Chapitre 1</p>
+    <h1>Vue d'ensemble et architecture</h1>
+
+    <h2 id="ch1-objectif">1.1 Objectif de l'application</h2>
+    <p><strong>Expertise</strong> est une plateforme web destinée à une organisation humanitaire et sociale. Elle permet de&nbsp;:</p>
+    <ul>
+        <li><strong>Présenter</strong> l'organisation au public : missions, actualités, équipe, bailleurs, lieux d'intervention.</li>
+        <li><strong>Gérer</strong> en interne les missions, projets, personnel, annonces, documents et la communication.</li>
+        <li><strong>Recruter</strong> via des offres publiées : les candidats peuvent s'inscrire, postuler et suivre leurs candidatures.</li>
+    </ul>
+    <p>L'application repose sur une base de données MySQL, un site public en PHP, un back-office d'administration et un espace client séparé.</p>
+
+    <h2 id="ch1-acteurs">1.2 Acteurs et rôles</h2>
+    <p>Trois types d'utilisateurs interagissent avec le système :</p>
+    <div class="diagram-wrap">
+        <div class="mermaid">
+flowchart LR
+    subgraph Externe
+        V[Visiteur]
+    end
+    subgraph Authentifié
+        C[Client / Candidat]
+        A[Administrateur / Staff]
+    end
+    V --> | Consultation | SitePublic[Site public]
+    C --> | Connexion | EspaceClient[Espace client]
+    A --> | Connexion | Admin[Back-office admin]
+    SitePublic --> | PHP + MySQL | DB[(Base de données)]
+    EspaceClient --> DB
+    Admin --> DB
+        </div>
+        <p class="diagram-caption">Figure 1 — Acteurs et accès aux différentes parties de l'application</p>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Acteur</th><th>Description</th><th>Accès</th></tr>
+        </thead>
+        <tbody>
+            <tr><td><strong>Visiteur</strong></td><td>Internaute non connecté</td><td>Pages publiques : accueil, missions, actualités, équipe, offres, contact, etc.</td></tr>
+            <tr><td><strong>Client / Candidat</strong></td><td>Utilisateur inscrit (inscription / login)</td><td>Espace client : tableau de bord, offres, candidatures, profil.</td></tr>
+            <tr><td><strong>Administrateur / Staff</strong></td><td>Personnel avec compte admin</td><td>Back-office : dashboard, missions, annonces, personnel, projets, documents, paramètres, etc. Droits gérés par rôles (RBAC).</td></tr>
+        </tbody>
+    </table>
+
+    <h2 id="ch1-architecture">1.3 Architecture technique</h2>
+    <p>L'application suit une architecture web classique en trois couches : présentation (navigateur), logique (PHP), données (MySQL).</p>
+    <div class="diagram-wrap">
+        <div class="mermaid">
+flowchart TB
+    subgraph Client["Navigateur (client)"]
+        HTML[Pages HTML]
+        CSS[CSS / Bootstrap]
+        JS[JavaScript / Leaflet]
+    end
+    subgraph Serveur["Serveur web (PHP)"]
+        Public[Site public]
+        Admin[Back-office admin]
+        ClientApp[Espace client]
+        Inc[inc/ db, header]
+    end
+    subgraph Données["Base de données"]
+        MySQL[(MySQL expertise)]
+    end
+    Client -->|Requêtes HTTP| Serveur
+    Public --> Inc
+    Admin --> Inc
+    ClientApp --> Inc
+    Inc --> MySQL
+        </div>
+        <p class="diagram-caption">Figure 2 — Architecture technique (couches)</p>
+    </div>
+    <ul>
+        <li><strong>Présentation :</strong> HTML, CSS (Bootstrap 5), Bootstrap Icons, Leaflet pour les cartes sur la page « Où nous travaillons ».</li>
+        <li><strong>Logique métier :</strong> PHP (sessions, requêtes SQL, inclusion de inc/db.php, inc/asset_url.php, etc.).</li>
+        <li><strong>Données :</strong> MySQL (schéma dans database/schema.sql), connexion configurée via config/database.php.</li>
+    </ul>
+
+    <h2 id="ch1-modules">1.4 Modules fonctionnels</h2>
+    <p>Les grandes briques métier sont les suivantes (alignées sur le schéma de base de données et les écrans) :</p>
+    <div class="diagram-wrap">
+        <div class="mermaid">
+flowchart TB
+    Org[Organisation]
+    Org --> User[Utilisateurs et Personnel]
+    Org --> Proj[Projets et Programmes]
+    Org --> Mission[Missions]
+    Org --> Annonce[Annonces]
+    Org --> Doc[Documents]
+    Mission --> Offre[Offres]
+    Offre --> Candidature[Candidatures]
+    User --> Role[Rôles et Permissions]
+    Mission --> Bailleur[Bailleurs]
+    Proj --> Bailleur
+        </div>
+        <p class="diagram-caption">Figure 3 — Modules fonctionnels et dépendances principales</p>
+    </div>
+    <table>
+        <thead>
+            <tr><th>Module</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>Organisation</td><td>Fiche organisation (nom, description, logo, réseaux sociaux, coordonnées). Une organisation active est utilisée pour le site public.</td></tr>
+            <tr><td>Utilisateurs et personnel</td><td>Comptes utilisateurs, profils, staff (poste, département, photo), rôles et permissions (RBAC).</td></tr>
+            <tr><td>Missions</td><td>Missions terrain (titre, lieu, dates, type, statut), objectifs, plans, rapports, ordres de mission, dépenses, affectations.</td></tr>
+            <tr><td>Projets et programmes</td><td>Portfolios, programmes, projets (phases, tâches, livrables, budgets), bailleurs liés.</td></tr>
+            <tr><td>Annonces / Actualités</td><td>Annonces avec titre, contenu, image de couverture, dates de publication/expiration. Affichées en hero et dans les actualités.</td></tr>
+            <tr><td>Offres et candidatures</td><td>Offres (liées ou non à une mission/projet), publication, date limite. Candidats : dépôt de CV et suivi des candidatures.</td></tr>
+            <tr><td>Documents</td><td>Catégories, documents, versions, archivage.</td></tr>
+            <tr><td>Communication</td><td>Canaux, conversations, messages, notifications, commentaires.</td></tr>
+        </tbody>
+    </table>
+
+    <h2 id="ch1-bdd">1.5 Schéma de données (simplifié)</h2>
+    <p>Le schéma complet est dans database/schema.sql. Ci-dessous, un extrait des entités centrales et de leurs relations.</p>
+    <div class="diagram-wrap">
+        <div class="mermaid">
+erDiagram
+    organisation ||--o{ mission : "has"
+    organisation ||--o{ announcement : "has"
+    organisation ||--o{ staff : "has"
+    organisation ||--o{ project : "has"
+    user ||--o| staff : "is"
+    mission ||--o{ objective : "has"
+    mission ||--o{ mission_plan : "has"
+    mission }o--o{ bailleur : "funded by"
+    project }o--o{ bailleur : "funded by"
+    offer ||--o{ offer_application : "receives"
+    user ||--o{ offer_application : "applies to"
+    offer }o--o| mission : "links to"
+    offer }o--o| project : "links to"
+    organisation {
+        int id
+        string name
+        string description
+    }
+    mission {
+        int id
+        string title
+        string location
+        date start_date
+    }
+    user {
+        int id
+        string email
+        string first_name
+    }
+    offer {
+        int id
+        string title
+        string status
+    }
+        </div>
+        <p class="diagram-caption">Figure 4 — Modèle de données simplifié (entités principales)</p>
+    </div>
+    <p>Les tables couvrent aussi : role, permission, user_role, role_permission (RBAC), document, document_version, channel, conversation, message, notification, etc.</p>
+</section>
+
+<div class="page-break"></div>
+
+<!-- ========== CHAPITRE 2 ========== -->
+<section class="chapter" id="chapitre-2">
+    <p class="chapter-num">Chapitre 2</p>
+    <h1>Parcours utilisateur et fonctionnalités</h1>
+
+    <h2 id="ch2-public">2.1 Site public (visiteur)</h2>
+    <p>Le site public est servi par les scripts à la racine du projet (index.php, missions.php, mission.php, news.php, announcement.php, about.php, teams.php, where-we-work.php, offres.php, offre.php, contact.php, etc.).</p>
+
+    <h3>Page d'accueil (index.php)</h3>
+    <ul>
+        <li><strong>Hero :</strong> Carousel des 3 dernières annonces (titre, extrait, image, lien « Lire la suite »). S'il n'y a pas d'annonces, affichage d'un bandeau par défaut avec le nom et la description de l'organisation.</li>
+        <li><strong>Réseaux sociaux :</strong> Liens Facebook, Twitter, LinkedIn, Instagram, YouTube si configurés pour l'organisation active.</li>
+        <li><strong>Qui nous sommes :</strong> Court texte + lien vers « En savoir plus » (about.php).</li>
+        <li><strong>Chiffres clés :</strong> Nombre de missions, lieux d'intervention, actualités publiées (calculés en base).</li>
+        <li><strong>Dernières missions :</strong> Grille de cartes (titre, lieu, date) avec lien vers la fiche mission.</li>
+        <li><strong>Actualités :</strong> Grille des dernières annonces avec lien vers la page annonce.</li>
+        <li><strong>Où nous travaillons :</strong> Carte Leaflet avec pays d'intervention colorés et marqueurs des missions (titre, lien). Liste de lieux cliquables filtrant les missions.</li>
+        <li><strong>Notre équipe :</strong> Carousel du personnel (photo, nom, poste, département) avec lien vers teams.php.</li>
+        <li><strong>Ils nous font confiance :</strong> Carousel des bailleurs (logo ou nom).</li>
+        <li><strong>Appel à l'action :</strong> Bouton « Nous contacter » vers contact.php.</li>
+    </ul>
+
+    <div class="diagram-wrap">
+        <div class="mermaid">
+flowchart LR
+    Accueil[index.php] --> Hero[Hero annonces]
+    Accueil --> Stats[Chiffres clés]
+    Accueil --> Missions[Dernières missions]
+    Accueil --> Actu[Actualités]
+    Accueil --> Carte[Où nous travaillons]
+    Accueil --> Equipe[Équipe]
+    Accueil --> Bailleurs[Bailleurs]
+    Accueil --> CTA[Contact]
+    Missions --> mission.php
+    Actu --> announcement.php
+    Carte --> where-we-work.php
+    Equipe --> teams.php
+    CTA --> contact.php
+        </div>
+        <p class="diagram-caption">Figure 5 — Structure de la page d'accueil et liens principaux</p>
+    </div>
+
+    <h3>Autres pages publiques</h3>
+    <table>
+        <thead>
+            <tr><th>Page</th><th>Contenu principal</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>missions.php</td><td>Liste des missions (filtres possibles), cartes avec couverture et métadonnées.</td></tr>
+            <tr><td>mission.php?id=</td><td>Fiche mission : titre, référence, type, statut, lieu, dates, description, objectifs, bailleurs, image de couverture.</td></tr>
+            <tr><td>news.php / announcement.php?id=</td><td>Liste des actualités et page détail d'une annonce (titre, contenu, date, image).</td></tr>
+            <tr><td>about.php</td><td>Présentation de l'organisation (texte, gouvernance, etc.).</td></tr>
+            <tr><td>teams.php</td><td>Liste du personnel (photo, nom, poste, département), détail par membre si id=.</td></tr>
+            <tr><td>where-we-work.php</td><td>Carte des interventions et liste des lieux.</td></tr>
+            <tr><td>offres.php / offre.php?id=</td><td>Liste des offres publiées et détail d'une offre (avec bouton candidater si connecté).</td></tr>
+            <tr><td>contact.php</td><td>Formulaire ou informations de contact.</td></tr>
+        </tbody>
+    </table>
+
+    <h2 id="ch2-admin">2.2 Back-office administration</h2>
+    <p>Toutes les URLs d'administration sont préfixées par admin/. L'accès est protégé par admin/inc/auth.php (vérification de session et des permissions).</p>
+
+    <div class="diagram-wrap">
+        <div class="mermaid">
+flowchart TB
+    Login[admin/login.php] --> Dashboard[admin/index.php]
+    Dashboard --> Orga[Organisations]
+    Dashboard --> Missions[Missions]
+    Dashboard --> Annonces[Annonces]
+    Dashboard --> Staff[Personnel]
+    Dashboard --> Users[Utilisateurs]
+    Dashboard --> Roles[Rôles]
+    Dashboard --> Projets[Projets]
+    Dashboard --> Programmes[Programmes]
+    Dashboard --> Portfolios[Portfolios]
+    Dashboard --> Bailleurs[Bailleurs]
+    Dashboard --> Offres[Offres]
+    Dashboard --> Docs[Documents]
+    Dashboard --> Planning[Planning]
+    Dashboard --> Notif[Notifications]
+    Offres --> Candidatures[Candidatures]
+        </div>
+        <p class="diagram-caption">Figure 6 — Menu et écrans principaux du back-office</p>
+    </div>
+
+    <p><strong>Tableau de bord (admin/index.php) :</strong> Statistiques (organisations, missions, annonces, utilisateurs, projets, tâches, personnel, documents), dernières missions, dernières annonces, projets actifs, graphiques par statut de missions et de projets.</p>
+    <p><strong>Gestion des missions :</strong> CRUD missions, types de mission, statuts, ordres de mission, plans de mission, rapports, dépenses. Les missions sont liées à l'organisation active et peuvent être associées à des bailleurs.</p>
+    <p><strong>Annonces :</strong> Création, édition, publication, date d'expiration, image de couverture. Les annonces publiées et non expirées apparaissent sur le site public (hero et liste actualités).</p>
+    <p><strong>Personnel et utilisateurs :</strong> Gestion des staff (liés à un utilisateur et une organisation), départements, postes. Gestion des comptes utilisateurs et des rôles/permissions (RBAC).</p>
+    <p><strong>Offres et candidatures :</strong> Création d'offres (titre, description, mission/projet optionnel, statut, date limite). Consultation des candidatures (offer_application), profils candidats.</p>
+    <p><strong>Documents :</strong> Catégories, documents, versions, archivage.</p>
+    <p><strong>Sécurité :</strong> Sessions, journal d'activité, audit, configuration (ex. admin/security.php).</p>
+
+    <h2 id="ch2-client">2.3 Espace client et candidatures</h2>
+    <p>L'espace client est sous le répertoire client/. Les utilisateurs peuvent s'inscrire (client/register.php), se connecter (client/login.php) et accéder à un tableau de bord (client/index.php).</p>
+
+    <div class="diagram-wrap">
+        <div class="mermaid">
+flowchart LR
+    Register[Inscription] --> Login[Connexion]
+    Login --> Dashboard[Tableau de bord]
+    Dashboard --> Offres[Voir les offres]
+    Dashboard --> Candidatures[Mes candidatures]
+    Dashboard --> Profil[Mon profil]
+    Offres --> Apply[Postuler]
+    Apply --> Candidatures
+        </div>
+        <p class="diagram-caption">Figure 7 — Parcours type d'un candidat (espace client)</p>
+    </div>
+
+    <p><strong>Inscription / Connexion :</strong> Création de compte (email, mot de passe, nom, prénom, etc.) et authentification. La session client est distincte de la session admin (client_logged_in / admin_logged_in).</p>
+    <p><strong>Tableau de bord client :</strong> Message de bienvenue, nombre de candidatures, liste des dernières candidatures avec statut (en attente, examinée, acceptée, refusée) et lien vers l'offre concernée.</p>
+    <p><strong>Offres :</strong> Liste des offres publiées (depuis le site public ou l'espace client). Sur la fiche offre (offre.php), un bouton « Postuler » ou « Candidater » permet d'envoyer une candidature (message, CV). Une candidature est enregistrée dans offer_application (offer_id, user_id, message, cv_path, status).</p>
+    <p><strong>Profil :</strong> Modification des informations personnelles et suivi des candidatures.</p>
+
+    <h2 id="ch2-flux">2.4 Flux de données principaux</h2>
+    <p>Résumé des flux métier les plus importants :</p>
+
+    <div class="diagram-wrap">
+        <div class="mermaid">
+sequenceDiagram
+    participant Visiteur
+    participant SitePublic
+    participant BDD
+    participant Admin
+    participant Client
+
+    Note over Admin,BDD: Publication de contenu
+    Admin->>BDD: Créer ou modifier mission, annonce, offres
+    BDD-->>SitePublic: Données lues (organisation active)
+
+    Note over Visiteur,SitePublic: Consultation
+    Visiteur->>SitePublic: Accueil, missions, actualités
+    SitePublic->>BDD: SELECT missions, announcements
+    BDD-->>SitePublic: Résultats
+    SitePublic-->>Visiteur: HTML
+
+    Note over Client,BDD: Candidature
+    Client->>SitePublic: Voir offres, clic Postuler
+    SitePublic->>BDD: INSERT offer_application
+    Client->>SitePublic: Espace client : mes candidatures
+    SitePublic->>BDD: SELECT offer_application
+    BDD-->>SitePublic: Candidatures
+    SitePublic-->>Client: Liste et statuts
+        </div>
+        <p class="diagram-caption">Figure 8 — Flux de données : publication, consultation, candidature</p>
+    </div>
+
+    <ul>
+        <li><strong>Contenu affiché en public :</strong> Une seule organisation est considérée comme « active » (is_active = 1). Les requêtes du site public filtrent par organisation_id de cette organisation (missions, annonces, staff, etc.).</li>
+        <li><strong>Assets (images) :</strong> Les chemins des images (couvertures missions/annonces, photos staff, logos bailleurs) sont stockés en base. inc/asset_url.php fournit une fonction pour générer l'URL complète à partir du baseUrl et du chemin relatif (ex. uploads/missions/...).</li>
+        <li><strong>Carte « Où nous travaillons » :</strong> Les missions avec latitude/longitude sont envoyées en JSON au client ; Leaflet affiche les marqueurs et un GeoJSON optionnel colore les pays d'intervention.</li>
+    </ul>
+
+    <div class="note">
+        <strong>Pour générer ce document en PDF :</strong> ouvrez ce fichier HTML dans un navigateur (Chrome ou Edge recommandé), puis utilisez le menu <strong>Fichier → Imprimer</strong> (ou Ctrl+P) et choisissez <strong>« Enregistrer au format PDF »</strong> comme destination. Les diagrammes Mermaid seront rendus dans le PDF si le JavaScript a bien été exécuté avant l'impression. Une image de synthèse peut être placée dans <code>assets/expertise-architecture-overview.png</code> pour la couverture (optionnel).
+    </div>
+</section>
+
+<div class="page-break"></div>
+
+<!-- ========== CHAPITRE 3 — Utilisation espace client ========== -->
+<section class="chapter" id="chapitre-3">
+    <p class="chapter-num">Chapitre 3</p>
+    <h1>Utilisation de l'espace client</h1>
+    <p>L'espace client permet aux candidats de créer un compte, de consulter les offres publiées, de déposer des candidatures (CV + message) et de suivre leur statut. Ce chapitre décrit les étapes d'utilisation.</p>
+
+    <h2 id="ch3-inscription">3.1 S'inscrire et se connecter</h2>
+
+    <h3>Créer un compte (inscription)</h3>
+    <ol>
+        <li>Depuis le site public, cliquer sur <strong>« Se connecter »</strong> dans la barre de navigation, ou accéder directement à <code>client/register.php</code> (lien « Créer un compte » sur la page de connexion).</li>
+        <li>Remplir le formulaire d'inscription :
+            <ul>
+                <li><strong>Identité :</strong> Prénom et Nom (obligatoires).</li>
+                <li><strong>Contact :</strong> E-mail (obligatoire, doit être unique), Téléphone (optionnel).</li>
+                <li><strong>Sécurité :</strong> Mot de passe (minimum 8 caractères, au moins une majuscule et un chiffre), Confirmation du mot de passe.</li>
+            </ul>
+        </li>
+        <li>Cliquer sur <strong>« Créer mon compte client »</strong>. En cas de succès, un message confirme la création et propose un lien vers la page de connexion.</li>
+    </ol>
+    <p>Règles de validation : e-mail valide et non déjà utilisé ; mot de passe conforme (longueur et complexité). En cas d'erreur, le formulaire affiche un message explicatif.</p>
+
+    <h3>Se connecter</h3>
+    <ol>
+        <li>Aller sur <code>client/login.php</code> (lien « Se connecter » depuis le site ou depuis la page d'inscription).</li>
+        <li>Saisir l'<strong>adresse e-mail</strong> et le <strong>mot de passe</strong> du compte client.</li>
+        <li>Cliquer sur <strong>« Se connecter »</strong>. Après authentification, vous êtes redirigé vers le tableau de bord client (<code>client/index.php</code>).</li>
+    </ol>
+    <p>La session client est indépendante de la session administrateur : un même navigateur peut avoir un compte client connecté sur l'espace client et un compte admin connecté sur le back-office (sessions distinctes).</p>
+
+    <h2 id="ch3-dashboard">3.2 Tableau de bord</h2>
+    <p>Une fois connecté, le tableau de bord (<code>client/index.php</code>) affiche :</p>
+    <ul>
+        <li>Un message de bienvenue avec votre nom (ou e-mail si le nom n'est pas renseigné).</li>
+        <li>Le <strong>nombre total de candidatures</strong> que vous avez déposées.</li>
+        <li>La liste des <strong>dernières candidatures</strong> (titre de l'offre, référence, date, statut) avec un lien vers la fiche offre et un lien « Mes candidatures » pour voir toute la liste.</li>
+        <li>Des raccourcis utiles : <strong>Voir nos offres</strong>, <strong>Mes candidatures</strong>, <strong>Mon profil</strong>.</li>
+    </ul>
+    <p>En haut à droite de la page (dans l'en-tête du site), un lien <strong>« Mon espace »</strong> permet de revenir au tableau de bord à tout moment ; un bouton <strong>« Déconnexion »</strong> ferme la session client.</p>
+
+    <h2 id="ch3-postuler">3.3 Consulter les offres et postuler</h2>
+
+    <h3>Consulter les offres</h3>
+    <p>Les offres publiées sont accessibles :</p>
+    <ul>
+        <li>Depuis le site public : menu <strong>« Nos offres »</strong> (<code>offres.php</code>) pour la liste, puis clic sur une offre pour ouvrir sa fiche (<code>offre.php?id=...</code>).</li>
+        <li>Depuis l'espace client : lien <strong>« Voir nos offres »</strong> sur le tableau de bord ou dans la section « Mes candidatures » lorsqu'il n'y a aucune candidature.</li>
+    </ul>
+    <p>Seules les offres dont le statut est <strong>« published »</strong> et qui sont liées à l'organisation active sont affichées. La fiche offre présente le titre, la référence, la description et, si vous êtes connecté, un bouton pour candidater.</p>
+
+    <h3>Déposer ou modifier une candidature</h3>
+    <ol>
+        <li>Sur la fiche de l'offre (<code>offre.php?id=...</code>), cliquer sur <strong>« Postuler »</strong> ou <strong>« Candidater »</strong>. Vous êtes redirigé vers <code>client/apply.php?offer_id=...</code>.</li>
+        <li>Remplir le formulaire de candidature :
+            <ul>
+                <li><strong>Message (optionnel) :</strong> Texte de motivation ou présentation.</li>
+                <li><strong>CV :</strong> Soit cocher « Utiliser le CV de mon profil » si vous avez déjà un CV dans votre profil, soit téléverser un fichier (PDF, DOC ou DOCX, max. 5 Mo) pour cette offre uniquement. Vous pouvez aussi faire les deux (CV profil par défaut + fichier spécifique pour remplacer).</li>
+            </ul>
+        </li>
+        <li>Cliquer sur <strong>« Envoyer ma candidature »</strong>. Vous êtes redirigé vers <strong>Mes candidatures</strong> avec un message de confirmation.</li>
+    </ol>
+    <p>Si vous avez déjà postulé à cette offre, la même page permet de <strong>modifier</strong> votre candidature (message et CV). Le statut actuel (En attente, Examinée, Acceptée, Refusée) est affiché. Après modification, cliquer sur <strong>« Enregistrer les modifications »</strong>.</p>
+
+    <h2 id="ch3-candidatures">3.4 Mes candidatures</h2>
+    <p>La page <strong>« Mes candidatures »</strong> (<code>client/applications.php</code>) liste toutes les offres auxquelles vous avez postulé.</p>
+    <ul>
+        <li>Pour chaque candidature sont affichés : le <strong>titre de l'offre</strong> (lien vers la fiche), la référence éventuelle, la <strong>date d'envoi</strong>, un lien pour <strong>télécharger le CV</strong> joint (s'il y en a un), et le <strong>statut</strong> (En attente, Examinée, Acceptée, Refusée).</li>
+        <li>Un bouton <strong>« Modifier »</strong> permet de revenir au formulaire de candidature pour cette offre (message et CV).</li>
+    </ul>
+    <p>Si vous n'avez aucune candidature, un message vous invite à parcourir les offres et un bouton <strong>« Voir nos offres »</strong> mène à la liste des offres.</p>
+
+    <h2 id="ch3-profil">3.5 Mon profil / Mon CV</h2>
+    <p>La page <strong>« Mon profil »</strong> (<code>client/profile.php</code>) permet de compléter et mettre à jour les informations réutilisées pour vos candidatures.</p>
+
+    <h3>Identité</h3>
+    <p>Prénom, Nom, Téléphone (modifiables). L'e-mail du compte n'est pas modifiable depuis cette page.</p>
+
+    <h3>CV et présentation</h3>
+    <ul>
+        <li><strong>Résumé / Présentation :</strong> Texte libre pour vous décrire.</li>
+        <li><strong>Intitulé du poste visé :</strong> Ex. « Développeur web », « Chef de projet ».</li>
+        <li><strong>Compétences :</strong> Une compétence par ligne.</li>
+        <li><strong>CV (fichier) :</strong> Téléverser un PDF, DOC ou DOCX (max. 5 Mo). Ce CV peut être utilisé par défaut lors du dépôt d'une candidature (option « Utiliser le CV de mon profil »). Vous pouvez remplacer le fichier en envoyant un nouveau document.</li>
+    </ul>
+
+    <h3>Expériences professionnelles et formation</h3>
+    <p>Blocs dynamiques pour ajouter/supprimer des expériences (titre du poste, entreprise, période, description) et des formations (diplôme, établissement, période). Utilisez les boutons <strong>« Ajouter »</strong> et l’icône poubelle pour gérer les lignes.</p>
+
+    <p>En bas du formulaire, cliquer sur <strong>« Enregistrer mon profil »</strong> pour sauvegarder toutes les modifications. Le nom affiché sur le tableau de bord (message de bienvenue) est mis à jour après enregistrement.</p>
+</section>
+
+<div class="page-break"></div>
+
+<!-- ========== CHAPITRE 4 — Utilisation back-office admin ========== -->
+<section class="chapter" id="chapitre-4">
+    <p class="chapter-num">Chapitre 4</p>
+    <h1>Utilisation du back-office administration</h1>
+    <p>Le back-office est réservé aux utilisateurs ayant un rôle <strong>Administrateur</strong> ou <strong>Super Administrateur</strong>. L'accès aux menus et écrans dépend des permissions (RBAC) attribuées à leur(s) rôle(s). Ce chapitre décrit les principales fonctions d'utilisation.</p>
+
+    <h2 id="ch4-connexion">4.1 Connexion et tableau de bord</h2>
+
+    <h3>Se connecter à l'administration</h3>
+    <ol>
+        <li>Accéder à l'URL d'administration : <code>admin/login.php</code> (ou via un lien « Administration » / « Dashboard » depuis le site si vous n'êtes pas encore connecté).</li>
+        <li>Saisir l'<strong>adresse e-mail</strong> et le <strong>mot de passe</strong> d'un compte utilisateur ayant le rôle <em>admin</em> ou <em>superadmin</em>.</li>
+        <li>Cliquer sur <strong>« Se connecter »</strong>. En cas de succès, vous êtes redirigé vers le tableau de bord (<code>admin/index.php</code>).</li>
+    </ol>
+    <p>En cas d'échec (mauvais identifiants ou compte sans rôle admin), un message d'erreur s'affiche. Un lien « Mot de passe oublié » mène à <code>admin/forgot-password.php</code> ; un lien « Créer un compte » mène à <code>admin/register.php</code> (création de compte par un autre admin). Un lien « Retour au site » ramène à la racine du site public.</p>
+
+    <h3>Tableau de bord</h3>
+    <p>Le tableau de bord affiche :</p>
+    <ul>
+        <li>Des <strong>statistiques globales</strong> : nombre d'organisations, missions, annonces, utilisateurs, projets, tâches en cours, personnel actif, documents.</li>
+        <li>Les <strong>dernières missions</strong> (titre, lieu, date) avec lien vers la fiche.</li>
+        <li>Les <strong>dernières annonces</strong> (titre, date) avec lien vers la fiche.</li>
+        <li>Les <strong>projets actifs</strong> (nom, statut, priorité, date).</li>
+        <li>Des <strong>graphiques</strong> (selon les données) : répartition des missions par statut, des projets par statut.</li>
+    </ul>
+    <p>La barre latérale gauche (sidebar) contient tout le menu de navigation. En bas de la sidebar : utilisateur connecté (e-mail), lien « Retour au site », lien « Déconnexion » (<code>admin/logout.php</code>).</p>
+
+    <h2 id="ch4-structure">4.2 Structure (organisations, unités)</h2>
+
+    <h3>Organisations</h3>
+    <p>Menu <strong>« Organisations »</strong> (<code>admin/organisations.php</code>) : gestion des fiches organisation (nom, code, description, logo, image de couverture, coordonnées, réseaux sociaux, etc.). Une organisation est marquée comme active (<code>is_active = 1</code>) ; c'est celle dont les données alimentent le site public (missions, annonces, équipe, etc.).</p>
+
+    <h3>Unités et services</h3>
+    <p>Menu <strong>« Unités & Services »</strong> (<code>admin/units.php</code>) : gestion de la structure organisationnelle (entités, départements, services, unités). Permet de définir la hiérarchie et d'y rattacher des postes et du personnel.</p>
+
+    <h2 id="ch4-rh">4.3 RH et sécurité (utilisateurs, personnel, rôles)</h2>
+
+    <h3>Utilisateurs</h3>
+    <p>Menu <strong>« Utilisateurs »</strong> (<code>admin/user.php</code>) : liste et gestion des comptes utilisateurs (e-mail, nom, prénom, statut actif/inactif). Création et édition de comptes, attribution de rôles. Les utilisateurs peuvent être des clients (candidats) ou des membres du personnel avec accès admin.</p>
+
+    <h3>Personnel</h3>
+    <p>Menu <strong>« Personnel »</strong> (<code>admin/staff.php</code>) : gestion des fiches « staff » liées à un utilisateur et à une organisation. Saisie du poste (job_title), département, photo, type de contrat, dates d'embauche/fin, etc. Le personnel actif apparaît dans la section « Notre équipe » du site public.</p>
+
+    <h3>Rôles et accès</h3>
+    <p>Menu <strong>« Rôles & Accès »</strong> (<code>admin/roles.php</code>) : gestion des rôles et des permissions (RBAC). Chaque rôle peut avoir des permissions précises (voir, ajouter, modifier, supprimer) par module (missions, annonces, utilisateurs, etc.). Les rôles système (superadmin, admin, manager, staff, client) sont prédéfinis ; les permissions des rôles admin/superadmin déterminent les entrées de menu visibles.</p>
+
+    <h3>Sécurité</h3>
+    <p>Menu <strong>« Sécurité »</strong> (<code>admin/security.php</code>) : consultation et paramétrage liés à la sécurité (sessions, politique de mot de passe, etc.).</p>
+
+    <h2 id="ch4-operations">4.4 Opérations (missions, offres, projets, bailleurs)</h2>
+
+    <h3>Missions</h3>
+    <p>Menu <strong>« Missions »</strong> (<code>admin/missions.php</code>) : création, modification et suppression des missions. Pour chaque mission : titre, référence, type, statut, lieu, coordonnées GPS (latitude/longitude), dates de début/fin, description, image de couverture, objectifs, plans, rapports, ordres de mission, dépenses, affectations, bailleurs associés. Les sous-menus ou onglets permettent d'accéder aux types de mission, ordres de mission, plans de mission, rapports de mission, dépenses de mission.</p>
+
+    <h3>Nos offres</h3>
+    <p>Menu <strong>« Nos offres »</strong> (<code>admin/offers.php</code>) : gestion des offres (titre, référence, description, image, lien optionnel à une mission ou un projet, statut : brouillon / publié / clôturé, date de publication, date limite). Une offre en statut <strong>publié</strong> est visible sur le site public et les candidats peuvent postuler. Depuis cette interface, accès aux <strong>candidatures</strong> reçues (liste des candidats par offre, statut, CV) et consultation des profils candidats (<code>admin/candidate_profile.php</code>).</p>
+
+    <h3>Projets, programmes, portfolios</h3>
+    <p>Menus <strong>« Projets & Tâches »</strong>, <strong>« Programmes »</strong>, <strong>« Portfolios »</strong> : gestion des portefeuilles, programmes et projets (phases, tâches, livrables, jalons, budgets, ressources, affectations). Les projets peuvent être liés à des bailleurs.</p>
+
+    <h3>Bailleurs de fonds</h3>
+    <p>Menu <strong>« Bailleurs de fonds »</strong> (<code>admin/bailleurs.php</code>) : gestion des bailleurs (nom, code, description, logo). Les bailleurs peuvent être associés aux missions et aux projets. Ceux actifs peuvent être affichés dans la section « Ils nous font confiance » sur le site public.</p>
+
+    <h2 id="ch4-comm">4.5 Communication et gestion</h2>
+
+    <h3>Annonces</h3>
+    <p>Menu <strong>« Annonces »</strong> (<code>admin/announcements.php</code>) : création et édition des annonces (titre, contenu riche, image de couverture, date de publication, date d'expiration). Les annonces publiées et non expirées apparaissent sur le site public : les 3 dernières en carousel sur la page d'accueil, et la liste dans la section Actualités. C'est le canal principal pour les actualités visibles par les visiteurs.</p>
+
+    <h3>Canaux, conversations, notifications, commentaires</h3>
+    <p>Menus <strong>Canaux</strong>, <strong>Conversations</strong>, <strong>Notifications</strong>, <strong>Commentaires</strong>, <strong>Pièces jointes</strong>, <strong>Historique communication</strong> : gestion des canaux de communication interne, des messages, des notifications et des commentaires associés aux entités (annonces, etc.).</p>
+
+    <h3>Documents</h3>
+    <p>Menu <strong>« Documents »</strong> (<code>admin/documents.php</code>) : gestion des catégories de documents et des documents (titre, description, type, couverture). Gestion des versions et de l'archivage.</p>
+
+    <h3>Pages de contenu et planning</h3>
+    <p>Menus <strong>« Responsabilité »</strong>, <strong>« Rapports et finances »</strong> : édition du contenu des pages statiques correspondantes (textes d'introduction, sections). Menu <strong>« Planning & KPI »</strong> : calendriers, événements, indicateurs de performance.</p>
+
+    <p>En bas de la sidebar, le lien <strong>« Déconnexion »</strong> ferme la session administrateur et renvoie à la page de connexion admin (avec message de déconnexion si l'URL contient <code>?logout=1</code>).</p>
+</section>
+
+<div class="page-break"></div>
+
+<!-- ========== CONCLUSION ========== -->
+<section class="chapter" id="conclusion">
+    <p class="chapter-num">Conclusion</p>
+    <h1>Conclusion</h1>
+    <p>L'application <strong>Expertise</strong> constitue une plateforme complète au service d'une organisation humanitaire et sociale. Elle assure à la fois la <strong>visibilité</strong> des actions (missions, actualités, équipe, bailleurs, lieux d'intervention) auprès du public et la <strong>gestion interne</strong> des missions, projets, personnel, annonces et documents.</p>
+    <p>La séparation entre <strong>site public</strong>, <strong>espace client</strong> (candidats) et <strong>back-office administration</strong> permet de distinguer clairement les usages : consultation pour les visiteurs, dépôt et suivi de candidatures pour les candidats, pilotage et configuration pour les équipes internes. Le contrôle d'accès par rôles et permissions (RBAC) garantit que chaque acteur n'accède qu'aux fonctionnalités qui le concernent.</p>
+    <p>Ce document a présenté l'architecture, les modules métier, les parcours utilisateur et les guides d'utilisation des espaces client et admin. Pour aller plus loin, il est recommandé de s'appuyer sur le schéma de base de données (<code>database/schema.sql</code>), la documentation du dépôt (<code>README.md</code>) et, le cas échéant, les commentaires dans le code source pour adapter ou étendre l'application selon les besoins de l'organisation.</p>
+</section>
+
+<script>
+    mermaid.initialize({
+        startOnLoad: true,
+        theme: 'neutral',
+        flowchart: { useMaxWidth: true, htmlLabels: true },
+        er: { useMaxWidth: true },
+        sequence: { useMaxWidth: true }
+    });
+</script>
+</body>
+</html>
