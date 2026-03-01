@@ -73,6 +73,7 @@ $coverUrl = $hasCover ? client_asset_url($baseUrl, $mission->cover_image) : '';
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
                     <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <button type="button" class="mission-detail-print-btn" onclick="window.print();" aria-label="Imprimer la page"><i class="bi bi-printer"></i> Imprimer</button>
                 </nav>
                 <span class="mission-detail-badge"><?= htmlspecialchars($mission->location ?: 'Mission') ?></span>
                 <?php if ($mission->type_name || $mission->status_name): ?>
@@ -98,6 +99,7 @@ $coverUrl = $hasCover ? client_asset_url($baseUrl, $mission->cover_image) : '';
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
                     <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <button type="button" class="mission-detail-print-btn mission-detail-print-btn--dark" onclick="window.print();" aria-label="Imprimer la page"><i class="bi bi-printer"></i> Imprimer</button>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark"><?= htmlspecialchars($mission->location ?: 'Mission') ?></span>
                 <?php if ($mission->type_name || $mission->status_name): ?>

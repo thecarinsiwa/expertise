@@ -812,7 +812,7 @@ a.card-staff:hover { color: inherit; }
     padding-bottom: 2.5rem;
     padding-top: 2rem;
 }
-.mission-detail-breadcrumb { margin-bottom: 1rem; }
+.mission-detail-breadcrumb { margin-bottom: 1rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
 .mission-detail-breadcrumb a {
     color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
@@ -823,6 +823,26 @@ a.card-staff:hover { color: inherit; }
     gap: 0.35rem;
 }
 .mission-detail-breadcrumb a:hover { color: #fff; }
+.mission-detail-print-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    padding: 0.4rem 0.75rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.mission-detail-print-btn:hover { background: rgba(255, 255, 255, 0.3); color: #fff; }
+.mission-detail-print-btn--dark {
+    background: #fff;
+    color: var(--msf-blue-dark);
+    border-color: var(--msf-blue-dark);
+}
+.mission-detail-print-btn--dark:hover { background: #f0f0f0; color: var(--msf-blue-dark); }
 .mission-detail-badge {
     display: inline-block;
     font-size: 0.75rem;
@@ -967,6 +987,14 @@ a.card-staff:hover { color: inherit; }
     object-fit: contain;
 }
 .mission-detail-bailleur-name { font-size: 0.9rem; font-weight: 500; color: var(--msf-blue-dark); }
+
+@media print {
+    .site-header,
+    .site-footer,
+    .mega-menu,
+    .mission-detail-print-btn { display: none !important; }
+    .mission-detail { padding-bottom: 0; }
+}
 
 @media (max-width: 991.98px) {
     .mission-detail-hero { margin-top: -72px; padding-top: 72px; min-height: 38vh; }
