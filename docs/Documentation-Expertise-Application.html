@@ -6,6 +6,7 @@
     <title>Documentation Expertise — Plateforme organisationnelle</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
     <style>
         :root {
@@ -66,15 +67,48 @@
         .toc a { color: var(--doc-primary); text-decoration: none; }
         .toc a:hover { text-decoration: underline; }
         .note { background: #e8f4fc; border-left: 4px solid var(--doc-primary); padding: 0.75rem 1rem; margin: 1rem 0; font-size: 0.95rem; }
+        .btn-export-pdf {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1.2rem;
+            background: var(--doc-primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 12px rgba(0, 113, 188, 0.35);
+            transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-export-pdf:hover {
+            background: #005a94;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(0, 113, 188, 0.4);
+        }
+        .btn-export-pdf:active { transform: translateY(0); }
+        .btn-export-pdf i { font-size: 1.1rem; }
         @media print {
             body { padding: 1rem; max-width: none; }
             .page-break { page-break-before: always; }
             .diagram-wrap { break-inside: avoid; }
             .cover { padding: 2rem 0; }
+            .btn-export-pdf { display: none !important; }
         }
     </style>
 </head>
 <body>
+
+<button type="button" class="btn-export-pdf" id="btnExportPdf" aria-label="Exporter la documentation en PDF">
+    <i class="bi bi-file-earmark-pdf-fill"></i>
+    <span>Exporter en PDF</span>
+</button>
 
 <div class="cover">
     <h1>Documentation de l'application Expertise</h1>
@@ -628,6 +662,9 @@ sequenceDiagram
         flowchart: { useMaxWidth: true, htmlLabels: true },
         er: { useMaxWidth: true },
         sequence: { useMaxWidth: true }
+    });
+    document.getElementById('btnExportPdf').addEventListener('click', function () {
+        window.print();
     });
 </script>
 </body>
