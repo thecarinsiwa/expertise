@@ -411,7 +411,7 @@ require __DIR__ . '/inc/header.php';
     <section class="container py-5 border-top" id="personnel">
         <div class="d-flex flex-wrap justify-content-center justify-content-md-between align-items-center mb-4 pt-4 gap-2">
             <h2 class="section-heading mb-0 text-center text-md-start">Notre équipe</h2>
-            <a href="<?= $baseUrl ?>about.php#equipe" class="btn-view-all">Voir tout</a>
+            <a href="<?= $baseUrl ?>teams.php" class="btn-view-all">Voir tout</a>
         </div>
         <?php if (count($homeStaff) > 0): ?>
             <div id="staffCarousel" class="carousel slide staff-carousel" data-bs-ride="carousel" data-bs-interval="6000" data-bs-pause="hover">
@@ -427,14 +427,14 @@ require __DIR__ . '/inc/header.php';
                                 $staffName = trim(($s->first_name ?? '') . ' ' . ($s->last_name ?? ''));
                             ?>
                                 <div class="col-12 col-sm-6 col-lg-3">
-                                    <div class="card card-staff h-100 text-center">
+                                    <a href="<?= $baseUrl ?>teams.php?id=<?= (int) $s->id ?>" class="card card-staff h-100 text-center text-decoration-none">
                                         <?php if ($staffPhotoUrl): ?>
                                             <div class="card-staff-img mx-auto rounded-circle" style="background-image: url('<?= htmlspecialchars($staffPhotoUrl) ?>');"></div>
                                         <?php else: ?>
                                             <div class="card-staff-img card-staff-img-placeholder mx-auto rounded-circle"><i class="bi bi-person"></i></div>
                                         <?php endif; ?>
                                         <div class="card-body py-2">
-                                            <h3 class="card-title h6 mb-1"><?= htmlspecialchars($staffName) ?></h3>
+                                            <h3 class="card-title h6 mb-1 text-dark"><?= htmlspecialchars($staffName) ?></h3>
                                             <?php if (!empty($s->job_title)): ?>
                                                 <p class="card-meta small mb-0"><?= htmlspecialchars($s->job_title) ?></p>
                                             <?php endif; ?>
@@ -442,7 +442,7 @@ require __DIR__ . '/inc/header.php';
                                                 <p class="card-meta small mb-0 text-muted"><?= htmlspecialchars($s->department) ?></p>
                                             <?php endif; ?>
                                         </div>
-                                    </div>
+                                    </a>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -471,7 +471,7 @@ require __DIR__ . '/inc/header.php';
     <!-- Nos bailleurs (carousel) -->
     <section class="container py-5 border-top" id="bailleurs">
         <div class="d-flex flex-wrap justify-content-center align-items-center mb-4 pt-4">
-            <h2 class="section-heading mb-0 text-center">Nos bailleurs</h2>
+            <h2 class="section-heading mb-0 text-center">Ils nous font confiance</h2>
         </div>
         <?php if (count($homeBailleurs) > 0): ?>
             <div id="bailleursCarousel" class="carousel slide bailleurs-carousel" data-bs-ride="carousel" data-bs-interval="6000" data-bs-pause="hover">

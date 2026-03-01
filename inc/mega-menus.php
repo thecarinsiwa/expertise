@@ -13,6 +13,11 @@
                 <a href="<?= isset($baseUrl) ? $baseUrl : '' ?>about.php" class="mega-link">En savoir plus</a>
             </div>
             <div class="mega-col">
+                <h3>Notre équipe</h3>
+                <p>Les membres de notre organisation.</p>
+                <a href="<?= $baseUrl ?>teams.php" class="mega-link">Voir l'équipe</a>
+            </div>
+            <div class="mega-col">
                 <h3>Comment nous travaillons</h3>
                 <p>Ce qui déclenche une intervention et comment la logistique permet à nos équipes de réagir rapidement.</p>
                 <a href="<?= $baseUrl ?>how-we-work.php" class="mega-link">En savoir plus</a>

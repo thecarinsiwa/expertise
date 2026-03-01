@@ -355,6 +355,7 @@ $typeLabels = [
                             <h2 class="mission-detail-block-title"><i class="bi bi-link-45deg"></i> En savoir plus</h2>
                             <ul class="list-unstyled mb-0">
                                 <li class="mb-2"><a href="<?= $baseUrl ?>contact.php" class="text-decoration-none">Nous contacter</a></li>
+                                <li class="mb-2"><a href="<?= $baseUrl ?>teams.php" class="text-decoration-none">Notre équipe</a></li>
                                 <li class="mb-2"><a href="<?= $baseUrl ?>projects.php" class="text-decoration-none">Nos projets</a></li>
                                 <li class="mb-2"><a href="<?= $baseUrl ?>missions.php" class="text-decoration-none">Nos missions</a></li>
                                 <li><a href="<?= $baseUrl ?>how-we-work.php" class="text-decoration-none">Comment nous travaillons</a></li>

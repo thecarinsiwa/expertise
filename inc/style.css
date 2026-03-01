@@ -186,7 +186,7 @@ body, html {
 }
 .hero.hero-has-cover::before,
 .hero.hero-fallback::before {
-    background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.4));
+    background: linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.25) 40%, transparent 70%);
     transform: none;
 }
 .hero-fallback .hero-carousel-overlay {
@@ -220,10 +220,13 @@ body, html {
     position: absolute;
     inset: 0;
     z-index: 1;
-    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.35) 45%, transparent 70%);
+    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.3) 45%, transparent 75%);
     pointer-events: none;
 }
 .hero::before { z-index: 1; }
+/* Avec cover : le gradient reste en arrière-plan, le texte du carousel au premier plan */
+.hero.hero-has-cover::before { z-index: 0; }
+.hero-carousel.hero-has-cover .carousel { z-index: 2; }
 /* L'overlay ne doit pas bloquer les clics sur le carousel (bouton Lire la suite) */
 .hero-carousel.hero-has-cover::before { pointer-events: none; }
 
@@ -263,11 +266,11 @@ body, html {
 .hero-carousel .carousel-item .hero-slide-content { opacity: 0; transform: translateY(12px); transition: opacity 0.5s ease 0.2s, transform 0.5s ease 0.2s; }
 .hero-carousel .carousel-item.active .hero-slide-content { opacity: 1; transform: translateY(0); }
 .hero .container { position: relative; z-index: 1; min-height: 70vh; display: flex; flex-direction: column; justify-content: flex-end; padding-bottom: 3rem; }
-.hero .badge-location { color: rgba(255,255,255,0.85); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.05em; }
-.hero h1 { color: #fff; font-weight: 700; font-size: clamp(1.75rem, 4vw, 2.75rem); text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-.hero .meta { color: rgba(255,255,255,0.9); font-size: 0.9rem; }
-.hero .lead { color: #fff; max-width: 480px; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
-.btn-read-more { background: var(--msf-yellow); color: var(--msf-blue-dark); border: none; border-radius: 4px; padding: 0.6rem 1.5rem; font-weight: 600; }
+.hero .badge-location { color: rgba(255,255,255,0.85); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; }
+.hero h1 { color: #fff; font-weight: 700; font-size: clamp(1.4rem, 3.2vw, 2.1rem); text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.hero .meta { color: rgba(255,255,255,0.9); font-size: 0.85rem; }
+.hero .lead { color: #fff; max-width: 480px; font-size: 0.95rem; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+.btn-read-more { background: var(--msf-yellow); color: var(--msf-blue-dark); border: none; border-radius: 4px; padding: 0.5rem 1.25rem; font-size: 0.9rem; font-weight: 600; }
 .btn-read-more:hover { background: #FFB300; color: var(--msf-blue-dark); }
 
 /* Share */
@@ -331,10 +334,107 @@ body, html {
 
 .card-staff { border: none; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); transition: box-shadow 0.2s; }
 .card-staff:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
+a.card-staff { color: inherit; }
+a.card-staff:hover { color: inherit; }
 .card-staff-img { width: 80px; height: 80px; background-size: cover; background-position: center; background-repeat: no-repeat; flex-shrink: 0; }
 .card-staff-img-placeholder { width: 80px; height: 80px; background: var(--msf-blue-dark); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem; }
+.card-staff-list-img { height: 180px; }
+.card-staff-link .card-staff-list-img.card-staff-img-placeholder { width: 100%; height: 180px; border-radius: 8px 8px 0 0; }
 .card-staff .card-title { font-weight: 600; color: var(--msf-blue-dark); }
 .card-staff .card-meta { font-size: 0.8rem; color: #6c757d; }
+.teams-detail-photo-placeholder { width: 120px; height: 120px; background: var(--msf-blue-dark); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.teams-detail-photo-icon { font-size: 3rem; }
+.mission-detail-hero--team .mission-detail-hero-bg { background-size: cover; background-position: center top; }
+.mission-detail-hero--team { min-height: 45vh; }
+.mission-detail-hero--team .mission-detail-hero-content { padding-bottom: 2.5rem; }
+
+/* Team detail body */
+.teams-detail-grid { align-items: start; }
+.teams-detail-profile {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+}
+.teams-detail-avatar {
+    width: 120px;
+    height: 120px;
+    min-width: 120px;
+    border-radius: 50%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+.teams-detail-avatar-placeholder {
+    background: var(--msf-blue-dark);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+}
+.teams-detail-profile-head { min-width: 0; }
+.teams-detail-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--msf-blue-dark);
+    margin: 0 0 0.35rem;
+}
+.teams-detail-role {
+    font-size: 1rem;
+    color: #6c757d;
+    margin: 0;
+}
+.teams-detail-about { margin-bottom: 2rem; }
+.teams-detail-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--msf-blue-dark);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 1rem;
+}
+.teams-detail-intro {
+    color: #495057;
+    line-height: 1.6;
+    margin: 0;
+}
+.teams-detail-sidebar .teams-detail-card {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+}
+.teams-detail-meta { display: flex; flex-direction: column; gap: 0.75rem; }
+.teams-detail-meta-row { display: grid; grid-template-columns: 1fr 1.5fr; gap: 0.5rem 1rem; align-items: baseline; }
+.teams-detail-meta-row dt {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 0;
+}
+.teams-detail-meta-row dd { margin: 0; font-size: 0.95rem; }
+.teams-detail-contact-card .teams-detail-contact-list { margin: 0; }
+.teams-detail-contact-list li { margin-bottom: 0.75rem; }
+.teams-detail-contact-list li:last-child { margin-bottom: 0; }
+.teams-detail-contact-link,
+.teams-detail-contact-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.95rem;
+    color: var(--msf-blue-dark);
+    text-decoration: none;
+}
+.teams-detail-contact-link:hover { color: var(--msf-red); }
+.teams-detail-contact-item { color: #495057; }
+.teams-detail-contact-link .bi,
+.teams-detail-contact-item .bi { font-size: 1.1rem; color: var(--msf-red); flex-shrink: 0; }
 .card-bailleur { border: none; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); min-height: 100px; }
 .card-bailleur-logo { max-height: 60px; width: auto; object-fit: contain; }
 .card-bailleur-name { font-size: 0.9rem; font-weight: 600; color: var(--msf-blue-dark); }
@@ -565,8 +665,8 @@ body, html {
     body, html { padding-top: 72px; }
     .hero { margin-top: -72px; min-height: 60vh; }
     .hero .container { min-height: 60vh; padding-bottom: 2rem; padding-left: 1rem; padding-right: 1rem; }
-    .hero h1 { font-size: clamp(1.35rem, 5vw, 2rem); }
-    .hero .lead { font-size: 0.95rem; max-width: 100%; }
+    .hero h1 { font-size: clamp(1.2rem, 4vw, 1.65rem); }
+    .hero .lead { font-size: 0.9rem; max-width: 100%; }
     .container { padding-left: 1rem; padding-right: 1rem; }
     .section-heading { font-size: 1.25rem; margin-bottom: 1rem; }
     .section-heading.mb-0 { margin-bottom: 0; }
@@ -584,9 +684,9 @@ body, html {
     body, html { padding-top: 68px; }
     .hero { margin-top: -68px; min-height: 55vh; }
     .hero .container { min-height: 55vh; padding-bottom: 1.5rem; }
-    .hero .badge-location { font-size: 0.8rem; }
-    .hero .meta { font-size: 0.85rem; }
-    .btn-read-more { padding: 0.5rem 1.25rem; font-size: 0.9rem; }
+    .hero .badge-location { font-size: 0.75rem; }
+    .hero .meta { font-size: 0.8rem; }
+    .btn-read-more { padding: 0.45rem 1rem; font-size: 0.85rem; }
     .share-icon { width: 36px; height: 36px; margin-right: 0.35rem; font-size: 0.9rem; }
     .copy-link { font-size: 0.85rem; display: inline-block; margin-top: 0.5rem; }
     .section-heading { font-size: 1.1rem; }
@@ -601,7 +701,7 @@ body, html {
     .navbar-main .navbar-brand img { height: 48px; }
     .hero { min-height: 50vh; }
     .hero .container { padding-left: 0.75rem; padding-right: 0.75rem; }
-    .hero h1 { font-size: 1.25rem; }
+    .hero h1 { font-size: 1.1rem; }
     .py-5 { padding-top: 2rem !important; padding-bottom: 2rem !important; }
     .d-flex.justify-content-between.mb-4 { flex-direction: column; align-items: flex-start !important; gap: 0.75rem; }
     .btn-view-all { align-self: flex-start; }
@@ -817,6 +917,8 @@ body, html {
     .mission-detail-hero { margin-top: -72px; padding-top: 72px; min-height: 38vh; }
     .mission-detail-grid { grid-template-columns: 1fr; gap: 2rem; }
     .mission-detail-sidebar { position: static; }
+    .teams-detail-profile { flex-wrap: wrap; }
+    .teams-detail-meta-row { grid-template-columns: 1fr; }
 }
 @media (max-width: 767.98px) {
     .mission-detail-hero { margin-top: -68px; padding-top: 68px; min-height: 35vh; }
@@ -826,6 +928,8 @@ body, html {
     .mission-detail-block { padding: 1.25rem; }
     .mission-detail-bailleurs { flex-direction: column; }
     .mission-detail-bailleur { width: 100%; }
+    .teams-detail-profile { flex-direction: column; align-items: flex-start; }
+    .teams-detail-avatar { width: 100px; height: 100px; min-width: 100px; }
 }
 @media (max-width: 575.98px) {
     .mission-detail-hero { min-height: 30vh; }
