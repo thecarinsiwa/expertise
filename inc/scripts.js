@@ -24,6 +24,12 @@
     updateMegaMenuPosition();
     window.addEventListener('resize', updateMegaMenuPosition);
 
+    var navbarCollapse = document.getElementById('navbarMain');
+    if (navbarCollapse) {
+        navbarCollapse.addEventListener('show.bs.collapse', updateMegaMenuPosition);
+        navbarCollapse.addEventListener('hidden.bs.collapse', updateMegaMenuPosition);
+    }
+
     function closeAll() {
         for (var i = 0; i < megas.length; i++) {
             megas[i].classList.remove('show');

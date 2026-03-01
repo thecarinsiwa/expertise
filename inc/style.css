@@ -71,10 +71,65 @@ body, html {
 
 @media (max-width: 991.98px) {
     .navbar-main { min-height: auto; padding: 0.5rem 0; }
+    .navbar-main .container { flex-wrap: wrap; }
     .navbar-main .navbar-brand { min-height: auto; margin-right: 0; }
     .navbar-main .navbar-brand img { height: 56px; }
-    .navbar-main .nav-center { justify-content: flex-start; }
-    .navbar-main .nav-right { flex-wrap: wrap; }
+    .navbar-main .navbar-toggler { margin-left: auto; }
+    /* Collapse fermé : masqué (renforce le comportement Bootstrap) */
+    .navbar-main .navbar-collapse.collapse:not(.show) { display: none !important; }
+    /* Collapse ouvert : layout vertical + hauteur limitée et scroll */
+    .navbar-main .navbar-collapse.collapse.show {
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        margin-top: 0.5rem;
+        max-height: min(70vh, 480px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 0.5rem;
+    }
+    .navbar-main .nav-center {
+        justify-content: flex-start;
+        flex-direction: column;
+        width: 100%;
+        margin-right: 0 !important;
+        order: 1;
+        flex-shrink: 0;
+    }
+    .navbar-main .nav-center .nav-item {
+        width: 100%;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+    .navbar-main .nav-center .nav-link {
+        width: 100%;
+        padding: 0.75rem 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .navbar-main .nav-right {
+        flex-wrap: wrap;
+        margin-left: 0 !important;
+        width: 100%;
+        order: 2;
+        border-top: 1px solid rgba(0, 0, 0, 0.12);
+        padding-top: 0.75rem;
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+        margin-top: 0.25rem;
+        gap: 0.75rem;
+        align-items: center;
+        justify-content: flex-start;
+        flex-shrink: 0;
+    }
+    .navbar-main .nav-right .nav-link:first-child {
+        padding-left: 0;
+    }
+    .navbar-main .nav-right .btn-read-more {
+        margin-left: 0;
+        margin-right: 0;
+    }
     .navbar-main .nav-link { font-size: 0.85rem; padding: 0.6rem 0.75rem; }
     .navbar-main .nav-right .nav-link { font-size: 0.8rem; }
     .btn-donate { padding: 0.45rem 1rem; font-size: 0.8rem; }
