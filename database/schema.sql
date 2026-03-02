@@ -732,7 +732,7 @@ CREATE TABLE IF NOT EXISTS `mission_assignment` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
--- Nos offres (liées à une mission, un projet ou à rien ; candidatures client)
+-- Nos offres (liées à une mission, un projet ou à rien – candidatures client)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS `offer` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,

@@ -4,12 +4,13 @@
  * URL: http://localhost/expertise/api/
  */
 
-// ─── Configuration de la connexion ──────────────────────────────────────────
-$DB_HOST = 'localhost';
-$DB_PORT = 3306;
-$DB_USER = 'root';
-$DB_PASS = '';
-$DB_NAME = 'expertise';
+// ─── Configuration de la connexion (centralisée, voir config/database.php) ───
+require_once __DIR__ . '/../config/database.php';
+$DB_HOST   = $dbConfig['host'];
+$DB_PORT   = (int) (getenv('DB_PORT') ?: 3306);
+$DB_USER   = $dbConfig['user'];
+$DB_PASS   = $dbConfig['pass'];
+$DB_NAME   = $dbConfig['dbname'];
 $DEFAULT_SCHEMA_FILE = '/database/schema.sql';
 
 // ─── Liste des tables attendues dans le schéma ───────────────────────────────
@@ -105,16 +106,31 @@ if ($action === 'init_db') {
         if (file_exists($schemaFile)) {
             $sql = file_get_contents($schemaFile);
 
-            // Exécuter le SQL instruction par instruction pour éviter les erreurs PDO::exec avec plusieurs statements
+            // Ne pas couper sur ; à l'intérieur des commentaires -- (évite erreurs de syntaxe)
+            $placeholder = "\x01__SEMICOLON_IN_COMMENT__\x01";
+            $lines = explode("\n", $sql);
+            foreach ($lines as $i => $line) {
+                $trimmed = ltrim($line);
+                if (strpos($trimmed, '--') === 0) {
+                    $lines[$i] = str_replace(';', $placeholder, $line);
+                }
+            }
+            $sql = implode("\n", $lines);
+
+            // Exécuter le SQL instruction par instruction
             $statements = array_filter(array_map('trim', explode(';', $sql)));
             foreach ($statements as $stmt) {
+                $stmt = str_replace($placeholder, ';', $stmt);
                 if ($stmt === '') continue;
                 try {
                     $pdo->exec($stmt);
                 } catch (PDOException $e) {
-                    // Ignorer colonne/clé déjà existantes (schéma ré-appliqué)
+                    // Ignorer colonne/clé/contrainte déjà existantes (schéma ré-appliqué)
                     $msg = $e->getMessage();
-                    if (strpos($msg, 'Duplicate column') !== false || strpos($msg, 'Duplicate key') !== false || strpos($msg, 'already exists') !== false) {
+                    if (strpos($msg, 'Duplicate column') !== false
+                        || strpos($msg, 'Duplicate key') !== false
+                        || strpos($msg, 'Duplicate foreign key constraint name') !== false
+                        || strpos($msg, 'already exists') !== false) {
                         continue;
                     }
                     throw $e;

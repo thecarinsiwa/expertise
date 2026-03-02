@@ -51,7 +51,7 @@ $hasFooterSocial = $organisation && (
                     <ul class="footer-links">
                         <li><a href="<?= $baseUrl ?>missions.php">Toutes les missions</a></li>
                         <li><a href="<?= $baseUrl ?>news.php">Toutes les actualités</a></li>
-                        <li><a href="<?= $baseUrl ?>client/">Espace client</a></li>
+                        <li><a href="<?= $baseUrl ?>client/">Espace Utilisateur</a></li>
                         <li><a href="<?= $baseUrl ?>admin/">Administration</a></li>
                     </ul>
                 </div>

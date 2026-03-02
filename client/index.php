@@ -1,6 +1,6 @@
 <?php
 /**
- * Tableau de bord – Espace client Expertise
+ * Tableau de bord – Espace Utilisateur Expertise
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
@@ -50,7 +50,7 @@ require __DIR__ . '/../inc/header.php';
             <div class="client-welcome-card">
                 <div class="row align-items-center">
                     <div class="col-lg-8">
-                        <p class="client-welcome-label">Espace client</p>
+                        <p class="client-welcome-label">Espace Utilisateur</p>
                         <h1 class="client-welcome-title">Bienvenue, <?= htmlspecialchars($clientName) ?></h1>
                         <p class="client-welcome-text">Accédez à nos offres, suivez vos candidatures et restez informé.</p>
                     </div>

@@ -1,6 +1,6 @@
 <?php
 /**
- * Déconnexion – Espace client Expertise
+ * Déconnexion – Espace Utilisateur Expertise
  */
 if (session_status() === PHP_SESSION_NONE) {
     session_start();

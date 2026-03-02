@@ -1,6 +1,6 @@
 <?php
 /**
- * Mes candidatures – Espace client
+ * Mes candidatures – Espace Utilisateur
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';

@@ -1,6 +1,6 @@
 <?php
 /**
- * Page d'inscription – Espace client Expertise
+ * Page d'inscription – Espace Utilisateur Expertise
  * Inscription publique : création d'un compte avec le statut (rôle) client.
  */
 if (session_status() === PHP_SESSION_NONE) {
@@ -393,7 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </div>
 
-    <p class="page-footer">&copy; <?= date('Y') ?> Expertise &middot; Espace client</p>
+    <p class="page-footer">&copy; <?= date('Y') ?> Expertise &middot; Espace Utilisateur</p>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script>

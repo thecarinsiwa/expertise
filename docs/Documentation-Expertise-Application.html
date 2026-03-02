@@ -130,7 +130,7 @@
         <li><strong>Chapitre 2 — Parcours et fonctionnalités</strong></li>
         <li><a href="#ch2-public">2.1 Site public (visiteur)</a></li>
         <li><a href="#ch2-admin">2.2 Back-office administration</a></li>
-        <li><a href="#ch2-client">2.3 Espace client et candidatures</a></li>
+        <li><a href="#ch2-client">2.3 Espace Utilisateur et candidatures</a></li>
         <li><a href="#ch2-flux">2.4 Flux de données principaux</a></li>
         <li><strong>Chapitre 3 — Utilisation de l'espace client</strong></li>
         <li><a href="#ch3-inscription">3.1 S'inscrire et se connecter</a></li>
@@ -176,7 +176,7 @@ flowchart LR
         A[Administrateur / Staff]
     end
     V --> | Consultation | SitePublic[Site public]
-    C --> | Connexion | EspaceClient[Espace client]
+    C --> | Connexion | EspaceClient[Espace Utilisateur]
     A --> | Connexion | Admin[Back-office admin]
     SitePublic --> | PHP + MySQL | DB[(Base de données)]
     EspaceClient --> DB
@@ -190,7 +190,7 @@ flowchart LR
         </thead>
         <tbody>
             <tr><td><strong>Visiteur</strong></td><td>Internaute non connecté</td><td>Pages publiques : accueil, missions, actualités, équipe, offres, contact, etc.</td></tr>
-            <tr><td><strong>Client / Candidat</strong></td><td>Utilisateur inscrit (inscription / login)</td><td>Espace client : tableau de bord, offres, candidatures, profil.</td></tr>
+            <tr><td><strong>Client / Candidat</strong></td><td>Utilisateur inscrit (inscription / login)</td><td>Espace Utilisateur : tableau de bord, offres, candidatures, profil.</td></tr>
             <tr><td><strong>Administrateur / Staff</strong></td><td>Personnel avec compte admin</td><td>Back-office : dashboard, missions, annonces, personnel, projets, documents, paramètres, etc. Droits gérés par rôles (RBAC).</td></tr>
         </tbody>
     </table>
@@ -208,7 +208,7 @@ flowchart TB
     subgraph Serveur["Serveur web (PHP)"]
         Public[Site public]
         Admin[Back-office admin]
-        ClientApp[Espace client]
+        ClientApp[Espace Utilisateur]
         Inc[inc/ db, header]
     end
     subgraph Données["Base de données"]
@@ -403,7 +403,7 @@ flowchart TB
     <p><strong>Documents :</strong> Catégories, documents, versions, archivage.</p>
     <p><strong>Sécurité :</strong> Sessions, journal d'activité, audit, configuration (ex. admin/security.php).</p>
 
-    <h2 id="ch2-client">2.3 Espace client et candidatures</h2>
+    <h2 id="ch2-client">2.3 Espace Utilisateur et candidatures</h2>
     <p>L'espace client est sous le répertoire client/. Les utilisateurs peuvent s'inscrire (client/register.php), se connecter (client/login.php) et accéder à un tableau de bord (client/index.php).</p>
 
     <div class="diagram-wrap">
@@ -450,7 +450,7 @@ sequenceDiagram
     Note over Client,BDD: Candidature
     Client->>SitePublic: Voir offres, clic Postuler
     SitePublic->>BDD: INSERT offer_application
-    Client->>SitePublic: Espace client : mes candidatures
+    Client->>SitePublic: Espace Utilisateur : mes candidatures
     SitePublic->>BDD: SELECT offer_application
     BDD-->>SitePublic: Candidatures
     SitePublic-->>Client: Liste et statuts

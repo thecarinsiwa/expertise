@@ -1194,7 +1194,7 @@ a.card-staff:hover { color: inherit; }
     .media-doc-thumb-icon { font-size: 1.35rem; }
 }
 
-/* ========== Espace client ========== */
+/* ========== Espace Utilisateur ========== */
 .client-dashboard { background: #f5f6f8; }
 .client-welcome-card {
     background: linear-gradient(135deg, var(--msf-blue-dark) 0%, #2d2d4e 100%);

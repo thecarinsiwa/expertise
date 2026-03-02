@@ -1,6 +1,6 @@
 <?php
 /**
- * Mon profil / Mon CV – Espace client
+ * Mon profil / Mon CV – Espace Utilisateur
  * Profil complet réutilisable pour les candidatures.
  */
 require_once __DIR__ . '/inc/auth.php';

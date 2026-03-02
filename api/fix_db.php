@@ -5,14 +5,15 @@
  * Pour une installation neuve, utiliser database/schema.sql (ou ?action=init_db dans l'API).
  */
 
-$DB_HOST = 'localhost';
-$DB_PORT = 3306;
-$DB_USER = 'root';
-$DB_PASS = '';
-$DB_NAME = 'expertise';
+require_once __DIR__ . '/../config/database.php';
+$DB_PORT = (int) (getenv('DB_PORT') ?: 3306);
 
 try {
-    $pdo = new PDO("mysql:host={$DB_HOST};port={$DB_PORT};dbname={$DB_NAME};charset=utf8mb4", $DB_USER, $DB_PASS, [
+    $pdo = new PDO(
+        "mysql:host={$dbConfig['host']};port={$DB_PORT};dbname={$dbConfig['dbname']};charset={$dbConfig['charset']}",
+        $dbConfig['user'],
+        $dbConfig['pass'],
+        [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
     ]);
 
