@@ -13,7 +13,7 @@ $hasFooterSocial = $organisation && (
             <div class="row g-4 site-footer-grid">
                 <div class="col-lg-4 site-footer-brand">
                     <p class="footer-title footer-brand-name"><?= $footerOrgName ?></p>
-                    <p class="footer-tagline"><?= $organisation && !empty($organisation->description) ? htmlspecialchars(mb_substr($organisation->description, 0, 140)) . (mb_strlen($organisation->description) > 140 ? '…' : '') : 'Plateforme de gestion des missions et des projets.' ?></p>
+                    <p class="footer-tagline"><?= $organisation && !empty($organisation->description) ? htmlspecialchars(mb_substr(strip_tags($organisation->description), 0, 140)) . (mb_strlen(strip_tags($organisation->description)) > 140 ? '…' : '') : 'Plateforme de gestion des missions et des projets.' ?></p>
                     <?php if ($hasFooterSocial): ?>
                     <div class="footer-social" aria-label="Réseaux sociaux">
                         <?php if (!empty($organisation->facebook_url)): ?>

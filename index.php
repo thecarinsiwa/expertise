@@ -230,7 +230,7 @@ require __DIR__ . '/inc/header.php';
                     <span class="badge-location d-block mb-2"><?= $organisation ? htmlspecialchars($organisation->name) : 'Actualité' ?></span>
                     <h1 class="mb-3"><?= $organisation ? htmlspecialchars($organisation->name) : 'Bienvenue sur Expertise' ?></h1>
                     <p class="meta mb-2"><?= date('d M Y') ?></p>
-                    <p class="lead mb-4"><?= $organisation && !empty($organisation->description) ? htmlspecialchars(mb_substr($organisation->description, 0, 280)) . (mb_strlen($organisation->description) > 280 ? '…' : '') : 'Plateforme de gestion des missions et des projets. Découvrez nos actions et actualités.' ?></p>
+                    <div class="lead mb-4 hero-description"><?= $organisation && !empty($organisation->description) ? $organisation->description : 'Plateforme de gestion des missions et des projets. Découvrez nos actions et actualités.' ?></div>
                     <a href="<?= $baseUrl ?>about.php" class="btn btn-read-more">En savoir plus</a>
                 </div>
             </div>
@@ -279,7 +279,7 @@ require __DIR__ . '/inc/header.php';
                 <div class="col-lg-7">
                     <h2 class="section-heading">Qui nous sommes</h2>
                     <p class="index-about-lead">
-                        <?= $organisation && !empty($organisation->description) ? nl2br(htmlspecialchars(mb_substr($organisation->description, 0, 380))) . (mb_strlen($organisation->description) > 380 ? '…' : '') : 'Nous sommes une organisation humanitaire médicale internationale et indépendante. Découvrez notre mission, notre gouvernance et nos principes d\'action.' ?>
+                        <?= $organisation && !empty($organisation->description) ? $organisation->description : 'Nous sommes une organisation humanitaire médicale internationale et indépendante. Découvrez notre mission, notre gouvernance et nos principes d\'action.' ?>
                     </p>
                     <a href="<?= $baseUrl ?>about.php" class="btn-view-all">En savoir plus</a>
                 </div>
