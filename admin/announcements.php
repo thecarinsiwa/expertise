@@ -161,7 +161,15 @@ if ($pdo) {
             $published_at = trim($_POST['published_at'] ?? '') ?: null;
             $expires_at = trim($_POST['expires_at'] ?? '') ?: null;
 
-            $cover_image = ($id > 0 && $detail && isset($detail->cover_image)) ? $detail->cover_image : null;
+            $cover_image = null;
+            if ($id > 0) {
+                $stmt = $pdo->prepare("SELECT cover_image FROM announcement WHERE id = ?");
+                $stmt->execute([$id]);
+                $existing = $stmt->fetch(PDO::FETCH_OBJ);
+                if ($existing && !empty($existing->cover_image)) {
+                    $cover_image = $existing->cover_image;
+                }
+            }
             if (!empty($_FILES['cover_image']['name'])) {
                 $target_dir = __DIR__ . '/../uploads/announcements/covers/';
                 if (!is_dir($target_dir)) mkdir($target_dir, 0755, true);
