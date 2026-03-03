@@ -740,8 +740,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             </div>
             <div>
                 <a href="projects.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline me-2">Annuler</a>
-                <button form="projectForm" type="submit" class="btn btn-success px-4" id="submitProject" style="display:none">
-                    <i class="bi bi-cloud-upload me-1"></i> Finaliser & Enregistrer
+                <button form="projectForm" type="submit" class="btn btn-success px-4" id="submitProject">
+                    <i class="bi bi-check-lg me-1"></i> Enregistrer
                 </button>
             </div>
         </div>
@@ -1287,13 +1287,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function updateStepButtons() {
         document.querySelector('.prev-tab').style.display = currentTabIdx > 0 ? '' : 'none';
-        if (currentTabIdx === tabs.length - 1) {
-            document.querySelector('.next-tab').style.display = 'none';
-            document.getElementById('submitProject').style.display = '';
-        } else {
-            document.querySelector('.next-tab').style.display = '';
-            document.getElementById('submitProject').style.display = 'none';
-        }
+        document.querySelector('.next-tab').style.display = currentTabIdx < tabs.length - 1 ? '' : 'none';
     }
 
     document.querySelector('.next-tab').addEventListener('click', function() {
