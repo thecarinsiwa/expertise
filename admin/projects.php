@@ -72,7 +72,15 @@ if ($pdo) {
             $priority = $_POST['priority'] ?? 'medium';
             $manager_user_id = trim($_POST['manager_user_id'] ?? '') !== '' ? (int) $_POST['manager_user_id'] : null;
 
-            $cover_image = ($id > 0 && !empty($detail->cover_image)) ? $detail->cover_image : null;
+            $cover_image = null;
+            if ($id > 0) {
+                $stmt = $pdo->prepare("SELECT cover_image FROM project WHERE id = ?");
+                $stmt->execute([$id]);
+                $existing = $stmt->fetch(PDO::FETCH_OBJ);
+                if ($existing && !empty($existing->cover_image)) {
+                    $cover_image = $existing->cover_image;
+                }
+            }
             if (!empty($_FILES['cover_image']['name'])) {
                 $target_dir = __DIR__ . '/../uploads/projects/';
                 if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
