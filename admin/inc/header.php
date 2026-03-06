@@ -382,7 +382,7 @@ header('Content-Type: text/html; charset=UTF-8');
             <?php endif; ?>
             <?php if (has_permission('admin.bailleurs.view')): ?>
             <a href="bailleurs.php" class="nav-link<?= $currentNav === 'bailleurs' ? ' active' : '' ?>">
-                <i class="bi bi-bank"></i><span>Bailleurs de fonds</span>
+                <i class="bi bi-bank"></i><span>Partenaires</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.missions.view')): ?>

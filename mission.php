@@ -160,7 +160,7 @@ $coverUrl = $hasCover ? client_asset_url($baseUrl, $mission->cover_image) : '';
 
                         <?php if (count($bailleurs) > 0): ?>
                             <div class="mission-detail-block">
-                                <h2 class="mission-detail-block-title"><i class="bi bi-building"></i> Bailleurs</h2>
+                                <h2 class="mission-detail-block-title"><i class="bi bi-building"></i> Partenaires</h2>
                                 <div class="mission-detail-bailleurs">
                                     <?php foreach ($bailleurs as $b): ?>
                                         <div class="mission-detail-bailleur">

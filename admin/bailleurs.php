@@ -1,5 +1,5 @@
 <?php
-$pageTitle = 'Bailleurs de fonds – Administration';
+$pageTitle = 'Partenaires – Administration';
 $currentNav = 'bailleurs';
 require_once __DIR__ . '/inc/auth.php';
 require_permission('admin.bailleurs.view');
@@ -92,9 +92,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="bailleurs.php" class="text-decoration-none">Bailleurs de fonds</a></li>
+        <li class="breadcrumb-item"><a href="bailleurs.php" class="text-decoration-none">Partenaires</a></li>
         <?php if ($action === 'add'): ?>
-            <li class="breadcrumb-item active">Nouveau bailleur</li>
+            <li class="breadcrumb-item active">Nouveau partenaire</li>
         <?php elseif ($action === 'edit' && $detail): ?>
             <li class="breadcrumb-item active">Modifier</li>
         <?php elseif ($detail): ?>
@@ -108,17 +108,17 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <div>
             <h1>
                 <?php
-                if ($action === 'add') echo 'Nouveau bailleur';
-                elseif ($action === 'edit' && $detail) echo 'Modifier le bailleur';
+                if ($action === 'add') echo 'Nouveau partenaire';
+                elseif ($action === 'edit' && $detail) echo 'Modifier le partenaire';
                 elseif ($detail) echo htmlspecialchars($detail->name);
-                else echo 'Bailleurs de fonds';
+                else echo 'Partenaires';
                 ?>
             </h1>
             <p class="text-muted mb-0">
                 <?php
-                if ($detail && !$isForm) echo 'Fiche bailleur de fonds';
-                elseif ($action === 'add') echo 'Créer un nouveau bailleur de fonds.';
-                else echo 'Gestion des bailleurs de fonds associés aux projets.';
+                if ($detail && !$isForm) echo 'Fiche partenaire';
+                elseif ($action === 'add') echo 'Créer un nouveau partenaire.';
+                else echo 'Gestion des partenaires associés aux projets.';
                 ?>
             </p>
         </div>
@@ -129,17 +129,17 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             <?php elseif ($isForm): ?>
                 <a href="bailleurs.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="bailleurs.php?action=add" class="btn btn-admin-primary"><i class="bi bi-bank me-1"></i> Nouveau bailleur</a>
+                <a href="bailleurs.php?action=add" class="btn btn-admin-primary"><i class="bi bi-bank me-1"></i> Nouveau partenaire</a>
             <?php endif; ?>
         </div>
     </div>
 </header>
 
 <?php if (isset($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
-    <div class="alert alert-success">Le bailleur a été supprimé.</div>
+    <div class="alert alert-success">Le partenaire a été supprimé.</div>
 <?php endif; ?>
 <?php if (isset($_GET['msg']) && $_GET['msg'] === 'created'): ?>
-    <div class="alert alert-success">Bailleur créé.</div>
+    <div class="alert alert-success">Partenaire créé.</div>
 <?php endif; ?>
 <?php if ($error): ?>
     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
@@ -154,7 +154,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             <div class="admin-card text-center p-3 h-100">
                 <div class="text-muted small text-uppercase mb-1 fw-bold">Total</div>
                 <div class="h3 mb-0 fw-bold"><?= $stats['total'] ?></div>
-                <div class="mt-2"><span class="badge bg-secondary">Bailleurs</span></div>
+                <div class="mt-2"><span class="badge bg-secondary">Partenaires</span></div>
             </div>
         </div>
         <div class="col-sm-6 col-xl-4">
@@ -174,7 +174,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <?php if ($isForm): ?>
     <div class="admin-card admin-section-card">
-        <h5 class="card-title mb-4"><i class="bi bi-bank"></i> <?= $id ? 'Modifier le bailleur' : 'Nouveau bailleur' ?></h5>
+        <h5 class="card-title mb-4"><i class="bi bi-bank"></i> <?= $id ? 'Modifier le partenaire' : 'Nouveau partenaire' ?></h5>
         <form method="POST" action="<?= $id ? 'bailleurs.php?action=edit&id=' . $id : 'bailleurs.php?action=add' ?>" enctype="multipart/form-data">
             <input type="hidden" name="save_bailleur" value="1">
             <div class="row g-3">
@@ -237,7 +237,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <div class="modal-dialog">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">Supprimer ce bailleur ?</h5>
+                    <h5 class="modal-title">Supprimer ce partenaire ?</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body py-4">
@@ -260,7 +260,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <thead>
                     <tr>
                         <th style="width:70px;">Logo</th>
-                        <th>Bailleur</th>
+                        <th>Partenaire</th>
                         <th>Code</th>
                         <th>Projets</th>
                         <th>Statut</th>
@@ -291,7 +291,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                         <li><a class="dropdown-item" href="bailleurs.php?action=edit&id=<?= (int) $b->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
-                                            <form method="POST" onsubmit="return confirm('Supprimer ce bailleur ?');">
+                                            <form method="POST" onsubmit="return confirm('Supprimer ce partenaire ?');">
                                                 <input type="hidden" name="delete_id" value="<?= (int) $b->id ?>">
                                                 <button type="submit" class="dropdown-item text-danger"><i class="bi bi-trash me-2"></i> Supprimer</button>
                                             </form>
@@ -308,7 +308,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <?php else: ?>
     <div class="admin-card admin-section-card">
-        <p class="admin-empty py-4 mb-0"><i class="bi bi-inbox"></i> Aucun bailleur. <a href="bailleurs.php?action=add">Créer un bailleur</a> pour pouvoir l’associer aux projets.</p>
+        <p class="admin-empty py-4 mb-0"><i class="bi bi-inbox"></i> Aucun partenaire. <a href="bailleurs.php?action=add">Créer un partenaire</a> pour pouvoir l’associer aux projets.</p>
     </div>
 <?php endif; ?>
 

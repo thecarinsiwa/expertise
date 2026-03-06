@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                     $stmtStep->execute([$missionId, trim($stepTitle), $stepContent, $stepImage, $index]);
                 }
 
-                // --- GESTION DES BAILLEURS DE FONDS ---
+                // --- GESTION DES PARTENAIRES ---
                 try {
                     $pdo->prepare("DELETE FROM mission_bailleur WHERE mission_id = ?")->execute([$missionId]);
                     $insBailleur = $pdo->prepare("INSERT INTO mission_bailleur (mission_id, bailleur_id) VALUES (?, ?)");
@@ -601,13 +601,13 @@ require __DIR__ . '/inc/header.php';
                             </select>
                         </div>
                         <div class="col-12">
-                            <label class="form-label fw-bold">Bailleurs de fonds</label>
+                            <label class="form-label fw-bold">Partenaires</label>
                             <select name="bailleur_ids[]" class="form-select" multiple size="4">
                                 <?php foreach ($bailleurs as $b): ?>
                                     <option value="<?= (int) $b->id ?>" <?= ($detail && in_array((int)$b->id, $detail->bailleur_ids ?? [])) ? 'selected' : '' ?>><?= htmlspecialchars($b->name) ?><?= !empty($b->code) ? ' (' . htmlspecialchars($b->code) . ')' : '' ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs bailleurs. <a href="bailleurs.php?action=add" target="_blank">Créer un bailleur</a></small>
+                            <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs partenaires. <a href="bailleurs.php?action=add" target="_blank">Créer un partenaire</a></small>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold">Lieu / Destination</label>
@@ -1115,7 +1115,7 @@ require __DIR__ . '/inc/header.php';
                                     <td class="small text-uppercase"><?= htmlspecialchars($detail->reference ?: '—') ?></td>
                                 </tr>
                                 <tr>
-                                    <td class="text-muted small">Bailleurs de fonds</td>
+                                    <td class="text-muted small">Partenaires</td>
                                     <td class="small"><?= !empty($detail->bailleurs) ? implode(', ', array_map(function($b) { return htmlspecialchars($b->name); }, $detail->bailleurs)) : '—' ?></td>
                                 </tr>
                             </table>

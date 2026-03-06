@@ -200,7 +200,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             position: relative;
         }
 
-        .input-group-icon i {
+        .input-group-icon > i.icon-left {
             position: absolute;
             left: .875rem;
             top: 50%;
@@ -213,6 +213,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .input-group-icon input {
             padding-left: 2.5rem;
+            padding-right: 2.5rem;
+        }
+
+        .input-group-icon input.is-invalid {
+            background-image: none;
         }
 
         .input-group-icon .toggle-pwd {
@@ -377,7 +382,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-3">
                     <label for="email" class="form-label">Adresse e-mail</label>
                     <div class="input-group-icon">
-                        <i class="bi bi-envelope"></i>
+                        <i class="bi bi-envelope icon-left"></i>
                         <input type="email" id="email" name="email"
                             class="form-control<?= $error ? ' is-invalid' : '' ?>"
                             value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" placeholder="admin@exemple.fr"
@@ -389,7 +394,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="mb-4">
                     <label for="password" class="form-label">Mot de passe</label>
                     <div class="input-group-icon">
-                        <i class="bi bi-lock"></i>
+                        <i class="bi bi-lock icon-left"></i>
                         <input type="password" id="password" name="password"
                             class="form-control<?= $error ? ' is-invalid' : '' ?>" placeholder="••••••••"
                             autocomplete="current-password" required>

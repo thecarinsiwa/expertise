@@ -491,13 +491,13 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                         <small class="text-muted"><a href="programmes.php" target="_blank">Configuration des programmes</a></small>
                     </div>
                     <div class="col-12">
-                        <label class="form-label fw-bold">Bailleurs de fonds</label>
+                        <label class="form-label fw-bold">Partenaires</label>
                         <select form="projectForm" name="bailleur_ids[]" class="form-select" multiple size="4">
                             <?php foreach ($bailleurs as $b): ?>
                                 <option value="<?= (int) $b->id ?>" <?= ($detail && in_array((int)$b->id, $detail->bailleur_ids ?? [])) ? 'selected' : '' ?>><?= htmlspecialchars($b->name) ?><?= !empty($b->code) ? ' (' . htmlspecialchars($b->code) . ')' : '' ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs bailleurs. <a href="bailleurs.php?action=add">Créer un bailleur</a></small>
+                        <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs partenaires. <a href="bailleurs.php?action=add">Créer un partenaire</a></small>
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-bold">Description</label>
@@ -872,7 +872,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <table class="admin-table mb-0">
             <tr><th style="width:180px;">Organisation</th><td><?= htmlspecialchars($detail->organisation_name ?? '—') ?></td></tr>
             <tr><th>Code</th><td><?= htmlspecialchars($detail->code ?? '—') ?></td></tr>
-            <tr><th>Bailleurs de fonds</th><td><?= !empty($detail->bailleurs) ? implode(', ', array_map(function($b) { return htmlspecialchars($b->name); }, $detail->bailleurs)) : '—' ?></td></tr>
+            <tr><th>Partenaires</th><td><?= !empty($detail->bailleurs) ? implode(', ', array_map(function($b) { return htmlspecialchars($b->name); }, $detail->bailleurs)) : '—' ?></td></tr>
             <tr><th>Description</th><td class="project-description"><?= !empty($detail->description) ? $detail->description : '—' ?></td></tr>
             <tr><th>Dates</th><td><?= $detail->start_date ? date('d/m/Y', strtotime($detail->start_date)) : '—' ?> — <?= $detail->end_date ? date('d/m/Y', strtotime($detail->end_date)) : '—' ?></td></tr>
             <tr><th>Statut</th><td><span class="badge bg-secondary"><?= $statusLabels[$detail->status] ?? $detail->status ?></span></td></tr>

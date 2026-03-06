@@ -279,6 +279,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </button>
                     </div>
                 </div>
+                
+
+
+
                 <button type="submit" class="btn-login" id="submitBtn">
                     <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
                 </button>
