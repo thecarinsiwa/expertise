@@ -142,7 +142,7 @@
         <li><a href="#ch4-connexion">4.1 Connexion et tableau de bord</a></li>
         <li><a href="#ch4-structure">4.2 Structure (organisations, unités)</a></li>
         <li><a href="#ch4-rh">4.3 RH et sécurité (utilisateurs, personnel, rôles)</a></li>
-        <li><a href="#ch4-operations">4.4 Opérations (missions, offres, projets, bailleurs)</a></li>
+        <li><a href="#ch4-operations">4.4 Opérations (missions, offres, projets, partenaires)</a></li>
         <li><a href="#ch4-comm">4.5 Communication et gestion</a></li>
         <li><strong>Conclusion</strong></li>
         <li><a href="#conclusion">Conclusion</a></li>
@@ -157,7 +157,7 @@
     <h2 id="ch1-objectif">1.1 Objectif de l'application</h2>
     <p><strong>Expertise</strong> est une plateforme web destinée à une organisation humanitaire et sociale. Elle permet de&nbsp;:</p>
     <ul>
-        <li><strong>Présenter</strong> l'organisation au public : missions, actualités, équipe, bailleurs, lieux d'intervention.</li>
+        <li><strong>Présenter</strong> l'organisation au public : missions, actualités, équipe, partenaires, lieux d'intervention.</li>
         <li><strong>Gérer</strong> en interne les missions, projets, personnel, annonces, documents et la communication.</li>
         <li><strong>Recruter</strong> via des offres publiées : les candidats peuvent s'inscrire, postuler et suivre leurs candidatures.</li>
     </ul>
@@ -242,7 +242,7 @@ flowchart TB
     Mission --> Offre[Offres]
     Offre --> Candidature[Candidatures]
     User --> Role[Rôles et Permissions]
-    Mission --> Bailleur[Bailleurs]
+    Mission --> Partenaire[Partenaires]
     Proj --> Bailleur
         </div>
         <p class="diagram-caption">Figure 3 — Modules fonctionnels et dépendances principales</p>
@@ -255,7 +255,7 @@ flowchart TB
             <tr><td>Organisation</td><td>Fiche organisation (nom, description, logo, réseaux sociaux, coordonnées). Une organisation active est utilisée pour le site public.</td></tr>
             <tr><td>Utilisateurs et personnel</td><td>Comptes utilisateurs, profils, staff (poste, département, photo), rôles et permissions (RBAC).</td></tr>
             <tr><td>Missions</td><td>Missions terrain (titre, lieu, dates, type, statut), objectifs, plans, rapports, ordres de mission, dépenses, affectations.</td></tr>
-            <tr><td>Projets et programmes</td><td>Portfolios, programmes, projets (phases, tâches, livrables, budgets), bailleurs liés.</td></tr>
+            <tr><td>Projets et programmes</td><td>Portfolios, programmes, projets (phases, tâches, livrables, budgets), partenaires liés.</td></tr>
             <tr><td>Annonces / Actualités</td><td>Annonces avec titre, contenu, image de couverture, dates de publication/expiration. Affichées en hero et dans les actualités.</td></tr>
             <tr><td>Offres et candidatures</td><td>Offres (liées ou non à une mission/projet), publication, date limite. Candidats : dépôt de CV et suivi des candidatures.</td></tr>
             <tr><td>Documents</td><td>Catégories, documents, versions, archivage.</td></tr>
@@ -275,8 +275,8 @@ erDiagram
     user ||--o| staff : "is"
     mission ||--o{ objective : "has"
     mission ||--o{ mission_plan : "has"
-    mission }o--o{ bailleur : "funded by"
-    project }o--o{ bailleur : "funded by"
+    mission }o--o{ partenaire : "funded by"
+    project }o--o{ partenaire : "funded by"
     offer ||--o{ offer_application : "receives"
     user ||--o{ offer_application : "applies to"
     offer }o--o| mission : "links to"
@@ -328,7 +328,7 @@ erDiagram
         <li><strong>Actualités :</strong> Grille des dernières annonces avec lien vers la page annonce.</li>
         <li><strong>Où nous travaillons :</strong> Carte Leaflet avec pays d'intervention colorés et marqueurs des missions (titre, lien). Liste de lieux cliquables filtrant les missions.</li>
         <li><strong>Notre équipe :</strong> Carousel du personnel (photo, nom, poste, département) avec lien vers teams.php.</li>
-        <li><strong>Ils nous font confiance :</strong> Carousel des bailleurs (logo ou nom).</li>
+        <li><strong>Ils nous font confiance :</strong> Carousel des partenaires (logo ou nom).</li>
         <li><strong>Appel à l'action :</strong> Bouton « Nous contacter » vers contact.php.</li>
     </ul>
 
@@ -341,7 +341,7 @@ flowchart LR
     Accueil --> Actu[Actualités]
     Accueil --> Carte[Où nous travaillons]
     Accueil --> Equipe[Équipe]
-    Accueil --> Bailleurs[Bailleurs]
+    Accueil --> Partenaires[Partenaires]
     Accueil --> CTA[Contact]
     Missions --> mission.php
     Actu --> announcement.php
@@ -359,7 +359,7 @@ flowchart LR
         </thead>
         <tbody>
             <tr><td>missions.php</td><td>Liste des missions (filtres possibles), cartes avec couverture et métadonnées.</td></tr>
-            <tr><td>mission.php?id=</td><td>Fiche mission : titre, référence, type, statut, lieu, dates, description, objectifs, bailleurs, image de couverture.</td></tr>
+            <tr><td>mission.php?id=</td><td>Fiche mission : titre, référence, type, statut, lieu, dates, description, objectifs, partenaires, image de couverture.</td></tr>
             <tr><td>news.php / announcement.php?id=</td><td>Liste des actualités et page détail d'une annonce (titre, contenu, date, image).</td></tr>
             <tr><td>about.php</td><td>Présentation de l'organisation (texte, gouvernance, etc.).</td></tr>
             <tr><td>teams.php</td><td>Liste du personnel (photo, nom, poste, département), détail par membre si id=.</td></tr>
@@ -385,7 +385,7 @@ flowchart TB
     Dashboard --> Projets[Projets]
     Dashboard --> Programmes[Programmes]
     Dashboard --> Portfolios[Portfolios]
-    Dashboard --> Bailleurs[Bailleurs]
+    Dashboard --> Partenaires[Partenaires]
     Dashboard --> Offres[Offres]
     Dashboard --> Docs[Documents]
     Dashboard --> Planning[Planning]
@@ -396,7 +396,7 @@ flowchart TB
     </div>
 
     <p><strong>Tableau de bord (admin/index.php) :</strong> Statistiques (organisations, missions, annonces, utilisateurs, projets, tâches, personnel, documents), dernières missions, dernières annonces, projets actifs, graphiques par statut de missions et de projets.</p>
-    <p><strong>Gestion des missions :</strong> CRUD missions, types de mission, statuts, ordres de mission, plans de mission, rapports, dépenses. Les missions sont liées à l'organisation active et peuvent être associées à des bailleurs.</p>
+    <p><strong>Gestion des missions :</strong> CRUD missions, types de mission, statuts, ordres de mission, plans de mission, rapports, dépenses. Les missions sont liées à l'organisation active et peuvent être associées à des partenaires.</p>
     <p><strong>Annonces :</strong> Création, édition, publication, date d'expiration, image de couverture. Les annonces publiées et non expirées apparaissent sur le site public (hero et liste actualités).</p>
     <p><strong>Personnel et utilisateurs :</strong> Gestion des staff (liés à un utilisateur et une organisation), départements, postes. Gestion des comptes utilisateurs et des rôles/permissions (RBAC).</p>
     <p><strong>Offres et candidatures :</strong> Création d'offres (titre, description, mission/projet optionnel, statut, date limite). Consultation des candidatures (offer_application), profils candidats.</p>
@@ -460,7 +460,7 @@ sequenceDiagram
 
     <ul>
         <li><strong>Contenu affiché en public :</strong> Une seule organisation est considérée comme « active » (is_active = 1). Les requêtes du site public filtrent par organisation_id de cette organisation (missions, annonces, staff, etc.).</li>
-        <li><strong>Assets (images) :</strong> Les chemins des images (couvertures missions/annonces, photos staff, logos bailleurs) sont stockés en base. inc/asset_url.php fournit une fonction pour générer l'URL complète à partir du baseUrl et du chemin relatif (ex. uploads/missions/...).</li>
+        <li><strong>Assets (images) :</strong> Les chemins des images (couvertures missions/annonces, photos staff, logos partenaires) sont stockés en base. inc/asset_url.php fournit une fonction pour générer l'URL complète à partir du baseUrl et du chemin relatif (ex. uploads/missions/...).</li>
         <li><strong>Carte « Où nous travaillons » :</strong> Les missions avec latitude/longitude sont envoyées en JSON au client ; Leaflet affiche les marqueurs et un GeoJSON optionnel colore les pays d'intervention.</li>
     </ul>
 
@@ -613,19 +613,19 @@ sequenceDiagram
     <h3>Sécurité</h3>
     <p>Menu <strong>« Sécurité »</strong> (<code>admin/security.php</code>) : consultation et paramétrage liés à la sécurité (sessions, politique de mot de passe, etc.).</p>
 
-    <h2 id="ch4-operations">4.4 Opérations (missions, offres, projets, bailleurs)</h2>
+    <h2 id="ch4-operations">4.4 Opérations (missions, offres, projets, partenaires)</h2>
 
     <h3>Missions</h3>
-    <p>Menu <strong>« Missions »</strong> (<code>admin/missions.php</code>) : création, modification et suppression des missions. Pour chaque mission : titre, référence, type, statut, lieu, coordonnées GPS (latitude/longitude), dates de début/fin, description, image de couverture, objectifs, plans, rapports, ordres de mission, dépenses, affectations, bailleurs associés. Les sous-menus ou onglets permettent d'accéder aux types de mission, ordres de mission, plans de mission, rapports de mission, dépenses de mission.</p>
+    <p>Menu <strong>« Missions »</strong> (<code>admin/missions.php</code>) : création, modification et suppression des missions. Pour chaque mission : titre, référence, type, statut, lieu, coordonnées GPS (latitude/longitude), dates de début/fin, description, image de couverture, objectifs, plans, rapports, ordres de mission, dépenses, affectations, partenaires associés. Les sous-menus ou onglets permettent d'accéder aux types de mission, ordres de mission, plans de mission, rapports de mission, dépenses de mission.</p>
 
     <h3>Nos offres</h3>
     <p>Menu <strong>« Nos offres »</strong> (<code>admin/offers.php</code>) : gestion des offres (titre, référence, description, image, lien optionnel à une mission ou un projet, statut : brouillon / publié / clôturé, date de publication, date limite). Une offre en statut <strong>publié</strong> est visible sur le site public et les candidats peuvent postuler. Depuis cette interface, accès aux <strong>candidatures</strong> reçues (liste des candidats par offre, statut, CV) et consultation des profils candidats (<code>admin/candidate_profile.php</code>).</p>
 
     <h3>Projets, programmes, portfolios</h3>
-    <p>Menus <strong>« Projets & Tâches »</strong>, <strong>« Programmes »</strong>, <strong>« Portfolios »</strong> : gestion des portefeuilles, programmes et projets (phases, tâches, livrables, jalons, budgets, ressources, affectations). Les projets peuvent être liés à des bailleurs.</p>
+    <p>Menus <strong>« Projets & Tâches »</strong>, <strong>« Programmes »</strong>, <strong>« Portfolios »</strong> : gestion des portefeuilles, programmes et projets (phases, tâches, livrables, jalons, budgets, ressources, affectations). Les projets peuvent être liés à des partenaires.</p>
 
     <h3>Partenaires</h3>
-    <p>Menu <strong>« Bailleurs de fonds »</strong> (<code>admin/bailleurs.php</code>) : gestion des bailleurs (nom, code, description, logo). Les bailleurs peuvent être associés aux missions et aux projets. Ceux actifs peuvent être affichés dans la section « Ils nous font confiance » sur le site public.</p>
+    <p>Menu <strong>« Partenaires »</strong> (<code>admin/bailleurs.php</code>) : gestion des partenaires (nom, code, description, logo). Les partenaires peuvent être associés aux missions et aux projets. Ceux actifs peuvent être affichés dans la section « Ils nous font confiance » sur le site public.</p>
 
     <h2 id="ch4-comm">4.5 Communication et gestion</h2>
 
@@ -650,7 +650,7 @@ sequenceDiagram
 <section class="chapter" id="conclusion">
     <p class="chapter-num">Conclusion</p>
     <h1>Conclusion</h1>
-    <p>L'application <strong>Expertise</strong> constitue une plateforme complète au service d'une organisation humanitaire et sociale. Elle assure à la fois la <strong>visibilité</strong> des actions (missions, actualités, équipe, bailleurs, lieux d'intervention) auprès du public et la <strong>gestion interne</strong> des missions, projets, personnel, annonces et documents.</p>
+    <p>L'application <strong>Expertise</strong> constitue une plateforme complète au service d'une organisation humanitaire et sociale. Elle assure à la fois la <strong>visibilité</strong> des actions (missions, actualités, équipe, partenaires, lieux d'intervention) auprès du public et la <strong>gestion interne</strong> des missions, projets, personnel, annonces et documents.</p>
     <p>La séparation entre <strong>site public</strong>, <strong>espace client</strong> (candidats) et <strong>back-office administration</strong> permet de distinguer clairement les usages : consultation pour les visiteurs, dépôt et suivi de candidatures pour les candidats, pilotage et configuration pour les équipes internes. Le contrôle d'accès par rôles et permissions (RBAC) garantit que chaque acteur n'accède qu'aux fonctionnalités qui le concernent.</p>
     <p>Ce document a présenté l'architecture, les modules métier, les parcours utilisateur et les guides d'utilisation des espaces client et admin. Pour aller plus loin, il est recommandé de s'appuyer sur le schéma de base de données (<code>database/schema.sql</code>), la documentation du dépôt (<code>README.md</code>) et, le cas échéant, les commentaires dans le code source pour adapter ou étendre l'application selon les besoins de l'organisation.</p>
 </section>
