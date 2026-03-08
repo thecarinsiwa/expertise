@@ -1,10 +1,11 @@
 # Masquer l'extension .php et hasher les IDs (paramètre h)
-# Laragon / Apache : mod_rewrite requis
+# Laragon / Apache : mod_rewrite requis. AllowOverride All doit être activé pour ce répertoire.
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    # Si le projet est dans un sous-dossier (ex. /expertise/), décommenter et adapter :
-    # RewriteBase /expertise/
+    Options +FollowSymLinks -MultiViews
+    # Projet dans un sous-dossier (ex. http://localhost/expertise/) : adapter le RewriteBase
+    RewriteBase /expertise/
 
     # 1. Redirection 301 : .php -> sans extension (normaliser les URLs)
     RewriteCond %{THE_REQUEST} \s/[^?\s]+\.php(\?[^\s]*)?\s [NC]

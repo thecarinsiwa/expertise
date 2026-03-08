@@ -1,8 +1,18 @@
 <?php
-if (!isset($baseUrl))
-    $baseUrl = '';
-if (!isset($organisation))
-    $organisation = null;
+if (!isset($baseUrl)) $baseUrl = '';
+if (strpos($baseUrl, ':') !== false || preg_match('#^[a-zA-Z]:#', $baseUrl)) {
+    $sn = $_SERVER['SCRIPT_NAME'] ?? '';
+    if ($sn !== '' && strpos($sn, ':') === false && $sn !== '/' && $sn !== '\\') {
+        $baseUrl = rtrim(dirname($sn), '/\\') . '/';
+    } else {
+        if (!getenv('SITE_BASE_URL') && empty($_ENV['SITE_BASE_URL']) && is_file(__DIR__ . '/../config/load_env.php')) {
+            require_once __DIR__ . '/../config/load_env.php';
+        }
+        $baseUrl = (getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '/expertise/'));
+        if ($baseUrl !== '' && $baseUrl !== '/' && substr($baseUrl, -1) !== '/') $baseUrl .= '/';
+    }
+}
+if (!isset($organisation)) $organisation = null;
 ?>
 <nav class="navbar navbar-expand-lg navbar-main navbar-light">
     <div class="container">
@@ -42,7 +52,7 @@ if (!isset($organisation))
                 <?php elseif (!empty($_SESSION['admin_logged_in'])): ?>
                     <a class="btn btn-read-more" href="<?= $baseUrl ?>admin/">Dashboard</a>
                 <?php else: ?>
-                    <a class="btn btn-read-more" href="<?= $baseUrl ?>client/login.php">Se connecter</a>
+                    <a class="btn btn-read-more" href="<?= $baseUrl ?>client/login">Se connecter</a>
                 <?php endif; ?>
             </div>
         </div>
