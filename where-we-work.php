@@ -5,6 +5,7 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 
 $organisation = null;
 $locations = [];
@@ -44,7 +45,12 @@ if ($pdo) {
                 LIMIT 80
             ");
             $stmt->execute([$orgId]);
-            if ($stmt) $mapLocations = $stmt->fetchAll(PDO::FETCH_OBJ);
+            if ($stmt) {
+                $mapLocations = $stmt->fetchAll(PDO::FETCH_OBJ);
+                foreach ($mapLocations as $mL) {
+                    $mL->url = public_entity_url($baseUrl, 'mission', (int) $mL->id);
+                }
+            }
         } catch (PDOException $e) {}
 
         $countryFrToEn = [
@@ -72,7 +78,7 @@ require_once __DIR__ . '/inc/page-static.php';
     <section class="where-we-work-hero py-4 py-md-5">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-3">
-                <a href="<?= $baseUrl ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
+                <a href="<?= $baseUrl ?>index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
             </nav>
             <h1 class="section-heading mb-2">Où nous travaillons</h1>
             <p class="lead text-muted mb-0">Visualisez nos zones d'intervention et accédez aux missions par lieu.</p>
@@ -99,7 +105,7 @@ require_once __DIR__ . '/inc/page-static.php';
                         $count = $locationCounts[$loc] ?? 0;
                     ?>
                         <div class="col-sm-6 col-lg-4 col-xl-3">
-                            <a href="<?= $baseUrl ?>missions.php?location=<?= urlencode($loc) ?>" class="where-we-work-card card h-100 text-decoration-none border-0 shadow-sm">
+                            <a href="<?= $baseUrl ?>missions?location=<?= urlencode($loc) ?>" class="where-we-work-card card h-100 text-decoration-none border-0 shadow-sm">
                                 <div class="card-body d-flex align-items-center gap-3">
                                     <span class="where-we-work-card-icon rounded-circle d-flex align-items-center justify-content-center"><i class="bi bi-geo-alt"></i></span>
                                     <div class="flex-grow-1 min-w-0">
@@ -156,7 +162,7 @@ require_once __DIR__ . '/inc/page-static.php';
         locations.forEach(function(m) {
             var lat = parseFloat(m.latitude), lng = parseFloat(m.longitude);
             if (isNaN(lat) || isNaN(lng)) return;
-            var popup = '<a href="' + baseUrl + 'mission.php?id=' + m.id + '">' + escapeHtml(m.title || 'Mission') + '</a>';
+            var popup = '<a href="' + (m.url || (baseUrl + 'mission?h=' + m.id)) + '">' + escapeHtml(m.title || 'Mission') + '</a>';
             if (m.location) popup += '<br><small class="text-muted">' + escapeHtml(m.location) + '</small>';
             L.marker([lat, lng]).addTo(map).bindPopup(popup);
             if (!bounds) bounds = L.latLngBounds([lat, lng], [lat, lng]); else bounds.extend([lat, lng]);

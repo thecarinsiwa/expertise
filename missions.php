@@ -16,6 +16,7 @@ $allowedSort = ['date_desc' => 1, 'date_asc' => 1, 'title_asc' => 1, 'title_desc
 if (!isset($allowedSort[$sort])) $sort = 'date_desc';
 
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 
 try {
     $stmt = $pdo->query("SELECT id, name, description FROM organisation WHERE is_active = 1 LIMIT 1");
@@ -81,6 +82,7 @@ if ($pdo) {
                 $mapCenterLat = (float) $firstWithCoords->latitude;
                 $mapCenterLng = (float) $firstWithCoords->longitude;
                 $mapZoom = 8;
+                $firstWithCoords->url = public_entity_url($baseUrl, 'mission', (int) $firstWithCoords->id);
                 $mapLocations = [$firstWithCoords];
             }
         } catch (PDOException $e) {
@@ -118,7 +120,7 @@ $missionsQueryString = [];
 if ($searchQ !== '') $missionsQueryString['q'] = $searchQ;
 if ($locationFilter !== '') $missionsQueryString['location'] = $locationFilter;
 if ($sort !== 'date_desc') $missionsQueryString['sort'] = $sort;
-$missionsQueryPrefix = $baseUrl . 'missions.php' . (count($missionsQueryString) ? '?' . http_build_query($missionsQueryString) . '&' : '?');
+$missionsQueryPrefix = $baseUrl . 'missions' . (count($missionsQueryString) ? '?' . http_build_query($missionsQueryString) . '&' : '?');
 
 require_once __DIR__ . '/inc/asset_url.php';
 require __DIR__ . '/inc/head.php';
@@ -138,15 +140,15 @@ require __DIR__ . '/inc/header.php';
     <section class="py-5">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= $baseUrl ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Retour à l'accueil</a>
+                <a href="<?= $baseUrl ?>index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Retour à l'accueil</a>
             </nav>
 
             <h1 class="mb-4">Missions<?= $locationFilter !== '' ? ' — ' . htmlspecialchars($locationFilter) : '' ?></h1>
             <?php if ($locationFilter !== ''): ?>
-                <p class="text-muted mb-3"><a href="<?= $baseUrl ?>missions.php" class="text-decoration-none"><i class="bi bi-arrow-left me-1"></i> Toutes les missions</a></p>
+                <p class="text-muted mb-3"><a href="<?= $baseUrl ?>missions" class="text-decoration-none"><i class="bi bi-arrow-left me-1"></i> Toutes les missions</a></p>
             <?php endif; ?>
 
-            <form method="get" action="<?= $baseUrl ?>missions.php" class="row g-3 mb-4 list-toolbar">
+            <form method="get" action="<?= $baseUrl ?>missions" class="row g-3 mb-4 list-toolbar">
                 <?php if ($locationFilter !== ''): ?>
                 <input type="hidden" name="location" value="<?= htmlspecialchars($locationFilter) ?>">
                 <?php endif; ?>
@@ -170,7 +172,7 @@ require __DIR__ . '/inc/header.php';
                 </div>
                 <?php if ($searchQ !== '' || $sort !== 'date_desc'): ?>
                 <div class="col-auto">
-                    <a href="<?= $baseUrl ?>missions.php<?= $locationFilter !== '' ? '?location=' . urlencode($locationFilter) : '' ?>" class="btn btn-outline-secondary">Réinitialiser filtres</a>
+                    <a href="<?= $baseUrl ?>missions<?= $locationFilter !== '' ? '?location=' . urlencode($locationFilter) : '' ?>" class="btn btn-outline-secondary">Réinitialiser filtres</a>
                 </div>
                 <?php endif; ?>
             </form>
@@ -190,7 +192,7 @@ require __DIR__ . '/inc/header.php';
                                 <div class="card-mission-img" style="background-image: url('<?= htmlspecialchars($cardCover) ?>');"></div>
                                 <?php endif; ?>
                                 <div class="card-body">
-                                    <h2 class="card-title h5"><a href="<?= $baseUrl ?>mission.php?id=<?= (int) $m->id ?>"><?= htmlspecialchars($m->title) ?></a></h2>
+                                    <h2 class="card-title h5"><a href="<?= public_entity_url($baseUrl, 'mission', (int) $m->id) ?>"><?= htmlspecialchars($m->title) ?></a></h2>
                                     <p class="card-meta mb-1"><?= htmlspecialchars($m->location ?: '—') ?></p>
                                     <p class="card-meta mb-0"><?= $m->updated_at ? date('d M Y', strtotime($m->updated_at)) : ($m->start_date ? date('d M Y', strtotime($m->start_date)) : '') ?></p>
                                 </div>
@@ -261,7 +263,7 @@ require __DIR__ . '/inc/header.php';
         locations.forEach(function(m) {
             var lat = parseFloat(m.latitude), lng = parseFloat(m.longitude);
             if (isNaN(lat) || isNaN(lng)) return;
-            var popup = '<a href="' + baseUrl + 'mission.php?id=' + m.id + '">' + escapeHtml(m.title || 'Mission') + '</a>';
+            var popup = '<a href="' + (m.url || (baseUrl + 'mission?h=' + m.id)) + '">' + escapeHtml(m.title || 'Mission') + '</a>';
             if (m.location) popup += '<br><small class="text-muted">' + escapeHtml(m.location) + '</small>';
             L.marker([lat, lng]).addTo(map).bindPopup(popup);
         });

@@ -37,20 +37,20 @@ $hasFooterSocial = $organisation && (
                 <div class="col-6 col-md-4 col-lg-2">
                     <p class="footer-title">Navigation</p>
                     <ul class="footer-links">
-                        <li><a href="<?= $baseUrl ?>index.php">Accueil</a></li>
-                        <li><a href="<?= $baseUrl ?>about.php">Qui nous sommes</a></li>
-                        <li><a href="<?= $baseUrl ?>index.php#missions">Missions</a></li>
-                        <li><a href="<?= $baseUrl ?>offres.php">Nos offres</a></li>
-                        <li><a href="<?= $baseUrl ?>index.php#actualites">Actualités</a></li>
-                        <li><a href="<?= $baseUrl ?>where-we-work.php">Où nous travaillons</a></li>
-                        <li><a href="<?= $baseUrl ?>contact.php">Contact</a></li>
+                        <li><a href="<?= $baseUrl ?>index">Accueil</a></li>
+                        <li><a href="<?= $baseUrl ?>about">Qui nous sommes</a></li>
+                        <li><a href="<?= $baseUrl ?>index#missions">Missions</a></li>
+                        <li><a href="<?= $baseUrl ?>offres">Nos offres</a></li>
+                        <li><a href="<?= $baseUrl ?>index#actualites">Actualités</a></li>
+                        <li><a href="<?= $baseUrl ?>where-we-work">Où nous travaillons</a></li>
+                        <li><a href="<?= $baseUrl ?>contact">Contact</a></li>
                     </ul>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <p class="footer-title">Accès directs</p>
                     <ul class="footer-links">
-                        <li><a href="<?= $baseUrl ?>missions.php">Toutes les missions</a></li>
-                        <li><a href="<?= $baseUrl ?>news.php">Toutes les actualités</a></li>
+                        <li><a href="<?= $baseUrl ?>missions">Toutes les missions</a></li>
+                        <li><a href="<?= $baseUrl ?>news">Toutes les actualités</a></li>
                         <li><a href="<?= $baseUrl ?>client/">Espace Utilisateur</a></li>
                         <li><a href="<?= $baseUrl ?>admin/">Administration</a></li>
                     </ul>

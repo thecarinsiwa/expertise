@@ -10,6 +10,7 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 
 try {
     $stmt = $pdo->query("SELECT name, description, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url FROM organisation WHERE is_active = 1 LIMIT 1");
@@ -112,6 +113,9 @@ try {
             $stmt = $pdo->prepare("SELECT id, title, location, latitude, longitude FROM mission WHERE organisation_id = ? AND latitude IS NOT NULL AND longitude IS NOT NULL AND location IS NOT NULL AND TRIM(location) != '' ORDER BY updated_at DESC LIMIT 50");
             $stmt->execute([$orgId]);
             $mapLocations = $stmt->fetchAll(PDO::FETCH_OBJ);
+            foreach ($mapLocations as $mL) {
+                $mL->url = public_entity_url($baseUrl, 'mission', (int) $mL->id);
+            }
         } catch (PDOException $e) {}
     }
 } catch (PDOException $e) {
@@ -200,7 +204,7 @@ require __DIR__ . '/inc/header.php';
                                 <?php if ($slideDesc !== ''): ?>
                                 <p class="lead mb-4"><?= htmlspecialchars($slideDesc) ?></p>
                                 <?php endif; ?>
-                                <a href="<?= $baseUrl ?>announcement.php?id=<?= (int) $ann->id ?>" class="btn btn-read-more">Lire la suite</a>
+                                <a href="<?= public_entity_url($baseUrl, 'announcement', (int) $ann->id) ?>" class="btn btn-read-more">Lire la suite</a>
                             </div>
                         </div>
                     </div>
@@ -321,7 +325,7 @@ require __DIR__ . '/inc/header.php';
     <section class="container py-5" id="missions">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
             <h2 class="section-heading mb-0">Dernières missions</h2>
-            <a href="<?= $baseUrl ?>missions.php" class="btn-view-all">Voir tout</a>
+            <a href="<?= $baseUrl ?>missions" class="btn-view-all">Voir tout</a>
         </div>
         <?php if (count($recentMissions) > 0): ?>
             <div class="row g-4">
@@ -334,7 +338,7 @@ require __DIR__ . '/inc/header.php';
                             <div class="card-mission-img" style="background-image: url('<?= htmlspecialchars($cardCoverUrl) ?>');"></div>
                             <?php endif; ?>
                             <div class="card-body">
-                                <h3 class="card-title"><a href="<?= $baseUrl ?>mission.php?id=<?= (int) $m->id ?>"><?= htmlspecialchars($m->title) ?></a></h3>
+                                <h3 class="card-title"><a href="<?= public_entity_url($baseUrl, 'mission', (int) $m->id) ?>"><?= htmlspecialchars($m->title) ?></a></h3>
                                 <p class="card-meta mb-1"><?= htmlspecialchars($m->location ?: '—') ?></p>
                                 <p class="card-meta mb-0"><?= $m->updated_at ? date('d M Y', strtotime($m->updated_at)) : ($m->start_date ? date('d M Y', strtotime($m->start_date)) : '') ?></p>
                             </div>
@@ -351,7 +355,7 @@ require __DIR__ . '/inc/header.php';
     <section class="container py-5 border-top" id="actualites">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pt-4">
             <h2 class="section-heading mb-0">Actualités</h2>
-            <a href="<?= $baseUrl ?>news.php" class="btn-view-all">Voir tout</a>
+            <a href="<?= $baseUrl ?>news" class="btn-view-all">Voir tout</a>
         </div>
         <?php if (count($recentAnnouncements) > 0): ?>
             <div class="row g-4">
@@ -364,7 +368,7 @@ require __DIR__ . '/inc/header.php';
                             <div class="card-mission-img" style="background-image: url('<?= htmlspecialchars($announceCardCover) ?>');"></div>
                             <?php endif; ?>
                             <div class="card-body">
-                                <h3 class="card-title"><a href="<?= $baseUrl ?>announcement.php?id=<?= (int) $a->id ?>"><?= htmlspecialchars($a->title) ?></a></h3>
+                                <h3 class="card-title"><a href="<?= public_entity_url($baseUrl, 'announcement', (int) $a->id) ?>"><?= htmlspecialchars($a->title) ?></a></h3>
                                 <p class="card-meta mb-0"><?= $a->published_at ? date('d M Y', strtotime($a->published_at)) : ($a->created_at ? date('d M Y', strtotime($a->created_at)) : '') ?></p>
                             </div>
                         </div>
@@ -396,7 +400,7 @@ require __DIR__ . '/inc/header.php';
                         <p class="text-muted mb-2">Parmi nos lieux d'intervention :</p>
                         <ul class="index-where-list mb-0">
                             <?php foreach ($recentLocations as $loc): ?>
-                                <li><a href="<?= $baseUrl ?>missions.php?location=<?= urlencode($loc) ?>"><?= htmlspecialchars($loc) ?></a></li>
+                                <li><a href="<?= $baseUrl ?>missions?location=<?= urlencode($loc) ?>"><?= htmlspecialchars($loc) ?></a></li>
                             <?php endforeach; ?>
                         </ul>
                     <?php else: ?>
@@ -427,7 +431,7 @@ require __DIR__ . '/inc/header.php';
                                 $staffName = trim(($s->first_name ?? '') . ' ' . ($s->last_name ?? ''));
                             ?>
                                 <div class="col-12 col-sm-6 col-lg-3">
-                                    <a href="<?= $baseUrl ?>teams.php?id=<?= (int) $s->id ?>" class="card card-staff h-100 text-center text-decoration-none">
+                                    <a href="<?= public_entity_url($baseUrl, 'teams', (int) $s->id) ?>" class="card card-staff h-100 text-center text-decoration-none">
                                         <?php if ($staffPhotoUrl): ?>
                                             <div class="card-staff-img mx-auto rounded-circle" style="background-image: url('<?= htmlspecialchars($staffPhotoUrl) ?>');"></div>
                                         <?php else: ?>
@@ -569,7 +573,7 @@ require __DIR__ . '/inc/header.php';
         locations.forEach(function(m) {
             var lat = parseFloat(m.latitude), lng = parseFloat(m.longitude);
             if (isNaN(lat) || isNaN(lng)) return;
-            var popup = '<a href="' + baseUrl + 'mission.php?id=' + m.id + '">' + escapeHtml(m.title || 'Mission') + '</a>';
+            var popup = '<a href="' + (m.url || (baseUrl + 'mission?h=' + m.id)) + '">' + escapeHtml(m.title || 'Mission') + '</a>';
             if (m.location) popup += '<br><small class="text-muted">' + escapeHtml(m.location) + '</small>';
             L.marker([lat, lng]).addTo(map).bindPopup(popup);
             if (!bounds) bounds = L.latLngBounds([lat, lng], [lat, lng]); else bounds.extend([lat, lng]);

@@ -15,6 +15,7 @@ $allowedSort = ['date_desc' => 1, 'date_asc' => 1, 'title_asc' => 1, 'title_desc
 if (!isset($allowedSort[$sort])) $sort = 'date_desc';
 
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 
 try {
     $stmt = $pdo->query("SELECT id, name, description FROM organisation WHERE is_active = 1 LIMIT 1");
@@ -68,7 +69,7 @@ $totalPages = $totalOffers > 0 ? (int) ceil($totalOffers / $perPage) : 1;
 $offersQueryString = [];
 if ($searchQ !== '') $offersQueryString['q'] = $searchQ;
 if ($sort !== 'date_desc') $offersQueryString['sort'] = $sort;
-$offersQueryPrefix = $baseUrl . 'offres.php' . (count($offersQueryString) ? '?' . http_build_query($offersQueryString) . '&' : '?');
+$offersQueryPrefix = $baseUrl . 'offres' . (count($offersQueryString) ? '?' . http_build_query($offersQueryString) . '&' : '?');
 
 require_once __DIR__ . '/inc/asset_url.php';
 require __DIR__ . '/inc/head.php';
@@ -78,12 +79,12 @@ require __DIR__ . '/inc/header.php';
     <section class="py-5">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= $baseUrl ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Retour à l'accueil</a>
+                <a href="<?= $baseUrl ?>index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Retour à l'accueil</a>
             </nav>
 
             <h1 class="mb-4">Nos offres</h1>
 
-            <form method="get" action="<?= $baseUrl ?>offres.php" class="row g-3 mb-4 list-toolbar">
+            <form method="get" action="<?= $baseUrl ?>offres" class="row g-3 mb-4 list-toolbar">
                 <div class="col-md-5 col-lg-4">
                     <label for="offres-q" class="form-label visually-hidden">Rechercher</label>
                     <input type="search" name="q" id="offres-q" class="form-control" value="<?= htmlspecialchars($searchQ) ?>" placeholder="Rechercher (titre, référence)…">
@@ -104,7 +105,7 @@ require __DIR__ . '/inc/header.php';
                 </div>
                 <?php if ($searchQ !== '' || $sort !== 'date_desc'): ?>
                 <div class="col-auto">
-                    <a href="<?= $baseUrl ?>offres.php" class="btn btn-outline-secondary">Réinitialiser filtres</a>
+                    <a href="<?= $baseUrl ?>offres" class="btn btn-outline-secondary">Réinitialiser filtres</a>
                 </div>
                 <?php endif; ?>
             </form>
@@ -128,7 +129,7 @@ require __DIR__ . '/inc/header.php';
                                 <div class="card-mission-img" style="background-image: url('<?= htmlspecialchars($cardCover) ?>');"></div>
                                 <?php endif; ?>
                                 <div class="card-body">
-                                    <h2 class="card-title h5"><a href="<?= $baseUrl ?>offre.php?id=<?= (int) $o->id ?>"><?= htmlspecialchars($o->title) ?></a></h2>
+                                    <h2 class="card-title h5"><a href="<?= public_entity_url($baseUrl, 'offre', (int) $o->id) ?>"><?= htmlspecialchars($o->title) ?></a></h2>
                                     <p class="card-meta mb-1"><?= htmlspecialchars($linkLabel) ?></p>
                                     <p class="card-meta mb-0">
                                         <?php if ($o->deadline_at): ?>Date limite : <?= date('d/m/Y', strtotime($o->deadline_at)) ?><?php else: ?><?= $o->updated_at ? date('d M Y', strtotime($o->updated_at)) : '' ?><?php endif; ?>

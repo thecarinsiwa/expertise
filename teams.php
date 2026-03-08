@@ -1,7 +1,7 @@
 <?php
 /**
  * Équipe – Liste et fiche détail d'un membre du personnel (public)
- * teams.php = liste ; teams.php?id=123 = détail du membre (staff id)
+ * teams.php = liste ; teams?h=xxx = détail du membre (staff id)
  */
 session_start();
 $pageTitle = 'Notre équipe';
@@ -12,9 +12,18 @@ $person = null;
 $teamList = [];
 
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 require_once __DIR__ . '/inc/asset_url.php';
 
-$staffId = isset($_GET['id']) ? (int) $_GET['id'] : 0;
+$staffId = 0;
+if (isset($_GET['h'])) {
+    $decoded = decode_id($_GET['h']);
+    if ($decoded === null || $decoded <= 0) {
+        header('Location: ' . $baseUrl . 'teams');
+        exit;
+    }
+    $staffId = $decoded;
+}
 
 if ($pdo) {
     $stmt = $pdo->query("SELECT id, name, description FROM organisation WHERE is_active = 1 LIMIT 1");
@@ -75,9 +84,9 @@ $employmentLabels = [
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
-                    <a href="<?= $baseUrl ?>teams.php">Notre équipe</a>
+                    <a href="<?= $baseUrl ?>teams">Notre équipe</a>
                     <span class="mx-1">/</span>
                     <span><?= htmlspecialchars($personName) ?></span>
                 </nav>
@@ -96,9 +105,9 @@ $employmentLabels = [
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
-                    <a href="<?= $baseUrl ?>teams.php">Notre équipe</a>
+                    <a href="<?= $baseUrl ?>teams">Notre équipe</a>
                     <span class="mx-1">/</span>
                     <span><?= htmlspecialchars($personName) ?></span>
                 </nav>
@@ -201,7 +210,7 @@ $employmentLabels = [
                         </div>
                         <?php endif; ?>
                         <div class="mission-detail-block">
-                            <a href="<?= $baseUrl ?>teams.php" class="btn btn-read-more w-100"><i class="bi bi-people me-2"></i>Toute l'équipe</a>
+                            <a href="<?= $baseUrl ?>teams" class="btn btn-read-more w-100"><i class="bi bi-people me-2"></i>Toute l'équipe</a>
                         </div>
                     </aside>
                 </div>
@@ -212,7 +221,7 @@ $employmentLabels = [
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
                     <span>Notre équipe</span>
                 </nav>
@@ -230,7 +239,7 @@ $employmentLabels = [
                         $staffName = trim(($s->first_name ?? '') . ' ' . ($s->last_name ?? ''));
                     ?>
                     <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                        <a href="<?= $baseUrl ?>teams.php?id=<?= (int) $s->id ?>" class="card card-mission card-staff-link h-100 text-decoration-none">
+                        <a href="<?= public_entity_url($baseUrl, 'teams', (int) $s->id) ?>" class="card card-mission card-staff-link h-100 text-decoration-none">
                             <?php if ($staffPhotoUrl): ?>
                             <div class="card-mission-img card-staff-list-img" style="background-image: url('<?= htmlspecialchars($staffPhotoUrl) ?>');"></div>
                             <?php else: ?>
@@ -251,7 +260,7 @@ $employmentLabels = [
                 </div>
                 <?php else: ?>
                 <p class="text-muted">Aucun membre de l'équipe à afficher pour le moment.</p>
-                <a href="<?= $baseUrl ?>about.php" class="btn btn-read-more">Qui nous sommes</a>
+                <a href="<?= $baseUrl ?>about" class="btn btn-read-more">Qui nous sommes</a>
                 <?php endif; ?>
             </div>
         </div>

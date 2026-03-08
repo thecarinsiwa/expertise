@@ -7,10 +7,11 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-if ($id <= 0) {
-    header('Location: index.php');
+$id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
+if ($id === null || $id <= 0) {
+    header('Location: ' . $baseUrl . 'index');
     exit;
 }
 
@@ -47,7 +48,7 @@ try {
     $announcement = $stmt->fetch();
 
     if (!$announcement) {
-        header('Location: index.php');
+        header('Location: ' . $baseUrl . 'index');
         exit;
     }
 
@@ -65,13 +66,13 @@ try {
                     if ($check->fetch()) {
                         $pdo->prepare("INSERT INTO comment (user_id, commentable_type, commentable_id, body, parent_comment_id) VALUES (?, 'announcement', ?, ?, ?)")
                             ->execute([$currentUserId, $id, $body, $parent_comment_id]);
-                        header('Location: ' . $baseUrl . 'announcement.php?id=' . $id . '&comment=1');
+                        header('Location: ' . public_entity_url($baseUrl, 'announcement', $id) . '&comment=1');
                         exit;
                     }
                 } else {
                     $pdo->prepare("INSERT INTO comment (user_id, commentable_type, commentable_id, body) VALUES (?, 'announcement', ?, ?)")
                         ->execute([$currentUserId, $id, $body]);
-                    header('Location: ' . $baseUrl . 'announcement.php?id=' . $id . '&comment=1');
+                    header('Location: ' . public_entity_url($baseUrl, 'announcement', $id) . '&comment=1');
                     exit;
                 }
             }
@@ -89,7 +90,7 @@ try {
                     $pdo->prepare("INSERT INTO announcement_reaction (announcement_id, user_id, reaction_type) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE reaction_type = VALUES(reaction_type)")
                         ->execute([$id, $currentUserId, $reactionType]);
                 }
-                header('Location: ' . $baseUrl . 'announcement.php?id=' . $id . '&reaction=1');
+                header('Location: ' . public_entity_url($baseUrl, 'announcement', $id) . '&reaction=1');
                 exit;
             }
         }
@@ -152,7 +153,7 @@ try {
     $recentAnnouncements = $stmt->fetchAll();
 } catch (PDOException $e) {
     $pdo = null;
-    header('Location: index.php');
+    header('Location: ' . $baseUrl . 'index');
     exit;
 }
 
@@ -172,7 +173,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                 </nav>
                 <span class="mission-detail-badge">Annonce</span>
                 <h1 class="mission-detail-title"><?= htmlspecialchars($announcement->title) ?></h1>
@@ -192,7 +193,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark">Annonce</span>
                 <h1 class="mission-detail-title mission-detail-title--dark"><?= htmlspecialchars($announcement->title) ?></h1>
@@ -222,7 +223,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
                         <div class="announcement-actions mt-4 pt-4 border-top">
                             <span class="announcement-actions-label me-2">Réagir :</span>
                             <?php if ($currentUserId > 0): ?>
-                                <form method="post" class="d-inline-block announcement-reactions-form" action="<?= $baseUrl ?>announcement.php?id=<?= $id ?>">
+                                <form method="post" class="d-inline-block announcement-reactions-form" action="<?= public_entity_url($baseUrl, 'announcement', $id) ?>">
                                     <input type="hidden" name="announcement_id" value="<?= $id ?>">
                                     <input type="hidden" name="set_reaction" value="1">
                                     <?php
@@ -243,7 +244,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
                                 </form>
                             <?php else: ?>
                                 <p class="text-muted small mb-0">Connectez-vous pour réagir à cette actualité.</p>
-                                <a href="<?= $baseUrl ?>client/login.php?redirect=<?= urlencode($baseUrl . 'announcement.php?id=' . $id) ?>" class="btn btn-sm btn-outline-primary mt-1">Se connecter</a>
+                                <a href="<?= $baseUrl ?>client/login.php?redirect=<?= urlencode(public_entity_url($baseUrl, 'announcement', $id)) ?>" class="btn btn-sm btn-outline-primary mt-1">Se connecter</a>
                             <?php endif; ?>
                         </div>
 
@@ -254,7 +255,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
                                 <div class="alert alert-success py-2 small">Votre commentaire a été publié.</div>
                             <?php endif; ?>
                             <?php if ($currentUserId > 0): ?>
-                                <form method="post" action="<?= $baseUrl ?>announcement.php?id=<?= $id ?>" class="mb-4">
+                                <form method="post" action="<?= public_entity_url($baseUrl, 'announcement', $id) ?>" class="mb-4">
                                     <input type="hidden" name="announcement_id" value="<?= $id ?>">
                                     <input type="hidden" name="add_comment" value="1">
                                     <label for="comment_body" class="form-label small">Ajouter un commentaire</label>
@@ -263,7 +264,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
                                 </form>
                             <?php else: ?>
                                 <p class="text-muted small">Connectez-vous pour laisser un commentaire.</p>
-                                <a href="<?= $baseUrl ?>client/login.php?redirect=<?= urlencode($baseUrl . 'announcement.php?id=' . $id) ?>" class="btn btn-sm btn-outline-primary">Se connecter</a>
+                                <a href="<?= $baseUrl ?>client/login.php?redirect=<?= urlencode(public_entity_url($baseUrl, 'announcement', $id)) ?>" class="btn btn-sm btn-outline-primary">Se connecter</a>
                             <?php endif; ?>
                             <?php if (count($comments) > 0): ?>
                                 <ul class="list-unstyled announcement-comment-list">
@@ -294,7 +295,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
                                                     <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none announcement-reply-toggle" data-target="reply-form-<?= (int) $c->id ?>" aria-expanded="false">
                                                         <i class="bi bi-reply me-1"></i> Répondre
                                                     </button>
-                                                    <form method="post" action="<?= $baseUrl ?>announcement.php?id=<?= $id ?>" class="announcement-reply-form mt-2" id="reply-form-<?= (int) $c->id ?>" style="display:none;">
+                                                    <form method="post" action="<?= public_entity_url($baseUrl, 'announcement', $id) ?>" class="announcement-reply-form mt-2" id="reply-form-<?= (int) $c->id ?>" style="display:none;">
                                                         <input type="hidden" name="announcement_id" value="<?= $id ?>">
                                                         <input type="hidden" name="add_comment" value="1">
                                                         <input type="hidden" name="parent_comment_id" value="<?= (int) $c->id ?>">
@@ -319,14 +320,14 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
                                 <ul class="list-unstyled mb-0">
                                     <?php foreach ($recentAnnouncements as $a): ?>
                                         <li class="mb-2 pb-2 border-bottom border-light">
-                                            <a href="<?= $baseUrl ?>announcement.php?id=<?= (int) $a->id ?>" class="text-decoration-none text-dark">
+                                            <a href="<?= public_entity_url($baseUrl, 'announcement', (int) $a->id) ?>" class="text-decoration-none text-dark">
                                                 <strong class="d-block"><?= htmlspecialchars($a->title) ?></strong>
                                                 <span class="small text-muted"><?= $a->published_at ? date('d/m/Y', strtotime($a->published_at)) : date('d/m/Y', strtotime($a->created_at)) ?></span>
                                             </a>
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
-                                <a href="<?= $baseUrl ?>news.php" class="btn btn-view-all btn-sm mt-2">Toutes les actualités</a>
+                                <a href="<?= $baseUrl ?>news" class="btn btn-view-all btn-sm mt-2">Toutes les actualités</a>
                             </div>
                         <?php endif; ?>
                     </aside>

@@ -36,7 +36,7 @@ require_once __DIR__ . '/inc/page-static.php';
     <section class="py-5 page-content">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= htmlspecialchars($baseUrl) ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
+                <a href="<?= htmlspecialchars($baseUrl) ?>index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
             </nav>
             <h1 class="section-heading mb-4">Notre gouvernance</h1>
             <div class="content-prose">
