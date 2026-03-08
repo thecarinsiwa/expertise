@@ -1,6 +1,15 @@
 <?php
 if (!isset($organisation)) $organisation = null;
 if (!isset($baseUrl)) $baseUrl = '';
+if (strpos($baseUrl, ':') !== false || preg_match('#^[a-zA-Z]:#', $baseUrl)) {
+    $sn = $_SERVER['SCRIPT_NAME'] ?? '';
+    if ($sn !== '' && strpos($sn, ':') === false && $sn !== '/' && $sn !== '\\') {
+        $baseUrl = rtrim(dirname($sn), '/\\') . '/';
+    } else {
+        $baseUrl = (getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '/expertise/'));
+        if ($baseUrl !== '' && $baseUrl !== '/' && substr($baseUrl, -1) !== '/') $baseUrl .= '/';
+    }
+}
 $footerOrgName = $organisation ? htmlspecialchars($organisation->name) : 'Expertise';
 $hasFooterSocial = $organisation && (
     !empty($organisation->facebook_url) || !empty($organisation->linkedin_url) || !empty($organisation->twitter_url)
@@ -37,20 +46,20 @@ $hasFooterSocial = $organisation && (
                 <div class="col-6 col-md-4 col-lg-2">
                     <p class="footer-title">Navigation</p>
                     <ul class="footer-links">
-                        <li><a href="<?= $baseUrl ?>index.php">Accueil</a></li>
-                        <li><a href="<?= $baseUrl ?>about.php">Qui nous sommes</a></li>
-                        <li><a href="<?= $baseUrl ?>index.php#missions">Missions</a></li>
-                        <li><a href="<?= $baseUrl ?>offres.php">Nos offres</a></li>
-                        <li><a href="<?= $baseUrl ?>index.php#actualites">Actualités</a></li>
-                        <li><a href="<?= $baseUrl ?>where-we-work.php">Où nous travaillons</a></li>
-                        <li><a href="<?= $baseUrl ?>contact.php">Contact</a></li>
+                        <li><a href="<?= $baseUrl ?>index">Accueil</a></li>
+                        <li><a href="<?= $baseUrl ?>about">Qui nous sommes</a></li>
+                        <li><a href="<?= $baseUrl ?>index#missions">Missions</a></li>
+                        <li><a href="<?= $baseUrl ?>offres">Nos offres</a></li>
+                        <li><a href="<?= $baseUrl ?>index#actualites">Actualités</a></li>
+                        <li><a href="<?= $baseUrl ?>where-we-work">Où nous travaillons</a></li>
+                        <li><a href="<?= $baseUrl ?>contact">Contact</a></li>
                     </ul>
                 </div>
                 <div class="col-6 col-md-4 col-lg-2">
                     <p class="footer-title">Accès directs</p>
                     <ul class="footer-links">
-                        <li><a href="<?= $baseUrl ?>missions.php">Toutes les missions</a></li>
-                        <li><a href="<?= $baseUrl ?>news.php">Toutes les actualités</a></li>
+                        <li><a href="<?= $baseUrl ?>missions">Toutes les missions</a></li>
+                        <li><a href="<?= $baseUrl ?>news">Toutes les actualités</a></li>
                         <li><a href="<?= $baseUrl ?>client/">Espace Utilisateur</a></li>
                         <li><a href="<?= $baseUrl ?>admin/">Administration</a></li>
                     </ul>
@@ -58,15 +67,15 @@ $hasFooterSocial = $organisation && (
                 <div class="col-12 col-md-4 col-lg-4 site-footer-cta">
                     <p class="footer-title">Agir avec nous</p>
                     <p class="footer-cta-text">Une question, un projet ou envie de nous rejoindre ?</p>
-                    <a href="<?= $baseUrl ?>contact.php" class="btn btn-footer-cta">Nous contacter</a>
+                    <a href="<?= $baseUrl ?>contact" class="btn btn-footer-cta">Nous contacter</a>
                 </div>
             </div>
             <div class="footer-bottom">
                 <div class="footer-bottom-inner">
                     <span class="footer-copy">&copy; <?= date('Y') ?> <?= $footerOrgName ?></span>
                     <nav class="footer-legal" aria-label="Mentions légales et informations">
-                        <a href="<?= $baseUrl ?>legal-notice.php">Mentions légales</a>
-                        <a href="<?= $baseUrl ?>contact.php">Contact</a>
+                        <a href="<?= $baseUrl ?>legal-notice">Mentions légales</a>
+                        <a href="<?= $baseUrl ?>contact">Contact</a>
                         <a href="#top" class="footer-back-top" aria-label="Retour en haut de la page"><i class="bi bi-arrow-up"></i></a>
                     </nav>
                 </div>

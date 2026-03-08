@@ -4,6 +4,7 @@
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 
 $pageTitle = 'Mes candidatures – Mon espace';
 $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
@@ -77,7 +78,7 @@ require __DIR__ . '/../inc/header.php';
                             <div class="row align-items-center">
                                 <div class="col-lg-8">
                                     <h3 class="client-application-title">
-                                        <a href="<?= htmlspecialchars($baseUrl) ?>offre.php?id=<?= (int) $app->offer_id ?>"><?= htmlspecialchars($app->offer_title) ?></a>
+                                        <a href="<?= htmlspecialchars(public_entity_url($baseUrl, 'offre', (int) $app->offer_id)) ?>"><?= htmlspecialchars($app->offer_title) ?></a>
                                     </h3>
                                     <?php if (!empty($app->offer_reference)): ?>
                                         <p class="client-application-ref mb-1">Réf. <?= htmlspecialchars($app->offer_reference) ?></p>
@@ -103,7 +104,7 @@ require __DIR__ . '/../inc/header.php';
                     <span class="client-empty-icon"><i class="bi bi-file-earmark-plus"></i></span>
                     <h3 class="client-empty-title">Aucune candidature</h3>
                     <p class="client-empty-text">Vous n'avez pas encore postulé à une offre. Parcourez nos offres et déposez votre candidature.</p>
-                    <a href="<?= htmlspecialchars($baseUrl) ?>offres.php" class="btn btn-read-more"><i class="bi bi-briefcase me-2"></i>Voir nos offres</a>
+                    <a href="<?= htmlspecialchars($baseUrl) ?>offres" class="btn btn-read-more"><i class="bi bi-briefcase me-2"></i>Voir nos offres</a>
                 </div>
             <?php endif; ?>
         </div>

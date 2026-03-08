@@ -7,10 +7,11 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-if ($id <= 0) {
-    header('Location: index.php');
+$id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
+if ($id === null || $id <= 0) {
+    header('Location: ' . $baseUrl . 'offres');
     exit;
 }
 
@@ -33,14 +34,14 @@ try {
     $offer = $stmt->fetch();
 
     if (!$offer) {
-        header('Location: index.php');
+        header('Location: ' . $baseUrl . 'offres');
         exit;
     }
 
     $pageTitle = $offer->title . ' — ' . ($organisation ? $organisation->name : 'Expertise');
 } catch (PDOException $e) {
     $pdo = null;
-    header('Location: index.php');
+    header('Location: ' . $baseUrl . 'offres');
     exit;
 }
 
@@ -61,7 +62,7 @@ if ($clientLoggedIn && $pdo && $offer) {
     }
 }
 $applyUrl = $baseUrl . 'client/apply.php?offer_id=' . (int) $offer->id;
-$loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode($baseUrl . 'offre.php?id=' . (int) $offer->id);
+$loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode(public_entity_url($baseUrl, 'offre', (int) $offer->id));
 ?>
 
     <main class="mission-detail">
@@ -71,9 +72,9 @@ $loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode($baseUrl . 'offr
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                     <span class="mx-2">/</span>
-                    <a href="<?= $baseUrl ?>offres.php">Nos offres</a>
+                    <a href="<?= $baseUrl ?>offres">Nos offres</a>
                 </nav>
                 <span class="mission-detail-badge"><?= htmlspecialchars($offer->mission_id ? ($offer->mission_title ?? 'Mission') : ($offer->project_id ? ($offer->project_name ?? 'Projet') : 'Offre')) ?></span>
                 <h1 class="mission-detail-title"><?= htmlspecialchars($offer->title) ?></h1>
@@ -90,9 +91,9 @@ $loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode($baseUrl . 'offr
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                     <span class="mx-2">/</span>
-                    <a href="<?= $baseUrl ?>offres.php">Nos offres</a>
+                    <a href="<?= $baseUrl ?>offres">Nos offres</a>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark"><?= htmlspecialchars($offer->mission_id ? ($offer->mission_title ?? 'Mission') : ($offer->project_id ? ($offer->project_name ?? 'Projet') : 'Offre')) ?></span>
                 <h1 class="mission-detail-title mission-detail-title--dark"><?= htmlspecialchars($offer->title) ?></h1>
@@ -140,7 +141,7 @@ $loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode($baseUrl . 'offr
                         <?php if ($offer->mission_id): ?>
                             <div class="mission-detail-block">
                                 <h2 class="mission-detail-block-title"><i class="bi bi-geo-alt"></i> Mission liée</h2>
-                                <p class="mb-0"><a href="<?= $baseUrl ?>mission.php?id=<?= (int) $offer->mission_id ?>"><?= htmlspecialchars($offer->mission_title ?? 'Voir la mission') ?></a></p>
+                                <p class="mb-0"><a href="<?= public_entity_url($baseUrl, 'mission', (int) $offer->mission_id) ?>"><?= htmlspecialchars($offer->mission_title ?? 'Voir la mission') ?></a></p>
                             </div>
                         <?php endif; ?>
                         <?php if ($offer->project_id): ?>

@@ -8,10 +8,22 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (empty($_SESSION['admin_logged_in'])) {
-    // Mémoriser l'URL demandée pour rediriger après connexion
+    // Charger la config pour obtenir le chemin web de base (éviter C:/ dans l'URL)
+    if (!function_exists('admin_base_url')) {
+        function admin_base_url() {
+            if (!getenv('SITE_BASE_URL') && empty($_ENV['SITE_BASE_URL'])) {
+                $envFile = dirname(__DIR__, 2) . '/config/load_env.php';
+                if (is_file($envFile)) require_once $envFile;
+            }
+            $base = getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '/expertise/');
+            return rtrim($base, '/') . '/';
+        }
+    }
+    $adminBase = admin_base_url() . 'admin/';
     $redirect = $_SERVER['REQUEST_URI'] ?? '';
-    header('Location: ' . rtrim(dirname($_SERVER['SCRIPT_NAME']), '/') . '/login.php'
-        . ($redirect ? '?redirect=' . urlencode($redirect) : ''));
+    if (strpos($redirect, ':') !== false) $redirect = $adminBase;
+    $loginUrl = $adminBase . 'login.php' . ($redirect ? '?redirect=' . urlencode($redirect) : '');
+    header('Location: ' . $loginUrl);
     exit;
 }
 
@@ -67,7 +79,6 @@ function require_permission($code) {
     if (has_permission($code)) {
         return;
     }
-    $base = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/');
-    header('Location: ' . $base . '/403.php');
+    header('Location: 403.php');
     exit;
 }

@@ -4,6 +4,7 @@ $currentNav = 'announcements';
 require_once __DIR__ . '/inc/auth.php';
 require_permission('admin.announcements.view');
 require __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/../inc/url_hash.php';
 
 $list = [];
 $detail = null;
@@ -628,7 +629,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                         </div>
                     <?php endif; ?>
                 <?php else: ?>
-                    <p class="text-muted mb-0">Aucune réaction pour le moment. Les réactions sont enregistrées lorsque les utilisateurs (clients ou admins) réagissent sur le <a href="../announcement.php?id=<?= (int) $detail->id ?>" target="_blank" rel="noopener">site client</a>.</p>
+                    <p class="text-muted mb-0">Aucune réaction pour le moment. Les réactions sont enregistrées lorsque les utilisateurs (clients ou admins) réagissent sur le <a href="<?= htmlspecialchars(public_entity_url('../', 'announcement', (int) $detail->id)) ?>" target="_blank" rel="noopener">site client</a>.</p>
                 <?php endif; ?>
             </div>
         </div>

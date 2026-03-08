@@ -7,10 +7,11 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 
-$id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
-if ($id <= 0) {
-    header('Location: ' . $baseUrl . 'projects.php');
+$id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
+if ($id === null || $id <= 0) {
+    header('Location: ' . $baseUrl . 'projects');
     exit;
 }
 
@@ -47,7 +48,7 @@ try {
     $project = $stmt->fetch();
 
     if (!$project) {
-        header('Location: ' . $baseUrl . 'projects.php');
+        header('Location: ' . $baseUrl . 'projects');
         exit;
     }
 
@@ -79,7 +80,7 @@ try {
     $otherProjects = $stmt->fetchAll();
 } catch (PDOException $e) {
     $pdo = null;
-    header('Location: ' . $baseUrl . 'projects.php');
+    header('Location: ' . $baseUrl . 'projects');
     exit;
 }
 
@@ -99,9 +100,9 @@ $priorityLabel = isset($priorityLabels[$project->priority]) ? $priorityLabels[$p
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
-                    <a href="<?= $baseUrl ?>projects.php">Projets</a>
+                    <a href="<?= $baseUrl ?>projects">Projets</a>
                 </nav>
                 <span class="mission-detail-badge">Projet</span>
                 <?php if (!empty($project->programme_name)): ?>
@@ -122,9 +123,9 @@ $priorityLabel = isset($priorityLabels[$project->priority]) ? $priorityLabels[$p
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
-                    <a href="<?= $baseUrl ?>projects.php">Projets</a>
+                    <a href="<?= $baseUrl ?>projects">Projets</a>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark">Projet</span>
                 <?php if (!empty($project->programme_name)): ?>
@@ -215,14 +216,14 @@ $priorityLabel = isset($priorityLabels[$project->priority]) ? $priorityLabels[$p
                             <ul class="list-unstyled mb-0">
                                 <?php foreach ($otherProjects as $op): ?>
                                 <li class="mb-2 pb-2 border-bottom border-light">
-                                    <a href="<?= $baseUrl ?>project.php?id=<?= (int) $op->id ?>" class="text-decoration-none text-dark">
+                                    <a href="<?= public_entity_url($baseUrl, 'project', (int) $op->id) ?>" class="text-decoration-none text-dark">
                                         <strong class="d-block"><?= htmlspecialchars($op->name) ?></strong>
                                         <span class="small text-muted"><?= $op->start_date ? date('d/m/Y', strtotime($op->start_date)) : '' ?><?= $op->end_date ? ' — ' . date('d/m/Y', strtotime($op->end_date)) : '' ?></span>
                                     </a>
                                 </li>
                                 <?php endforeach; ?>
                             </ul>
-                            <a href="<?= $baseUrl ?>projects.php" class="btn btn-view-all btn-sm mt-2">Tous les projets</a>
+                            <a href="<?= $baseUrl ?>projects" class="btn btn-view-all btn-sm mt-2">Tous les projets</a>
                         </div>
                         <?php endif; ?>
                     </aside>

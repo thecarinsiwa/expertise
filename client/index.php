@@ -4,6 +4,7 @@
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
+require_once __DIR__ . '/inc/url_hash.php';
 
 $pageTitle = 'Mon espace – Expertise';
 $clientName = !empty($_SESSION['client_name']) && trim($_SESSION['client_name']) !== ''
@@ -76,7 +77,7 @@ require __DIR__ . '/../inc/header.php';
             <h2 class="client-section-title">Accès rapides</h2>
             <div class="row g-4 mb-5">
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>offres.php" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>offres" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-briefcase"></i></span>
                         <h3 class="client-action-title">Nos offres</h3>
                         <p class="client-action-desc">Consulter les offres et postuler</p>
@@ -100,7 +101,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>index.php" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>index" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-house"></i></span>
                         <h3 class="client-action-title">Site principal</h3>
                         <p class="client-action-desc">Retour à l'accueil du site</p>
@@ -108,7 +109,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>missions.php" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>missions" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-geo-alt"></i></span>
                         <h3 class="client-action-title">Nos missions</h3>
                         <p class="client-action-desc">Découvrir nos missions</p>
@@ -116,7 +117,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>news.php" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>news" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-newspaper"></i></span>
                         <h3 class="client-action-title">Actualités</h3>
                         <p class="client-action-desc">Lire les dernières actualités</p>
@@ -124,7 +125,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>contact.php" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>contact" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-envelope"></i></span>
                         <h3 class="client-action-title">Nous contacter</h3>
                         <p class="client-action-desc">Une question ? Écrivez-nous</p>
@@ -146,7 +147,7 @@ require __DIR__ . '/../inc/header.php';
                 <div class="client-recent-item">
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <div>
-                            <a href="<?= htmlspecialchars($baseUrl) ?>offre.php?id=<?= (int) $app->offer_id ?>" class="client-recent-title"><?= htmlspecialchars($app->offer_title) ?></a>
+                            <a href="<?= htmlspecialchars(public_entity_url($baseUrl, 'offre', (int) $app->offer_id)) ?>" class="client-recent-title"><?= htmlspecialchars($app->offer_title) ?></a>
                             <?php if (!empty($app->offer_reference)): ?><span class="client-recent-ref">Réf. <?= htmlspecialchars($app->offer_reference) ?></span><?php endif; ?>
                             <p class="client-recent-date mb-0"><?= date('d/m/Y à H:i', strtotime($app->created_at)) ?></p>
                         </div>
