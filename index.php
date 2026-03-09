@@ -13,7 +13,7 @@ require_once __DIR__ . '/inc/db.php';
 require_once __DIR__ . '/inc/url_hash.php';
 
 try {
-    $stmt = $pdo->query("SELECT name, description, logo, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url FROM organisation WHERE is_active = 1 LIMIT 1");
+    $stmt = $pdo->query("SELECT name, description, logo, favicon, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url FROM organisation WHERE is_active = 1 LIMIT 1");
     if ($row = $stmt->fetch()) {
         $organisation = $row;
         $pageTitle = $row->name;
