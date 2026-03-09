@@ -31,7 +31,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_id'];
             try {
                 $pdo->prepare("DELETE FROM channel WHERE id = ?")->execute([$delId]);
-                header('Location: channels.php?msg=deleted');
+                header('Location: channels?msg=deleted');
                 exit;
             } catch (PDOException $e) {
                 $error = 'Impossible de supprimer le canal (conversations ou annonces peuvent y être liées).';
@@ -80,7 +80,7 @@ if ($pdo) {
                     } else {
                         $pdo->prepare("INSERT INTO channel (organisation_id, name, code, channel_type, description, created_by_user_id) VALUES (?, ?, ?, ?, ?, ?)")
                             ->execute([$organisation_id, $name, $code, $channel_type, $description, $created_by_user_id]);
-                        header('Location: channels.php?id=' . $pdo->lastInsertId() . '&msg=created');
+                        header('Location: channels?id=' . $pdo->lastInsertId() . '&msg=created');
                         exit;
                     }
                 } catch (PDOException $e) {
@@ -138,9 +138,9 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="announcements.php" class="text-decoration-none">Communication</a></li>
-        <li class="breadcrumb-item"><a href="channels.php" class="text-decoration-none">Canaux</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="announcements" class="text-decoration-none">Communication</a></li>
+        <li class="breadcrumb-item"><a href="channels" class="text-decoration-none">Canaux</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau canal</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -172,15 +172,15 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
-                <a href="channels.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <a href="announcements.php" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
-                <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="channels?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                <a href="announcements" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+                <a href="channels" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="announcements.php" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
-                <a href="channels.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
+                <a href="announcements" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+                <a href="channels<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="announcements.php" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
-                <a href="channels.php?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouveau canal</a>
+                <a href="announcements" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+                <a href="channels?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouveau canal</a>
             <?php endif; ?>
         </div>
     </div>
@@ -205,7 +205,7 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
         <div class="col-12">
             <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
                 <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i> Configuration :</span>
-                <a href="channel_types.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les types de canal</a>
+                <a href="channel_types" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les types de canal</a>
             </div>
         </div>
     </div>
@@ -236,7 +236,7 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
 <?php if ($isForm): ?>
     <div class="admin-card admin-section-card">
         <h5 class="card-title mb-4"><i class="bi bi-chat-dots"></i> <?= $id ? 'Modifier le canal' : 'Nouveau canal' ?></h5>
-        <form method="POST" action="<?= $id ? 'channels.php?action=edit&id=' . $id : 'channels.php?action=add' ?>">
+        <form method="POST" action="<?= $id ? 'channels?action=edit&id=' . $id : 'channels?action=add' ?>">
             <input type="hidden" name="save_channel" value="1">
             <div class="row g-3">
                 <div class="col-md-6">
@@ -298,9 +298,9 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
             <tr><th>Description</th><td><?= !empty($detail->description) ? '<div class="channel-description">' . $detail->description . '</div>' : '—' ?></td></tr>
         </table>
         <div class="mt-4 d-flex gap-2">
-            <a href="channels.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-            <a href="announcements.php" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
-            <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="channels?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+            <a href="announcements" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+            <a href="channels" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteChannelModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
         </div>
     </div>
@@ -402,7 +402,7 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
                 <tbody>
                     <?php foreach ($list as $c): ?>
                         <tr>
-                            <td><a href="channels.php?id=<?= (int) $c->id ?>"><?= htmlspecialchars($c->name) ?></a></td>
+                            <td><a href="channels?id=<?= (int) $c->id ?>"><?= htmlspecialchars($c->name) ?></a></td>
                             <td><?= htmlspecialchars($c->organisation_name ?? '—') ?></td>
                             <td><span class="badge bg-secondary"><?= $channelTypes[$c->channel_type] ?? $c->channel_type ?></span></td>
                             <td><span class="badge bg-light text-dark"><?= (int) ($c->members_count ?? 0) ?></span></td>
@@ -411,8 +411,8 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                        <li><a class="dropdown-item" href="channels.php?id=<?= (int) $c->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
-                                        <li><a class="dropdown-item" href="channels.php?action=edit&id=<?= (int) $c->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                        <li><a class="dropdown-item" href="channels?id=<?= (int) $c->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
+                                        <li><a class="dropdown-item" href="channels?action=edit&id=<?= (int) $c->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form method="POST" onsubmit="return confirm('Supprimer ce canal ?');">
@@ -439,7 +439,7 @@ $channelTypes = ['public' => 'Public', 'private' => 'Privé', 'direct' => 'Direc
     </script>
 <?php else: ?>
     <div class="admin-card admin-section-card">
-        <p class="admin-empty py-4 mb-0"><i class="bi bi-chat-dots"></i> Aucun canal. <a href="channels.php?action=add">Créer un canal</a> pour organiser les conversations et annonces.</p>
+        <p class="admin-empty py-4 mb-0"><i class="bi bi-chat-dots"></i> Aucun canal. <a href="channels?action=add">Créer un canal</a> pour organiser les conversations et annonces.</p>
     </div>
 <?php endif; ?>
 
@@ -475,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="announcements.php" class="text-muted text-decoration-none small"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+        <a href="announcements" class="text-muted text-decoration-none small"><i class="bi bi-megaphone me-1"></i> Annonces</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

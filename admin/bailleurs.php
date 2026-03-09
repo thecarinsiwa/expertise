@@ -20,7 +20,7 @@ if ($pdo) {
             if (isset($_POST['delete_id'])) {
                 $delId = (int) $_POST['delete_id'];
                 $pdo->prepare("DELETE FROM bailleur WHERE id = ?")->execute([$delId]);
-                header('Location: bailleurs.php?msg=deleted');
+                header('Location: bailleurs?msg=deleted');
                 exit;
             }
             if (isset($_POST['save_bailleur'])) {
@@ -56,7 +56,7 @@ if ($pdo) {
                         $detail = $stmt->fetch();
                     } else {
                         $pdo->prepare("INSERT INTO bailleur (name, code, description, logo, is_active) VALUES (?, ?, ?, ?, ?)")->execute([$name, $code, $description, $logo, $is_active]);
-                        header('Location: bailleurs.php?id=' . $pdo->lastInsertId() . '&msg=created');
+                        header('Location: bailleurs?id=' . $pdo->lastInsertId() . '&msg=created');
                         exit;
                     }
                 }
@@ -91,8 +91,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="bailleurs.php" class="text-decoration-none">Partenaires</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="bailleurs" class="text-decoration-none">Partenaires</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau partenaire</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -124,12 +124,12 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
-                <a href="bailleurs.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <a href="bailleurs.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="bailleurs?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                <a href="bailleurs" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="bailleurs.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
+                <a href="bailleurs<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="bailleurs.php?action=add" class="btn btn-admin-primary"><i class="bi bi-bank me-1"></i> Nouveau partenaire</a>
+                <a href="bailleurs?action=add" class="btn btn-admin-primary"><i class="bi bi-bank me-1"></i> Nouveau partenaire</a>
             <?php endif; ?>
         </div>
     </div>
@@ -175,7 +175,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php if ($isForm): ?>
     <div class="admin-card admin-section-card">
         <h5 class="card-title mb-4"><i class="bi bi-bank"></i> <?= $id ? 'Modifier le partenaire' : 'Nouveau partenaire' ?></h5>
-        <form method="POST" action="<?= $id ? 'bailleurs.php?action=edit&id=' . $id : 'bailleurs.php?action=add' ?>" enctype="multipart/form-data">
+        <form method="POST" action="<?= $id ? 'bailleurs?action=edit&id=' . $id : 'bailleurs?action=add' ?>" enctype="multipart/form-data">
             <input type="hidden" name="save_bailleur" value="1">
             <div class="row g-3">
                 <div class="col-12">
@@ -226,8 +226,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             <tr><th>Statut</th><td><span class="badge bg-secondary"><?= $detail->is_active ? 'Actif' : 'Inactif' ?></span></td></tr>
         </table>
         <div class="mt-4 d-flex gap-2">
-            <a href="bailleurs.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-            <a href="bailleurs.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="bailleurs?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+            <a href="bailleurs" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteBailleurModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
         </div>
     </div>
@@ -278,7 +278,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <a href="bailleurs.php?id=<?= (int) $b->id ?>"><?= htmlspecialchars($b->name) ?></a>
+                                <a href="bailleurs?id=<?= (int) $b->id ?>"><?= htmlspecialchars($b->name) ?></a>
                             </td>
                             <td><?= htmlspecialchars($b->code ?? '—') ?></td>
                             <td><span class="badge bg-secondary"><?= (int) ($b->projects_count ?? 0) ?></span></td>
@@ -287,8 +287,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                        <li><a class="dropdown-item" href="bailleurs.php?id=<?= (int) $b->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
-                                        <li><a class="dropdown-item" href="bailleurs.php?action=edit&id=<?= (int) $b->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                        <li><a class="dropdown-item" href="bailleurs?id=<?= (int) $b->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
+                                        <li><a class="dropdown-item" href="bailleurs?action=edit&id=<?= (int) $b->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form method="POST" onsubmit="return confirm('Supprimer ce partenaire ?');">
@@ -308,7 +308,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <?php else: ?>
     <div class="admin-card admin-section-card">
-        <p class="admin-empty py-4 mb-0"><i class="bi bi-inbox"></i> Aucun partenaire. <a href="bailleurs.php?action=add">Créer un partenaire</a> pour pouvoir l’associer aux projets.</p>
+        <p class="admin-empty py-4 mb-0"><i class="bi bi-inbox"></i> Aucun partenaire. <a href="bailleurs?action=add">Créer un partenaire</a> pour pouvoir l’associer aux projets.</p>
     </div>
 <?php endif; ?>
 
@@ -334,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="projects.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Projets & Tâches</a>
+        <a href="projects" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Projets & Tâches</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
         $delId = (int) $_POST['delete_id'];
         $stmt = $pdo->prepare("DELETE FROM mission WHERE id = ?");
         if ($stmt->execute([$delId])) {
-            header('Location: missions.php?msg=deleted');
+            header('Location: missions?msg=deleted');
             exit;
         }
     }
@@ -194,10 +194,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                 $pdo->commit();
 
                 if ($id > 0) {
-                    header('Location: missions.php?id=' . $missionId . '&msg=updated');
+                    header('Location: missions?id=' . $missionId . '&msg=updated');
                     exit;
                 } else {
-                    header('Location: missions.php?id=' . $missionId . '&msg=created');
+                    header('Location: missions?id=' . $missionId . '&msg=created');
                     exit;
                 }
             } catch (PDOException $e) {
@@ -248,7 +248,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                     $stmt = $pdo->prepare("INSERT INTO mission_report (mission_id, author_user_id, title, summary, content, report_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
                     $stmt->execute([$m_id, $author, $title, $summary, $content, $date, $status]);
                 }
-                header('Location: missions.php?action=edit&id=' . $m_id . '&msg=report_saved');
+                header('Location: missions?action=edit&id=' . $m_id . '&msg=report_saved');
                 exit;
             }
             $success = "Rapport enregistré.";
@@ -283,7 +283,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                         $stmt = $pdo->prepare("INSERT INTO mission_expense (mission_id, user_id, category, description, amount, currency, expense_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                         $stmt->execute([$m_id, $beneficiary, $cat, $desc, $amount, $currency, $date, $status]);
                     }
-                    header('Location: missions.php?action=edit&id=' . $m_id . '&msg=expense_saved');
+                    header('Location: missions?action=edit&id=' . $m_id . '&msg=expense_saved');
                     exit;
                 } catch (PDOException $e) {
                     $error = "Erreur enregistrement dépense : " . $e->getMessage();
@@ -419,8 +419,8 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="missions.php" class="text-decoration-none">Missions</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="missions" class="text-decoration-none">Missions</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouvelle</li><?php endif; ?>
         <?php if ($action === 'edit'): ?>
@@ -460,7 +460,7 @@ require __DIR__ . '/inc/header.php';
         </div>
         <div class="d-flex gap-2">
             <?php if ($action === 'list' || $action === 'view'): ?>
-                <a href="missions.php?action=add" class="btn btn-admin-primary">
+                <a href="missions?action=add" class="btn btn-admin-primary">
                     <i class="bi bi-plus-lg me-1"></i> Créer une mission
                 </a>
             <?php endif; ?>
@@ -475,7 +475,7 @@ require __DIR__ . '/inc/header.php';
             <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
                 <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i> Configuration
                     :</span>
-                <a href="mission_types.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les
+                <a href="mission_types" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les
                     Types de Mission</a>
             </div>
         </div>
@@ -524,7 +524,7 @@ require __DIR__ . '/inc/header.php';
 <?php if ($action === 'add' || $action === 'edit'): ?>
     <!-- Formulaire mission : onglets + stepper (même logique que Projets) -->
     <div class="admin-card admin-section-card p-0 overflow-hidden">
-        <form method="POST" action="missions.php?action=<?= $action ?><?= $id ? '&id=' . $id : '' ?>" id="missionForm"
+        <form method="POST" action="missions?action=<?= $action ?><?= $id ? '&id=' . $id : '' ?>" id="missionForm"
             enctype="multipart/form-data">
             <input type="hidden" name="save_mission" value="1">
             <div class="admin-header-tabs px-4 pt-3 bg-light border-bottom">
@@ -607,7 +607,7 @@ require __DIR__ . '/inc/header.php';
                                     <option value="<?= (int) $b->id ?>" <?= ($detail && in_array((int)$b->id, $detail->bailleur_ids ?? [])) ? 'selected' : '' ?>><?= htmlspecialchars($b->name) ?><?= !empty($b->code) ? ' (' . htmlspecialchars($b->code) . ')' : '' ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs partenaires. <a href="bailleurs.php?action=add" target="_blank">Créer un partenaire</a></small>
+                            <small class="text-muted">Maintenez Ctrl (ou Cmd) pour sélectionner plusieurs partenaires. <a href="bailleurs?action=add" target="_blank">Créer un partenaire</a></small>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-bold">Lieu / Destination</label>
@@ -974,7 +974,7 @@ require __DIR__ . '/inc/header.php';
                     <button type="button" class="btn btn-admin-primary next-tab">Suivant</button>
                 </div>
                 <div>
-                    <a href="missions.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline me-2">Annuler</a>
+                    <a href="missions<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline me-2">Annuler</a>
                     <button type="submit" name="save_mission" value="1" class="btn btn-success px-4" id="submitMission" style="display:none">
                         <i class="bi bi-cloud-upload me-1"></i> Finaliser & Enregistrer
                     </button>
@@ -997,7 +997,7 @@ require __DIR__ . '/inc/header.php';
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <h2 class="h5 mb-0 fw-bold text-admin-sidebar"><?= htmlspecialchars($detail->title) ?></h2>
                 <div class="d-flex gap-2">
-                    <a href="missions.php?action=edit&id=<?= $detail->id ?>" class="btn btn-sm btn-admin-outline">
+                    <a href="missions?action=edit&id=<?= $detail->id ?>" class="btn btn-sm btn-admin-outline">
                         <i class="bi bi-pencil me-1"></i> Modifier
                     </a>
                     <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
@@ -1190,7 +1190,7 @@ require __DIR__ . '/inc/header.php';
             <div class="tab-pane fade" id="view-tab-orders">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="h6 mb-0 fw-bold"><i class="bi bi-file-earmark-text me-2"></i> Ordres de mission</h3>
-                    <a href="mission_orders.php?mission_id=<?= $detail->id ?>" class="btn btn-sm btn-admin-primary">Accéder
+                    <a href="mission_orders?mission_id=<?= $detail->id ?>" class="btn btn-sm btn-admin-primary">Accéder
                         à la gestion</a>
                 </div>
                 <!-- Debug: Tab rendered -->
@@ -1224,7 +1224,7 @@ require __DIR__ . '/inc/header.php';
             <div class="tab-pane fade" id="view-tab-reports">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="h6 mb-0 fw-bold"><i class="bi bi-journal-text me-2"></i> Rapports de mission</h3>
-                    <a href="mission_reports.php?mission_id=<?= $detail->id ?>" class="btn btn-sm btn-admin-primary">Voir
+                    <a href="mission_reports?mission_id=<?= $detail->id ?>" class="btn btn-sm btn-admin-primary">Voir
                         tous les rapports</a>
                 </div>
                 <?php if (!empty($detail->reports)): ?>
@@ -1262,7 +1262,7 @@ require __DIR__ . '/inc/header.php';
             <div class="tab-pane fade" id="view-tab-expenses">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h3 class="h6 mb-0 fw-bold"><i class="bi bi-cash-stack me-2"></i> Frais de mission</h3>
-                    <a href="mission_expenses.php?mission_id=<?= $detail->id ?>"
+                    <a href="mission_expenses?mission_id=<?= $detail->id ?>"
                         class="btn btn-sm btn-admin-primary">Détails financiers</a>
                 </div>
                 <div class="row g-3">
@@ -1287,7 +1287,7 @@ require __DIR__ . '/inc/header.php';
     </div>
 
     <div class="mt-4 pt-3">
-        <a href="missions.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-arrow-left"></i> Retour à la
+        <a href="missions" class="btn btn-sm btn-admin-outline"><i class="bi bi-arrow-left"></i> Retour à la
             liste</a>
     </div>
 
@@ -1333,7 +1333,7 @@ require __DIR__ . '/inc/header.php';
                         <?php foreach ($missions as $m): ?>
                             <tr>
                                 <td>
-                                    <h6 class="mb-0"><a href="missions.php?id=<?= $m->id ?>"><?= htmlspecialchars($m->title) ?></a>
+                                    <h6 class="mb-0"><a href="missions?id=<?= $m->id ?>"><?= htmlspecialchars($m->title) ?></a>
                                     </h6>
                                     <div class="d-flex gap-2 align-items-center mt-1">
                                         <span
@@ -1369,9 +1369,9 @@ require __DIR__ . '/inc/header.php';
                                             <i class="bi bi-three-dots"></i>
                                         </button>
                                         <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                            <li><a class="dropdown-item" href="missions.php?id=<?= $m->id ?>"><i
+                                            <li><a class="dropdown-item" href="missions?id=<?= $m->id ?>"><i
                                                         class="bi bi-eye me-2"></i> Voir</a></li>
-                                            <li><a class="dropdown-item" href="missions.php?action=edit&id=<?= $m->id ?>"><i
+                                            <li><a class="dropdown-item" href="missions?action=edit&id=<?= $m->id ?>"><i
                                                         class="bi bi-pencil me-2"></i> Modifier</a></li>
                                             <li>
                                                 <hr class="dropdown-divider">
@@ -1379,13 +1379,13 @@ require __DIR__ . '/inc/header.php';
                                             <li>
                                                 <h6 class="dropdown-header small text-uppercase">Gestion Spécifique</h6>
                                             </li>
-                                            <li><a class="dropdown-item" href="mission_orders.php?mission_id=<?= $m->id ?>"><i
+                                            <li><a class="dropdown-item" href="mission_orders?mission_id=<?= $m->id ?>"><i
                                                         class="bi bi-file-earmark-text me-2"></i> Ordres de mission</a></li>
-                                            <li><a class="dropdown-item" href="mission_plans.php?mission_id=<?= $m->id ?>"><i
+                                            <li><a class="dropdown-item" href="mission_plans?mission_id=<?= $m->id ?>"><i
                                                         class="bi bi-calendar-event me-2"></i> Plannings & Étapes</a></li>
-                                            <li><a class="dropdown-item" href="mission_reports.php?mission_id=<?= $m->id ?>"><i
+                                            <li><a class="dropdown-item" href="mission_reports?mission_id=<?= $m->id ?>"><i
                                                         class="bi bi-journal-text me-2"></i> Rapports de mission</a></li>
-                                            <li><a class="dropdown-item" href="mission_expenses.php?mission_id=<?= $m->id ?>"><i
+                                            <li><a class="dropdown-item" href="mission_expenses?mission_id=<?= $m->id ?>"><i
                                                         class="bi bi-cash-stack me-2"></i> Frais de mission</a></li>
                                             <li>
                                                 <hr class="dropdown-divider">
@@ -1410,7 +1410,7 @@ require __DIR__ . '/inc/header.php';
                 <i class="bi bi-geo-alt d-block mb-3" style="font-size: 3rem;"></i>
                 <h5>Aucune mission enregistrée</h5>
                 <p class="text-muted mb-4">Commencez par ajouter votre première mission sur le terrain.</p>
-                <a href="missions.php?action=add" class="btn btn-admin-primary">
+                <a href="missions?action=add" class="btn btn-admin-primary">
                     <i class="bi bi-plus-lg me-1"></i> Créer ma première mission
                 </a>
             </div>
@@ -1536,7 +1536,7 @@ require __DIR__ . '/inc/header.php';
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i>
+        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i>
             Tableau
             de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
@@ -1605,7 +1605,7 @@ require __DIR__ . '/inc/header.php';
 <!-- Modal Rapport -->
 <div class="modal fade" id="reportModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
-        <form method="POST" <?= $id > 0 ? 'action="missions.php?action=edit&amp;id=' . (int) $id . '"' : '' ?> class="modal-content border-0 shadow">
+        <form method="POST" <?= $id > 0 ? 'action="missions?action=edit&amp;id=' . (int) $id . '"' : '' ?> class="modal-content border-0 shadow">
             <div class="modal-header bg-dark text-white">
                 <h5 class="modal-title" id="reportModalTitle">Ajouter un rapport</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
@@ -1661,7 +1661,7 @@ require __DIR__ . '/inc/header.php';
 <!-- Modal Frais (formulaire isolé pour éviter toute soumission du formulaire mission) -->
 <div class="modal fade" id="expenseModal" tabindex="-1">
     <div class="modal-dialog">
-        <form id="expenseForm" method="POST" action="missions.php?action=edit&amp;id=<?= (int) $id ?>" class="modal-content border-0 shadow">
+        <form id="expenseForm" method="POST" action="missions?action=edit&amp;id=<?= (int) $id ?>" class="modal-content border-0 shadow">
             <div class="modal-header bg-dark text-white">
                 <h5 class="modal-title" id="expenseModalTitle">Ajouter une dépense</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>

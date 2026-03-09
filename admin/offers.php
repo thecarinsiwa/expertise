@@ -50,7 +50,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_id'];
             if (has_permission('admin.offers.delete')) {
                 $pdo->prepare("DELETE FROM offer WHERE id = ? AND organisation_id = ?")->execute([$delId, $organisation_id]);
-                header('Location: offers.php?msg=deleted');
+                header('Location: offers?msg=deleted');
                 exit;
             }
         }
@@ -99,7 +99,7 @@ if ($pdo) {
                         INSERT INTO offer (organisation_id, title, reference, description, cover_image, mission_id, project_id, status, published_at, deadline_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ")->execute([$organisation_id, $title, $reference, $description, $cover_image, $mission_id, $project_id, $status, $published_at, $deadline_at]);
-                    header('Location: offers.php?id=' . $pdo->lastInsertId() . '&msg=created');
+                    header('Location: offers?id=' . $pdo->lastInsertId() . '&msg=created');
                     exit;
                 }
             }
@@ -203,7 +203,7 @@ if ($pdo) {
                 $pdo->exec("INSERT IGNORE INTO `permission` (`module`, `code`, `name`) VALUES ('Nos offres', 'admin.offers.view', 'Nos offres – Voir'), ('Nos offres', 'admin.offers.add', 'Nos offres – Ajout'), ('Nos offres', 'admin.offers.modify', 'Nos offres – Modifier'), ('Nos offres', 'admin.offers.delete', 'Nos offres – Supprimer')");
                 $pdo->exec("INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`) SELECT 1, id FROM `permission` WHERE `code` LIKE 'admin.offers.%'");
                 $pdo->exec("INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`) SELECT 2, id FROM `permission` WHERE `code` LIKE 'admin.offers.%'");
-                header('Location: offers.php?migrated=1');
+                header('Location: offers?migrated=1');
                 exit;
             } catch (PDOException $e2) {
                 $error = 'Erreur base de données (migration échouée) : ' . $e2->getMessage();
@@ -226,8 +226,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="offers.php" class="text-decoration-none">Nos offres</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="offers" class="text-decoration-none">Nos offres</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouvelle offre</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -260,13 +260,13 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
                 <?php if (has_permission('admin.offers.modify')): ?>
-                    <a href="offers.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                    <a href="offers?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
                 <?php endif; ?>
-                <a href="offers.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="offers" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="offers.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
+                <a href="offers<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php elseif (has_permission('admin.offers.add')): ?>
-                <a href="offers.php?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouvelle offre</a>
+                <a href="offers?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouvelle offre</a>
             <?php endif; ?>
         </div>
     </div>
@@ -289,7 +289,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php endif; ?>
 
 <?php if (!$detail && !$isForm): ?>
-    <form method="get" action="offers.php" class="row g-2 mb-4">
+    <form method="get" action="offers" class="row g-2 mb-4">
         <div class="col-md-4">
             <label class="form-label visually-hidden">Statut</label>
             <select name="status" class="form-select" onchange="this.form.submit()">
@@ -339,7 +339,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php if ($isForm): ?>
     <div class="admin-card admin-section-card">
         <h5 class="card-title mb-4"><i class="bi bi-briefcase"></i> <?= $id ? 'Modifier l\'offre' : 'Nouvelle offre' ?></h5>
-        <form method="POST" action="<?= $id ? 'offers.php?action=edit&id=' . $id : 'offers.php?action=add' ?>" enctype="multipart/form-data">
+        <form method="POST" action="<?= $id ? 'offers?action=edit&id=' . $id : 'offers?action=add' ?>" enctype="multipart/form-data">
             <input type="hidden" name="save_offer" value="1">
             <div class="row g-3">
                 <div class="col-md-8">
@@ -451,9 +451,9 @@ document.addEventListener('DOMContentLoaded', function() {
         </table>
         <div class="mt-4 d-flex gap-2">
             <?php if (has_permission('admin.offers.modify')): ?>
-                <a href="offers.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                <a href="offers?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
             <?php endif; ?>
-            <a href="offers.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="offers" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php if (has_permission('admin.offers.delete')): ?>
                 <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteOfferModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
             <?php endif; ?>
@@ -485,7 +485,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <td><?= date('d/m/Y H:i', strtotime($app->created_at)) ?></td>
                                 <td><span class="badge bg-secondary"><?= $applicationStatusLabels[$app->status] ?? $app->status ?></span></td>
                                 <td><?= !empty($app->cv_path) ? '<a href="../' . htmlspecialchars($app->cv_path) . '" target="_blank"><i class="bi bi-file-earmark-pdf"></i> CV</a>' : '—' ?></td>
-                                <td><a href="candidate_profile.php?user_id=<?= (int) $app->user_id ?>" target="_blank" class="btn btn-sm btn-admin-outline"><i class="bi bi-person-badge me-1"></i>Voir le profil</a></td>
+                                <td><a href="candidate_profile?user_id=<?= (int) $app->user_id ?>" target="_blank" class="btn btn-sm btn-admin-outline"><i class="bi bi-person-badge me-1"></i>Voir le profil</a></td>
                                 <td class="text-end">
                                     <?php if (has_permission('admin.offers.modify')): ?>
                                         <form method="POST" class="d-inline">
@@ -552,7 +552,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <tbody>
                     <?php foreach ($list as $o): ?>
                         <tr>
-                            <td><a href="offers.php?id=<?= (int) $o->id ?>"><?= htmlspecialchars($o->title) ?></a></td>
+                            <td><a href="offers?id=<?= (int) $o->id ?>"><?= htmlspecialchars($o->title) ?></a></td>
                             <td><?= htmlspecialchars($o->reference ?? '—') ?></td>
                             <td class="small">
                                 <?php if (!empty($o->mission_id)): ?>Mission<?php elseif (!empty($o->project_id)): ?>Projet<?php else: ?>—<?php endif; ?>
@@ -564,9 +564,9 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item" href="offers.php?id=<?= (int) $o->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
+                                        <li><a class="dropdown-item" href="offers?id=<?= (int) $o->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
                                         <?php if (has_permission('admin.offers.modify')): ?>
-                                            <li><a class="dropdown-item" href="offers.php?action=edit&id=<?= (int) $o->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                            <li><a class="dropdown-item" href="offers?action=edit&id=<?= (int) $o->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
                                         <?php endif; ?>
                                         <?php if (has_permission('admin.offers.delete')): ?>
                                             <li><hr class="dropdown-divider"></li>
@@ -588,13 +588,13 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 <?php else: ?>
     <div class="admin-card admin-section-card">
-        <p class="admin-empty py-4 mb-0"><i class="bi bi-inbox"></i> Aucune offre. <?php if (has_permission('admin.offers.add')): ?><a href="offers.php?action=add">Créer une offre</a><?php endif; ?></p>
+        <p class="admin-empty py-4 mb-0"><i class="bi bi-inbox"></i> Aucune offre. <?php if (has_permission('admin.offers.add')): ?><a href="offers?action=add">Créer une offre</a><?php endif; ?></p>
     </div>
 <?php endif; ?>
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="missions.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Missions</a>
+        <a href="missions" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Missions</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

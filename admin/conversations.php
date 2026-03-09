@@ -32,7 +32,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_conversation_id'];
             try {
                 $pdo->prepare("DELETE FROM conversation WHERE id = ?")->execute([$delId]);
-                header('Location: conversations.php?msg=deleted');
+                header('Location: conversations?msg=deleted');
                 exit;
             } catch (PDOException $e) {
                 $error = 'Impossible de supprimer la conversation.';
@@ -121,9 +121,9 @@ $convTypes = ['channel' => 'Canal', 'direct' => 'Direct', 'thread' => 'Fil'];
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="announcements.php">Communication</a></li>
-        <li class="breadcrumb-item"><a href="conversations.php">Conversations</a></li>
+        <li class="breadcrumb-item"><a href="index">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="announcements">Communication</a></li>
+        <li class="breadcrumb-item"><a href="conversations">Conversations</a></li>
         <?php if ($detail): ?>
             <li class="breadcrumb-item active"><?= htmlspecialchars($detail->subject ?: 'Conversation #' . $detail->id) ?></li>
         <?php endif; ?>
@@ -138,12 +138,12 @@ $convTypes = ['channel' => 'Canal', 'direct' => 'Direct', 'thread' => 'Fil'];
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail): ?>
-                <a href="conversations.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
-                <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
+                <a href="conversations" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="channels" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteConvModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
             <?php else: ?>
-                <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
-                <a href="announcements.php" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+                <a href="channels" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
+                <a href="announcements" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
             <?php endif; ?>
         </div>
     </div>
@@ -164,8 +164,8 @@ $convTypes = ['channel' => 'Canal', 'direct' => 'Direct', 'thread' => 'Fil'];
         <div class="col-12">
             <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
                 <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i> Configuration :</span>
-                <a href="channels.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
-                <a href="channel_types.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Types de canal</a>
+                <a href="channels" class="btn btn-sm btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
+                <a href="channel_types" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Types de canal</a>
                 <span class="text-muted small fw-bold text-uppercase ms-2 me-2"><i class="bi bi-funnel me-1"></i> Filtre</span>
                 <form method="GET" class="d-flex gap-2 align-items-center flex-wrap">
                     <select name="channel_id" class="form-select form-select-sm" style="max-width:220px;" onchange="this.form.submit()">
@@ -297,14 +297,14 @@ $convTypes = ['channel' => 'Canal', 'direct' => 'Direct', 'thread' => 'Fil'];
                 <tbody>
                     <?php foreach ($list as $cv): ?>
                         <tr>
-                            <td><a href="conversations.php?id=<?= (int) $cv->id ?>"><?= htmlspecialchars($cv->subject ?: '#' . $cv->id) ?></a></td>
+                            <td><a href="conversations?id=<?= (int) $cv->id ?>"><?= htmlspecialchars($cv->subject ?: '#' . $cv->id) ?></a></td>
                             <td><?= htmlspecialchars($cv->channel_name ?? '—') ?></td>
                             <td><span class="badge bg-secondary"><?= $convTypes[$cv->conversation_type] ?? $cv->conversation_type ?></span></td>
                             <td><?= htmlspecialchars(trim(($cv->created_by_first_name ?? '') . ' ' . ($cv->created_by_last_name ?? '')) ?: '—') ?></td>
                             <td><span class="badge bg-light text-dark"><?= (int) ($cv->messages_count ?? 0) ?></span></td>
                             <td class="text-muted small"><?= $cv->created_at ? date('d/m/Y H:i', strtotime($cv->created_at)) : '—' ?></td>
                             <td class="text-end">
-                                <a href="conversations.php?id=<?= (int) $cv->id ?>" class="btn btn-sm btn-admin-outline"><i class="bi bi-eye me-1"></i> Voir</a>
+                                <a href="conversations?id=<?= (int) $cv->id ?>" class="btn btn-sm btn-admin-outline"><i class="bi bi-eye me-1"></i> Voir</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -328,7 +328,7 @@ $convTypes = ['channel' => 'Canal', 'direct' => 'Direct', 'thread' => 'Fil'];
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="channels.php" class="text-muted text-decoration-none small"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
+        <a href="channels" class="text-muted text-decoration-none small"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

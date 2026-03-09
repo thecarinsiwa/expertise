@@ -216,7 +216,7 @@ if ($pdo) {
                             $pdo->prepare("UPDATE document SET current_version_id = ? WHERE id = ?")->execute([$ver_id, $new_doc_id]);
                         }
 
-                        header('Location: documents.php?tab=documents&id=' . $new_doc_id . '&msg=created');
+                        header('Location: documents?tab=documents&id=' . $new_doc_id . '&msg=created');
                         exit;
                     }
                 }
@@ -229,7 +229,7 @@ if ($pdo) {
         $delId = (int) $_POST['delete_document'];
         try {
             $pdo->prepare("DELETE FROM document WHERE id = ?")->execute([$delId]);
-            header('Location: documents.php?tab=documents&msg=deleted');
+            header('Location: documents?tab=documents&msg=deleted');
             exit;
         } catch (PDOException $e) {
             $error = 'Impossible de supprimer le document.';
@@ -363,9 +363,9 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="documents.php" class="text-decoration-none">Gestion</a></li>
-        <li class="breadcrumb-item"><a href="documents.php" class="text-decoration-none">Documents</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="documents" class="text-decoration-none">Gestion</a></li>
+        <li class="breadcrumb-item"><a href="documents" class="text-decoration-none">Documents</a></li>
         <?php if ($tab === 'categories'): ?>
             <li class="breadcrumb-item active">Catégories</li>
         <?php elseif ($detail): ?>
@@ -382,10 +382,10 @@ require __DIR__ . '/inc/header.php';
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail && $tab === 'documents'): ?>
-                <a href="documents.php?tab=documents" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
-                <a href="documents.php?tab=documents&action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                <a href="documents?tab=documents" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="documents?tab=documents&action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
             <?php elseif ($tab === 'documents' && !$detail): ?>
-                <a href="documents.php?tab=documents&action=add" class="btn btn-admin-primary"><i class="bi bi-file-earmark-plus me-1"></i> Nouveau document</a>
+                <a href="documents?tab=documents&action=add" class="btn btn-admin-primary"><i class="bi bi-file-earmark-plus me-1"></i> Nouveau document</a>
             <?php endif; ?>
         </div>
     </div>
@@ -410,7 +410,7 @@ require __DIR__ . '/inc/header.php';
         <div class="col-12">
             <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
                 <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i> Configuration :</span>
-                <a href="documents.php?tab=categories" class="btn btn-sm btn-admin-outline"><i class="bi bi-folder me-1"></i> Gérer les Catégories</a>
+                <a href="documents?tab=categories" class="btn btn-sm btn-admin-outline"><i class="bi bi-folder me-1"></i> Gérer les Catégories</a>
             </div>
         </div>
     </div>
@@ -418,7 +418,7 @@ require __DIR__ . '/inc/header.php';
 
 <?php if ($tab === 'categories'): ?>
     <div class="mb-3">
-        <a href="documents.php?tab=documents" class="btn btn-admin-outline btn-sm"><i class="bi bi-arrow-left me-1"></i> Retour aux documents</a>
+        <a href="documents?tab=documents" class="btn btn-admin-outline btn-sm"><i class="bi bi-arrow-left me-1"></i> Retour aux documents</a>
     </div>
     <div class="admin-card admin-section-card">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -522,7 +522,7 @@ require __DIR__ . '/inc/header.php';
 
 <?php if ($tab === 'documents' && ($action === 'add' || ($action === 'edit' && $detail))): ?>
     <div class="admin-card admin-section-card">
-        <form method="POST" action="documents.php?tab=documents&action=<?= $action ?><?= $id ? '&id=' . $id : '' ?>" enctype="multipart/form-data">
+        <form method="POST" action="documents?tab=documents&action=<?= $action ?><?= $id ? '&id=' . $id : '' ?>" enctype="multipart/form-data">
             <input type="hidden" name="save_document" value="1">
             <input type="hidden" name="document_id" value="<?= (int) ($detail->id ?? 0) ?>">
             <?php if (ini_get('file_uploads') !== '1'): ?>
@@ -583,7 +583,7 @@ require __DIR__ . '/inc/header.php';
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-admin-primary">Enregistrer</button>
-                    <a href="documents.php?tab=documents<?= $id ? '&id=' . $id : '' ?>" class="btn btn-secondary">Annuler</a>
+                    <a href="documents?tab=documents<?= $id ? '&id=' . $id : '' ?>" class="btn btn-secondary">Annuler</a>
                 </div>
             </div>
         </form>
@@ -607,7 +607,7 @@ require __DIR__ . '/inc/header.php';
             <tr><th>Description</th><td><?= nl2br(htmlspecialchars($detail->description ?? '—')) ?></td></tr>
         </table>
         <div class="mt-3 d-flex gap-2">
-            <a href="documents.php?tab=documents&action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary btn-sm"><i class="bi bi-pencil me-1"></i> Modifier</a>
+            <a href="documents?tab=documents&action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary btn-sm"><i class="bi bi-pencil me-1"></i> Modifier</a>
             <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#versionModal"><i class="bi bi-plus-circle me-1"></i> Nouvelle version</button>
             <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" data-bs-target="#archiveModal"><i class="bi bi-archive me-1"></i> Archiver</button>
             <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce document et ses versions ?');">
@@ -786,18 +786,18 @@ require __DIR__ . '/inc/header.php';
                 <tbody>
                     <?php foreach ($list as $d): ?>
                         <tr>
-                            <td><a href="documents.php?tab=documents&id=<?= (int) $d->id ?>"><?= htmlspecialchars($d->title) ?></a></td>
+                            <td><a href="documents?tab=documents&id=<?= (int) $d->id ?>"><?= htmlspecialchars($d->title) ?></a></td>
                             <td><?= htmlspecialchars($d->category_name ?? '—') ?></td>
                             <td><?= htmlspecialchars($d->document_type ?? '—') ?></td>
                             <td><?= date('d/m/Y', strtotime($d->created_at)) ?></td>
                             <td class="text-end">
-                                <a href="documents.php?tab=documents&id=<?= (int) $d->id ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
-                                <a href="documents.php?tab=documents&action=edit&id=<?= (int) $d->id ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
+                                <a href="documents?tab=documents&id=<?= (int) $d->id ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i></a>
+                                <a href="documents?tab=documents&action=edit&id=<?= (int) $d->id ?>" class="btn btn-sm btn-outline-secondary"><i class="bi bi-pencil"></i></a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
                     <?php if (empty($list)): ?>
-                        <tr><td colspan="5" class="text-center text-muted py-4">Aucun document. <a href="documents.php?tab=documents&action=add">Créer un document</a></td></tr>
+                        <tr><td colspan="5" class="text-center text-muted py-4">Aucun document. <a href="documents?tab=documents&action=add">Créer un document</a></td></tr>
                     <?php endif; ?>
                 </tbody>
             </table>
@@ -816,7 +816,7 @@ require __DIR__ . '/inc/header.php';
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

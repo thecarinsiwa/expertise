@@ -30,7 +30,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_id'];
             if ($delId !== (int) ($_SESSION['admin_id'] ?? 0)) {
                 $pdo->prepare("DELETE FROM user WHERE id = ?")->execute([$delId]);
-                header('Location: user.php?msg=deleted');
+                header('Location: user?msg=deleted');
                 exit;
             }
             $error = 'Vous ne pouvez pas supprimer votre propre compte.';
@@ -104,7 +104,7 @@ if ($pdo) {
                                 if ($rid > 0) $ins->execute([$newId, $rid]);
                             }
                         }
-                        header('Location: user.php?id=' . $newId . '&msg=created');
+                        header('Location: user?id=' . $newId . '&msg=created');
                         exit;
                     }
                 }
@@ -152,8 +152,8 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="user.php" class="text-decoration-none">Utilisateurs</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="user" class="text-decoration-none">Utilisateurs</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -185,15 +185,15 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail && !$isForm): ?>
-                <?php if (has_permission('admin.users.modify')): ?><a href="user.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+                <?php if (has_permission('admin.users.modify')): ?><a href="user?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
                 <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0) && has_permission('admin.users.delete')): ?>
                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
                 <?php endif; ?>
-                <a href="user.php" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="user" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="user.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
+                <a href="user<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <?php if (has_permission('admin.users.add')): ?><a href="user.php?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a><?php endif; ?>
+                <?php if (has_permission('admin.users.add')): ?><a href="user?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a><?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -214,7 +214,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
 
 <?php if ($isForm && (($action === 'add' && has_permission('admin.users.add')) || ($action === 'edit' && has_permission('admin.users.modify')))): ?>
     <div class="admin-card admin-section-card mb-4">
-        <form method="POST" action="<?= $id ? 'user.php?action=edit&id=' . $id : 'user.php?action=add' ?>">
+        <form method="POST" action="<?= $id ? 'user?action=edit&id=' . $id : 'user?action=add' ?>">
             <input type="hidden" name="save_user" value="1">
             <div class="row g-3">
                 <div class="col-md-6">
@@ -270,7 +270,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-admin-primary"><i class="bi bi-check-lg me-1"></i> Enregistrer</button>
-                    <a href="user.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-secondary">Annuler</a>
+                    <a href="user<?= $id ? '?id=' . $id : '' ?>" class="btn btn-secondary">Annuler</a>
                 </div>
             </div>
         </form>
@@ -291,19 +291,19 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
             <h5 class="card-title"><i class="bi bi-shield-lock"></i> Rôles</h5>
             <p class="mb-3">
                 <?php foreach ($detail->roles as $r): ?>
-                    <a href="roles.php?id=<?= (int) $r->id ?>" class="badge bg-primary me-1 text-decoration-none"><?= htmlspecialchars($r->name) ?></a>
+                    <a href="roles?id=<?= (int) $r->id ?>" class="badge bg-primary me-1 text-decoration-none"><?= htmlspecialchars($r->name) ?></a>
                 <?php endforeach; ?>
             </p>
         <?php endif; ?>
         <?php if (!empty($detail->staff_count)): ?>
-            <p class="mb-0"><a href="staff.php?user_id=<?= (int) $detail->id ?>" class="btn btn-sm btn-admin-outline"><i class="bi bi-people me-1"></i> Voir la fiche personnel</a></p>
+            <p class="mb-0"><a href="staff?user_id=<?= (int) $detail->id ?>" class="btn btn-sm btn-admin-outline"><i class="bi bi-people me-1"></i> Voir la fiche personnel</a></p>
         <?php endif; ?>
         <div class="mt-4 d-flex gap-2">
-            <?php if (has_permission('admin.users.modify')): ?><a href="user.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+            <?php if (has_permission('admin.users.modify')): ?><a href="user?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
             <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0) && has_permission('admin.users.delete')): ?>
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
             <?php endif; ?>
-            <a href="user.php" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="user" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
         </div>
     </div>
     <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0) && has_permission('admin.users.delete')): ?>
@@ -358,7 +358,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
                     <?php foreach ($userList as $u): ?>
                         <tr>
                             <td>
-                                <h6 class="mb-0"><a href="user.php?id=<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></a></h6>
+                                <h6 class="mb-0"><a href="user?id=<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></a></h6>
                                 <span class="text-muted x-small"><?= htmlspecialchars($u->email) ?></span>
                             </td>
                             <td><?= htmlspecialchars($u->organisation_name ?? '—') ?></td>
@@ -367,8 +367,8 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                        <li><a class="dropdown-item" href="user.php?id=<?= (int) $u->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
-                                        <?php if (has_permission('admin.users.modify')): ?><li><a class="dropdown-item" href="user.php?action=edit&id=<?= (int) $u->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li><?php endif; ?>
+                                        <li><a class="dropdown-item" href="user?id=<?= (int) $u->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
+                                        <?php if (has_permission('admin.users.modify')): ?><li><a class="dropdown-item" href="user?action=edit&id=<?= (int) $u->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li><?php endif; ?>
                                     </ul>
                                 </div>
                             </td>
@@ -384,7 +384,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
             <i class="bi bi-people d-block mb-3" style="font-size: 3rem;"></i>
             <h5>Aucun utilisateur</h5>
             <p class="text-muted mb-4">Créez le premier compte utilisateur.</p>
-            <?php if (has_permission('admin.users.add')): ?><a href="user.php?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a><?php endif; ?>
+            <?php if (has_permission('admin.users.add')): ?><a href="user?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a><?php endif; ?>
         </div>
     </div>
 <?php endif; ?>
@@ -405,7 +405,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

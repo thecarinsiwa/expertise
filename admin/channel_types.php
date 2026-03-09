@@ -22,9 +22,9 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="announcements.php" class="text-decoration-none">Communication</a></li>
-        <li class="breadcrumb-item"><a href="channels.php" class="text-decoration-none">Canaux</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="announcements" class="text-decoration-none">Communication</a></li>
+        <li class="breadcrumb-item"><a href="channels" class="text-decoration-none">Canaux</a></li>
         <li class="breadcrumb-item active">Types de canal</li>
     </ol>
 </nav>
@@ -34,7 +34,7 @@ require __DIR__ . '/inc/header.php';
         <h1 class="h3 mb-0 fw-bold">Types de canal</h1>
         <p class="text-muted small">Configurez et consultez les types de canaux disponibles pour la communication.</p>
     </div>
-    <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux canaux</a>
+    <a href="channels" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux canaux</a>
 </div>
 
 <div class="admin-card p-0 overflow-hidden">
@@ -61,7 +61,7 @@ require __DIR__ . '/inc/header.php';
 </div>
 
 <div class="mt-4">
-    <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux canaux</a>
+    <a href="channels" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux canaux</a>
 </div>
 
 <?php require __DIR__ . '/inc/footer.php'; ?>
