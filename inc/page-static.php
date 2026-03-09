@@ -7,7 +7,7 @@
 if (!isset($organisation)) {
     $organisation = null;
     if (isset($pdo) && $pdo) {
-        $stmt = $pdo->query("SELECT id, name, description FROM organisation WHERE is_active = 1 LIMIT 1");
+        $stmt = $pdo->query("SELECT id, name, description, logo FROM organisation WHERE is_active = 1 LIMIT 1");
         if ($row = $stmt->fetch()) $organisation = $row;
     }
 }

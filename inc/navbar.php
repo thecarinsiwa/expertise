@@ -13,12 +13,17 @@ if (strpos($baseUrl, ':') !== false || preg_match('#^[a-zA-Z]:#', $baseUrl)) {
     }
 }
 if (!isset($organisation)) $organisation = null;
+if (!function_exists('get_site_logo_url')) {
+    require_once __DIR__ . '/asset_url.php';
+}
+$siteLogoUrl = get_site_logo_url($baseUrl, $organisation);
+$siteLogoAlt = $organisation ? htmlspecialchars($organisation->name) : 'EXPERTISE';
 ?>
 <nav class="navbar navbar-expand-lg navbar-main navbar-light">
     <div class="container">
         <a class="navbar-brand" href="<?= $baseUrl ?>index">
-            <img src="<?= $baseUrl ?>assets/images/logo.jpg"
-                alt="<?= $organisation ? htmlspecialchars($organisation->name) : 'EXPERTISE' ?>">
+            <img src="<?= htmlspecialchars($siteLogoUrl) ?>"
+                alt="<?= $siteLogoAlt ?>">
         </a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
