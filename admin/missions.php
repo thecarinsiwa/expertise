@@ -82,8 +82,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
             try {
                 $pdo->beginTransaction();
 
-                // Gestion photo de couverture
-                $cover_image = isset($detail) && isset($detail->cover_image) ? $detail->cover_image : null;
+                // Gestion photo de couverture : en modification, récupérer l'image existante depuis la BDD
+                $cover_image = null;
+                if ($id > 0) {
+                    $stmtCover = $pdo->prepare("SELECT cover_image FROM mission WHERE id = ?");
+                    $stmtCover->execute([$id]);
+                    $row = $stmtCover->fetch(PDO::FETCH_OBJ);
+                    if ($row && !empty($row->cover_image)) {
+                        $cover_image = $row->cover_image;
+                    }
+                }
                 if (!empty($_FILES['cover_image']['name'])) {
                     $target_dir = "../uploads/missions/";
                     if (!is_dir($target_dir))
