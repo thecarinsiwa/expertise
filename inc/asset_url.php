@@ -67,19 +67,48 @@ if (!function_exists('get_site_logo_url')) {
 }
 
 /**
- * Favicon du site : même source que le logo (organisation active) ou fallback assets/images/favicon.ico / logo.
+ * Favicon du site : organisation active (favicon) ou fallback assets/images/favicon.ico, sinon logo.
  * @param string $baseUrl Base URL du site
- * @param object|null $organisation Objet organisation (optionnel)
+ * @param object|null $organisation Objet organisation (optionnel, avec ->favicon ou ->logo)
  * @return string URL absolue du favicon
  */
 if (!function_exists('get_site_favicon_url')) {
     function get_site_favicon_url($baseUrl, $organisation = null) {
-        $logoUrl = get_site_logo_url($baseUrl, $organisation);
-        $fallbackFavicon = ($baseUrl !== '' ? rtrim($baseUrl, '/') . '/' : '') . 'assets/images/favicon.ico';
-        $faviconPath = __DIR__ . '/../assets/images/favicon.ico';
-        if (file_exists($faviconPath)) {
-            return $fallbackFavicon;
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
         }
-        return $logoUrl;
+        $path = '';
+        if ($organisation && !empty($organisation->favicon)) {
+            $path = $organisation->favicon;
+        } elseif ($organisation && !empty($organisation->logo)) {
+            $path = $organisation->logo;
+        } else {
+            if (isset($GLOBALS['pdo']) && $GLOBALS['pdo']) {
+                $stmt = $GLOBALS['pdo']->query("SELECT favicon, logo FROM organisation WHERE is_active = 1 LIMIT 1");
+                if ($stmt && ($row = $stmt->fetch(PDO::FETCH_OBJ))) {
+                    if (!empty($row->favicon)) {
+                        $path = $row->favicon;
+                    } elseif (!empty($row->logo)) {
+                        $path = $row->logo;
+                    }
+                }
+            }
+        }
+        if ($path === '') {
+            $faviconPath = __DIR__ . '/../assets/images/favicon.ico';
+            if (file_exists($faviconPath)) {
+                $path = 'assets/images/favicon.ico';
+            } else {
+                $path = ''; // will use logo fallback below
+            }
+        }
+        if ($path === '') {
+            $path = get_site_logo_url($baseUrl, $organisation);
+            $cached = $path;
+            return $cached;
+        }
+        $cached = client_asset_url($baseUrl, $path);
+        return $cached;
     }
 }

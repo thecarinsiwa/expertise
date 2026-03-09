@@ -4,6 +4,13 @@ if (!isset($pageTitle))
 $currentNav = isset($currentNav) ? $currentNav : 'dashboard';
 require_once __DIR__ . '/auth.php';
 header('Content-Type: text/html; charset=UTF-8');
+if (isset($pdo)) {
+    $GLOBALS['pdo'] = $pdo;
+}
+if (!function_exists('get_site_favicon_url')) {
+    require_once __DIR__ . '/../../inc/asset_url.php';
+}
+$adminFaviconUrl = get_site_favicon_url('../', null);
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -12,6 +19,7 @@ header('Content-Type: text/html; charset=UTF-8');
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($pageTitle) ?></title>
+    <link rel="icon" href="<?= htmlspecialchars($adminFaviconUrl) ?>" sizes="any">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">

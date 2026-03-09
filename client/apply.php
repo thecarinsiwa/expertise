@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
 
 $organisation = null;
 if ($pdo) {
-    $stmt = $pdo->query("SELECT name, description FROM organisation WHERE is_active = 1 LIMIT 1");
+    $stmt = $pdo->query("SELECT name, description, logo, favicon FROM organisation WHERE is_active = 1 LIMIT 1");
     if ($row = $stmt->fetch()) $organisation = $row;
 }
 

@@ -1,6 +1,9 @@
 <?php
 if (!isset($pageTitle)) $pageTitle = 'Expertise';
 $baseUrl = isset($baseUrl) ? $baseUrl : '';
+if (isset($pdo) && $pdo) {
+    $GLOBALS['pdo'] = $pdo;
+}
 if (!function_exists('get_site_favicon_url')) {
     require_once __DIR__ . '/asset_url.php';
 }

@@ -66,13 +66,15 @@ if ($pdo) {
             $youtube_url = trim($_POST['youtube_url'] ?? '') ?: null;
 
             $logo = null;
+            $favicon = null;
             $cover_image = null;
             if ($id > 0) {
-                $cur = $pdo->prepare("SELECT logo, cover_image FROM organisation WHERE id = ?");
+                $cur = $pdo->prepare("SELECT logo, favicon, cover_image FROM organisation WHERE id = ?");
                 $cur->execute([$id]);
                 $row = $cur->fetch();
                 if ($row) {
                     if (!empty($row->logo)) $logo = $row->logo;
+                    if (!empty($row->favicon)) $favicon = $row->favicon;
                     if (!empty($row->cover_image)) $cover_image = $row->cover_image;
                 }
             }
@@ -98,6 +100,17 @@ if ($pdo) {
                     }
                 }
             }
+            if (!empty($_FILES['favicon']['name']) && $_FILES['favicon']['error'] === UPLOAD_ERR_OK) {
+                $target_dir = __DIR__ . '/../uploads/organisations/';
+                if (!is_dir($target_dir)) mkdir($target_dir, 0777, true);
+                $ext = strtolower(pathinfo($_FILES['favicon']['name'], PATHINFO_EXTENSION));
+                if (in_array($ext, ['ico', 'png', 'gif', 'jpg', 'jpeg', 'webp'])) {
+                    $file_name = 'favicon_' . ($id ?: 'new') . '_' . time() . '_' . uniqid() . '.' . $ext;
+                    if (move_uploaded_file($_FILES['favicon']['tmp_name'], $target_dir . $file_name)) {
+                        $favicon = 'uploads/organisations/' . $file_name;
+                    }
+                }
+            }
 
             if ($name === '') {
                 $error = 'Le nom est obligatoire.';
@@ -105,8 +118,8 @@ if ($pdo) {
                 if ($id > 0) {
                     require_permission('admin.organisations.modify');
                     try {
-                        $stmt = $pdo->prepare("UPDATE organisation SET name = ?, code = ?, description = ?, address = ?, phone = ?, email = ?, website = ?, postal_code = ?, city = ?, country = ?, rccm = ?, nif = ?, sector = ?, notes = ?, logo = ?, cover_image = ?, facebook_url = ?, linkedin_url = ?, twitter_url = ?, instagram_url = ?, youtube_url = ?, is_active = ? WHERE id = ?");
-                        $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $cover_image, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active, $id]);
+                        $stmt = $pdo->prepare("UPDATE organisation SET name = ?, code = ?, description = ?, address = ?, phone = ?, email = ?, website = ?, postal_code = ?, city = ?, country = ?, rccm = ?, nif = ?, sector = ?, notes = ?, logo = ?, favicon = ?, cover_image = ?, facebook_url = ?, linkedin_url = ?, twitter_url = ?, instagram_url = ?, youtube_url = ?, is_active = ? WHERE id = ?");
+                        $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $favicon, $cover_image, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active, $id]);
                         $pdo->prepare("DELETE FROM organisation_organisation_type WHERE organisation_id = ?")->execute([$id]);
                         $stmtTypes = $pdo->prepare("INSERT INTO organisation_organisation_type (organisation_id, type_code) VALUES (?, ?)");
                         foreach ($organisation_types as $tc) {
@@ -119,8 +132,8 @@ if ($pdo) {
                     }
                 } else {
                     require_permission('admin.organisations.add');
-                    $stmt = $pdo->prepare("INSERT INTO organisation (name, code, description, address, phone, email, website, postal_code, city, country, rccm, nif, sector, notes, logo, cover_image, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $cover_image, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active]);
+                    $stmt = $pdo->prepare("INSERT INTO organisation (name, code, description, address, phone, email, website, postal_code, city, country, rccm, nif, sector, notes, logo, favicon, cover_image, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $favicon, $cover_image, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active]);
                     $newId = (int) $pdo->lastInsertId();
                     $stmtTypes = $pdo->prepare("INSERT INTO organisation_organisation_type (organisation_id, type_code) VALUES (?, ?)");
                     foreach ($organisation_types as $tc) {
@@ -344,6 +357,16 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                     <input type="file" name="logo" class="form-control" accept="image/jpeg,image/png,image/gif,image/webp">
                 </div>
                 <div class="col-12">
+                    <label class="form-label fw-bold">Favicon</label>
+                    <p class="text-muted small mb-1">Icône affichée dans l'onglet du navigateur (format .ico, .png recommandé).</p>
+                    <?php if (!empty($detail->favicon)): ?>
+                        <div class="mb-2">
+                            <img src="../<?= htmlspecialchars($detail->favicon) ?>" alt="Favicon" class="rounded border" style="height: 32px; width: 32px; object-fit: contain;">
+                        </div>
+                    <?php endif; ?>
+                    <input type="file" name="favicon" class="form-control" accept=".ico,image/png,image/gif,image/jpeg,image/webp">
+                </div>
+                <div class="col-12">
                     <label class="form-label fw-bold">Photo de couverture</label>
                     <p class="text-muted small mb-1">Image d'en-tête affichée sur la page « Qui nous sommes » (bannière).</p>
                     <?php if (!empty($detail->cover_image)): ?>
@@ -456,6 +479,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <div class="d-flex flex-wrap gap-4 align-items-start mb-4">
             <?php if (!empty($detail->logo)): ?>
                 <img src="../<?= htmlspecialchars($detail->logo) ?>" alt="Logo" class="rounded border flex-shrink-0" style="width: 80px; height: 80px; object-fit: contain;">
+            <?php endif; ?>
+            <?php if (!empty($detail->favicon)): ?>
+                <img src="../<?= htmlspecialchars($detail->favicon) ?>" alt="Favicon" class="rounded border flex-shrink-0" style="width: 32px; height: 32px; object-fit: contain;">
             <?php endif; ?>
             <?php if (!empty($detail->cover_image)): ?>
                 <img src="../<?= htmlspecialchars($detail->cover_image) ?>" alt="Photo de couverture" class="rounded border flex-shrink-0" style="max-width: 280px; max-height: 120px; object-fit: cover;">
