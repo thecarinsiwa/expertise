@@ -57,7 +57,7 @@ require __DIR__ . '/inc/header.php';
                     <div class="small text-muted">ID: #
                         <?= $m->id ?>
                     </div>
-                    <a href="missions.php?action=edit&id=<?= $m->id ?>#tab-steps" class="btn btn-sm btn-admin-outline">
+                    <a href="missions?action=edit&id=<?= $m->id ?>#tab-steps" class="btn btn-sm btn-admin-outline">
                         Gérer le plan <i class="bi bi-chevron-right ms-1"></i>
                     </a>
                 </div>
@@ -67,7 +67,7 @@ require __DIR__ . '/inc/header.php';
 </div>
 
 <div class="mt-4">
-    <a href="missions.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux missions</a>
+    <a href="missions" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux missions</a>
 </div>
 
 <?php require __DIR__ . '/inc/footer.php'; ?>

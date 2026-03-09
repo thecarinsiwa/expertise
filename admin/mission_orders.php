@@ -103,7 +103,7 @@ require __DIR__ . '/inc/header.php';
 </div>
 
 <div class="mt-4">
-    <a href="missions.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux missions</a>
+    <a href="missions" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux missions</a>
 </div>
 
 <?php require __DIR__ . '/inc/footer.php'; ?>

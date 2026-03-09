@@ -46,7 +46,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_id'];
             try {
                 $pdo->prepare("DELETE FROM announcement WHERE id = ?")->execute([$delId]);
-                header('Location: announcements.php?msg=deleted');
+                header('Location: announcements?msg=deleted');
                 exit;
             } catch (PDOException $e) {
                 $error = 'Impossible de supprimer l\'annonce.';
@@ -215,7 +215,7 @@ if ($pdo) {
                                 ->execute([$organisation_id, $channel_id, $author_user_id, $title, $content, $is_pinned, $published_at, $expires_at]);
                         }
                         $newId = (int) $pdo->lastInsertId();
-                        header('Location: announcements.php?action=edit&id=' . $newId . '&msg=created');
+                        header('Location: announcements?action=edit&id=' . $newId . '&msg=created');
                         exit;
                     }
                 } catch (PDOException $e) {
@@ -309,9 +309,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="announcements.php" class="text-decoration-none">Communication</a></li>
-        <li class="breadcrumb-item"><a href="announcements.php" class="text-decoration-none">Annonces</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="announcements" class="text-decoration-none">Communication</a></li>
+        <li class="breadcrumb-item"><a href="announcements" class="text-decoration-none">Annonces</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouvelle annonce</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -343,15 +343,15 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
-                <a href="announcements.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
-                <a href="announcements.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="announcements?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                <a href="channels" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
+                <a href="announcements" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
-                <a href="announcements.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
+                <a href="channels" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
+                <a href="announcements<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux & Messages</a>
-                <a href="announcements.php?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouvelle annonce</a>
+                <a href="channels" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux & Messages</a>
+                <a href="announcements?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouvelle annonce</a>
             <?php endif; ?>
         </div>
     </div>
@@ -376,8 +376,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <div class="col-12">
             <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
                 <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i> Configuration :</span>
-                <a href="channels.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Gérer les canaux</a>
-                <a href="channel_types.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les types de canal</a>
+                <a href="channels" class="btn btn-sm btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Gérer les canaux</a>
+                <a href="channel_types" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les types de canal</a>
             </div>
         </div>
     </div>
@@ -402,7 +402,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php if ($isForm): ?>
     <div class="admin-card admin-section-card">
         <h5 class="card-title mb-4"><i class="bi bi-megaphone"></i> <?= $id ? 'Modifier l\'annonce' : 'Nouvelle annonce' ?></h5>
-        <form method="POST" action="<?= $id ? 'announcements.php?action=edit&id=' . $id : 'announcements.php?action=add' ?>" enctype="multipart/form-data">
+        <form method="POST" action="<?= $id ? 'announcements?action=edit&id=' . $id : 'announcements?action=add' ?>" enctype="multipart/form-data">
             <input type="hidden" name="save_announcement" value="1">
             <div class="row g-3">
                 <div class="col-12">
@@ -500,9 +500,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             </div>
         <?php endif; ?>
         <div class="mt-4 d-flex gap-2">
-            <a href="announcements.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-            <a href="channels.php" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
-            <a href="announcements.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="announcements?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+            <a href="channels" class="btn btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
+            <a href="announcements" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteAnnouncementModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
         </div>
     </div>
@@ -697,7 +697,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                         <?php foreach ($announcement_conversations as $cv): ?>
                             <li class="list-group-item d-flex justify-content-between align-items-center">
                                 <div><strong><?= htmlspecialchars($cv->subject ?: 'Conversation #' . $cv->id) ?></strong> <?= $cv->channel_name ? ' <span class="badge bg-secondary">' . htmlspecialchars($cv->channel_name) . '</span>' : '' ?> <span class="text-muted small"><?= $cv->created_at ? date('d/m/Y H:i', strtotime($cv->created_at)) : '' ?></span></div>
-                                <a href="conversations.php?id=<?= (int) $cv->id ?>" class="btn btn-sm btn-admin-outline"><i class="bi bi-eye me-1"></i> Voir / Répondre</a>
+                                <a href="conversations?id=<?= (int) $cv->id ?>" class="btn btn-sm btn-admin-outline"><i class="bi bi-eye me-1"></i> Voir / Répondre</a>
                             </li>
                         <?php endforeach; ?>
                     </ul>
@@ -750,7 +750,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <tbody>
                     <?php foreach ($list as $a): ?>
                         <tr>
-                            <td><a href="announcements.php?id=<?= (int) $a->id ?>"><?= htmlspecialchars($a->title) ?></a></td>
+                            <td><a href="announcements?id=<?= (int) $a->id ?>"><?= htmlspecialchars($a->title) ?></a></td>
                             <td><?= htmlspecialchars($a->organisation_name ?? '—') ?></td>
                             <td><?= htmlspecialchars(trim(($a->author_first_name ?? '') . ' ' . ($a->author_last_name ?? '')) ?: '—') ?></td>
                             <td><?= $a->is_pinned ? '<span class="badge bg-warning text-dark">Épinglée</span>' : '—' ?></td>
@@ -759,16 +759,16 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                 <div class="dropdown" data-bs-boundary="viewport">
                                     <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown" data-bs-boundary="viewport" data-bs-reference="toggle" aria-expanded="false" title="Actions"><i class="bi bi-three-dots-vertical"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>"><i class="bi bi-eye me-2"></i> Voir la fiche</a></li>
-                                        <li><a class="dropdown-item" href="announcements.php?action=edit&id=<?= (int) $a->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                        <li><a class="dropdown-item" href="announcements?id=<?= (int) $a->id ?>"><i class="bi bi-eye me-2"></i> Voir la fiche</a></li>
+                                        <li><a class="dropdown-item" href="announcements?action=edit&id=<?= (int) $a->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li><h6 class="dropdown-header py-1">Accès rapide</h6></li>
-                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-comments"><i class="bi bi-chat-quote me-2"></i> Commentaires</a></li>
-                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-reactions"><i class="bi bi-heart me-2"></i> Réactions</a></li>
-                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-attachments"><i class="bi bi-paperclip me-2"></i> Pièces jointes</a></li>
-                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-notifications"><i class="bi bi-bell me-2"></i> Notifications</a></li>
-                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-conversations"><i class="bi bi-chat-text me-2"></i> Conversations</a></li>
-                                        <li><a class="dropdown-item" href="announcements.php?id=<?= (int) $a->id ?>#tab-history"><i class="bi bi-clock-history me-2"></i> Historique</a></li>
+                                        <li><a class="dropdown-item" href="announcements?id=<?= (int) $a->id ?>#tab-comments"><i class="bi bi-chat-quote me-2"></i> Commentaires</a></li>
+                                        <li><a class="dropdown-item" href="announcements?id=<?= (int) $a->id ?>#tab-reactions"><i class="bi bi-heart me-2"></i> Réactions</a></li>
+                                        <li><a class="dropdown-item" href="announcements?id=<?= (int) $a->id ?>#tab-attachments"><i class="bi bi-paperclip me-2"></i> Pièces jointes</a></li>
+                                        <li><a class="dropdown-item" href="announcements?id=<?= (int) $a->id ?>#tab-notifications"><i class="bi bi-bell me-2"></i> Notifications</a></li>
+                                        <li><a class="dropdown-item" href="announcements?id=<?= (int) $a->id ?>#tab-conversations"><i class="bi bi-chat-text me-2"></i> Conversations</a></li>
+                                        <li><a class="dropdown-item" href="announcements?id=<?= (int) $a->id ?>#tab-history"><i class="bi bi-clock-history me-2"></i> Historique</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form method="POST" onsubmit="return confirm('Supprimer cette annonce ?');">
@@ -812,7 +812,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
     </script>
 <?php else: ?>
     <div class="admin-card admin-section-card">
-        <p class="admin-empty py-4 mb-0"><i class="bi bi-megaphone"></i> Aucune annonce. <a href="announcements.php?action=add">Créer une annonce</a>. <?php if (empty($organisations)): ?> Créez d'abord une <strong><a href="organisations.php">organisation</a></strong>.<?php endif; ?></p>
+        <p class="admin-empty py-4 mb-0"><i class="bi bi-megaphone"></i> Aucune annonce. <a href="announcements?action=add">Créer une annonce</a>. <?php if (empty($organisations)): ?> Créez d'abord une <strong><a href="organisations">organisation</a></strong>.<?php endif; ?></p>
     </div>
 <?php endif; ?>
 
@@ -872,7 +872,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="channels.php" class="text-muted text-decoration-none small"><i class="bi bi-chat-dots me-1"></i> Canaux & Messages</a>
+        <a href="channels" class="text-muted text-decoration-none small"><i class="bi bi-chat-dots me-1"></i> Canaux & Messages</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

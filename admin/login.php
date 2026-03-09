@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Déjà connecté → tableau de bord
 if (!empty($_SESSION['admin_logged_in'])) {
-    header('Location: index.php');
+    header('Location: index');
     exit;
 }
 
@@ -21,7 +21,7 @@ require_once __DIR__ . '/inc/db.php';
    Traitement du formulaire
 ────────────────────────────────────────────── */
 $error = '';
-$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'index.php';
+$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'index';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
@@ -413,9 +413,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Pied -->
         <div class="login-footer">
-            <a href="forgot-password.php"><i class="bi bi-key me-1"></i>Mot de passe oublié ?</a>
+            <a href="forgot-password"><i class="bi bi-key me-1"></i>Mot de passe oublié ?</a>
             <span class="mx-2" style="color:#dee2e6;">|</span>
-            <a href="register.php"><i class="bi bi-person-plus me-1"></i>Créer un compte</a>
+            <a href="register"><i class="bi bi-person-plus me-1"></i>Créer un compte</a>
             <span class="mx-2" style="color:#dee2e6;">|</span>
             <a href="../" class="d-inline-flex align-items-center gap-1">
                 <i class="bi bi-arrow-left"></i> Retour au site

@@ -9,7 +9,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Déjà connecté → tableau de bord
 if (!empty($_SESSION['admin_logged_in'])) {
-    header('Location: index.php');
+    header('Location: index');
     exit;
 }
 
@@ -634,7 +634,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['token'])) {
                             <?= $success ?>
                         </span>
                     </div>
-                    <a href="login.php" class="btn-auth d-inline-flex align-items-center justify-content-center gap-2"
+                    <a href="login" class="btn-auth d-inline-flex align-items-center justify-content-center gap-2"
                         style="text-decoration:none;">
                         <i class="bi bi-box-arrow-in-right"></i>Retour à la connexion
                     </a>
@@ -645,7 +645,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['token'])) {
 
         <!-- Pied -->
         <div class="auth-footer">
-            <a href="login.php"><i class="bi bi-arrow-left me-1"></i>Retour à la connexion</a>
+            <a href="login"><i class="bi bi-arrow-left me-1"></i>Retour à la connexion</a>
             <span class="mx-2">·</span>
             <a href="../"><i class="bi bi-house me-1"></i>Site public</a>
         </div>

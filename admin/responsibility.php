@@ -157,7 +157,7 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
         <li class="breadcrumb-item active">Responsabilité</li>
     </ol>
 </nav>
@@ -168,7 +168,7 @@ require __DIR__ . '/inc/header.php';
             <h1>Contenu – Page Responsabilité</h1>
             <p class="text-muted mb-0">Introduction et engagements affichés sur la page publique Responsabilité.</p>
         </div>
-        <a href="<?= htmlspecialchars(dirname($_SERVER['SCRIPT_NAME']) . '/../responsibility.php') ?>" class="btn btn-admin-outline" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i> Voir la page</a>
+        <a href="<?= htmlspecialchars(dirname($_SERVER['SCRIPT_NAME']) . '/../responsibility') ?>" class="btn btn-admin-outline" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i> Voir la page</a>
     </div>
 </header>
 
@@ -333,6 +333,6 @@ function editCommitment(c) {
 <?php endif; ?>
 
 <footer class="admin-main-footer mt-4">
-    <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+    <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
 </footer>
 <?php require __DIR__ . '/inc/footer.php'; ?>

@@ -331,11 +331,11 @@ require __DIR__ . '/inc/header.php';
         <div class="admin-card admin-section-card h-100">
             <h2 class="card-title"><i class="bi bi-lightning"></i> Actions rapides</h2>
             <div class="d-grid gap-2">
-                <a href="missions.php" class="btn btn-admin-primary text-start"><i class="bi bi-plus-circle me-2"></i>
+                <a href="missions" class="btn btn-admin-primary text-start"><i class="bi bi-plus-circle me-2"></i>
                     Nouvelle mission</a>
                 <a href="#" class="btn btn-admin-outline text-start"><i class="bi bi-plus-circle me-2"></i> Nouveau
                     projet</a>
-                <a href="announcements.php" class="btn btn-admin-outline text-start"><i
+                <a href="announcements" class="btn btn-admin-outline text-start"><i
                         class="bi bi-megaphone me-2"></i> Publier une annonce</a>
                 <a href="#" class="btn btn-admin-outline text-start"><i class="bi bi-person-plus me-2"></i> Recruter un
                     membre</a>
@@ -345,6 +345,10 @@ require __DIR__ . '/inc/header.php';
 
             <h2 class="card-title h6"><i class="bi bi-link-45deg"></i> Raccourcis</h2>
             <ul class="list-group list-group-flush small">
+                <li class="list-group-item px-0 d-flex justify-content-between">
+                    <a href="check_setup">Vérification configuration (CRUD)</a>
+                    <i class="bi bi-shield-check"></i>
+                </li>
                 <li class="list-group-item px-0 d-flex justify-content-between">
                     <a href="../">Site public</a>
                     <i class="bi bi-box-arrow-up-right"></i>
@@ -363,7 +367,7 @@ require __DIR__ . '/inc/header.php';
         <div class="admin-card admin-section-card">
             <div class="section-header">
                 <h2 class="card-title"><i class="bi bi-geo-alt"></i> Dernières missions</h2>
-                <a href="missions.php" class="btn btn-sm btn-admin-outline">Voir tout</a>
+                <a href="missions" class="btn btn-sm btn-admin-outline">Voir tout</a>
             </div>
             <?php if (count($recentMissions) > 0): ?>
                 <table class="admin-table">
@@ -377,7 +381,7 @@ require __DIR__ . '/inc/header.php';
                     <tbody>
                         <?php foreach ($recentMissions as $m): ?>
                             <tr>
-                                <td><a href="missions.php?id=<?= (int) $m->id ?>"><?= htmlspecialchars($m->title) ?></a></td>
+                                <td><a href="missions?id=<?= (int) $m->id ?>"><?= htmlspecialchars($m->title) ?></a></td>
                                 <td class="text-muted"><?= htmlspecialchars($m->location ?: '—') ?></td>
                                 <td class="text-muted"><?= $m->updated_at ? date('d/m/Y', strtotime($m->updated_at)) : '—' ?>
                                 </td>
@@ -397,7 +401,7 @@ require __DIR__ . '/inc/header.php';
         <div class="admin-card admin-section-card">
             <div class="section-header">
                 <h2 class="card-title"><i class="bi bi-megaphone"></i> Dernières annonces</h2>
-                <a href="announcements.php" class="btn btn-sm btn-admin-outline">Voir tout</a>
+                <a href="announcements" class="btn btn-sm btn-admin-outline">Voir tout</a>
             </div>
             <?php if (count($recentAnnouncements) > 0): ?>
                 <table class="admin-table">
@@ -410,7 +414,7 @@ require __DIR__ . '/inc/header.php';
                     <tbody>
                         <?php foreach ($recentAnnouncements as $a): ?>
                             <tr>
-                                <td><a href="announcements.php?id=<?= (int) $a->id ?>"><?= htmlspecialchars($a->title) ?></a>
+                                <td><a href="announcements?id=<?= (int) $a->id ?>"><?= htmlspecialchars($a->title) ?></a>
                                 </td>
                                 <td class="text-muted">
                                     <?= ($a->published_at ? date('d/m/Y', strtotime($a->published_at)) : ($a->created_at ? date('d/m/Y', strtotime($a->created_at)) : '—')) ?>

@@ -70,21 +70,21 @@ if ($pdo) {
             require_permission('admin.units.delete');
             $id = (int) $_POST['delete_department'];
             $pdo->prepare("DELETE FROM department WHERE id = ? AND organisation_id = ?")->execute([$id, $organisationId]);
-            header('Location: units.php?organisation_id=' . $organisationId . '&msg=deleted');
+            header('Location: units?organisation_id=' . $organisationId . '&msg=deleted');
             exit;
         }
         if (isset($_POST['delete_service'])) {
             require_permission('admin.units.delete');
             $id = (int) $_POST['delete_service'];
             $pdo->prepare("DELETE FROM service WHERE id = ?")->execute([$id]);
-            header('Location: units.php?organisation_id=' . $organisationId . '&msg=deleted');
+            header('Location: units?organisation_id=' . $organisationId . '&msg=deleted');
             exit;
         }
         if (isset($_POST['delete_unit'])) {
             require_permission('admin.units.delete');
             $id = (int) $_POST['delete_unit'];
             $pdo->prepare("DELETE FROM unit WHERE id = ?")->execute([$id]);
-            header('Location: units.php?organisation_id=' . $organisationId . '&msg=deleted');
+            header('Location: units?organisation_id=' . $organisationId . '&msg=deleted');
             exit;
         }
 
@@ -279,8 +279,8 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="organisations.php" class="text-decoration-none">Structure</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="organisations" class="text-decoration-none">Structure</a></li>
         <li class="breadcrumb-item active">Unités & Services</li>
     </ol>
 </nav>
@@ -292,7 +292,7 @@ require __DIR__ . '/inc/header.php';
             <p class="text-muted mb-0">Départements, services et unités par organisation.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="organisations.php" class="btn btn-admin-outline"><i class="bi bi-building me-1"></i> Organisations</a>
+            <a href="organisations" class="btn btn-admin-outline"><i class="bi bi-building me-1"></i> Organisations</a>
         </div>
     </div>
 </header>
@@ -347,7 +347,7 @@ require __DIR__ . '/inc/header.php';
     <!-- Départements -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-title mb-0"><i class="bi bi-building me-2"></i>Départements</h5>
-            <a href="units.php?organisation_id=<?= $organisationId ?>&type=department&form_action=add" class="btn btn-sm btn-admin-primary">Ajouter un département</a>
+            <a href="units?organisation_id=<?= $organisationId ?>&type=department&form_action=add" class="btn btn-sm btn-admin-primary">Ajouter un département</a>
         </div>
         <?php if ($formType === 'department' && ($formAction === 'add' || $editDepartment)): ?>
             <form method="POST" class="mb-4 p-3 bg-light rounded" enctype="multipart/form-data">
@@ -368,7 +368,7 @@ require __DIR__ . '/inc/header.php';
                         <textarea name="description" id="department_description" class="form-control"><?= htmlspecialchars(isset($editDepartment) ? ($editDepartment->description ?? '') : '') ?></textarea>
                         <script type="application/json" id="department_description_data"><?= json_encode(isset($editDepartment) ? ($editDepartment->description ?? '') : '') ?></script>
                     </div>
-                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units.php?organisation_id=<?= $organisationId ?>&tab=department" class="btn btn-secondary btn-sm">Annuler</a></div>
+                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units?organisation_id=<?= $organisationId ?>&tab=department" class="btn btn-secondary btn-sm">Annuler</a></div>
                 </div>
             </form>
         <?php endif; ?>
@@ -385,7 +385,7 @@ require __DIR__ . '/inc/header.php';
                                 <td><?= $d->first_name ? htmlspecialchars($d->last_name . ' ' . $d->first_name) : '—' ?></td>
                                 <td><?= $d->is_active ? '<span class="badge bg-success-subtle text-success border">Actif</span>' : '<span class="badge bg-secondary">Inactif</span>' ?></td>
                                 <td class="text-end">
-                                    <a href="units.php?organisation_id=<?= $organisationId ?>&type=department&form_action=edit&form_id=<?= (int)$d->id ?>" class="btn btn-sm btn-light border">Modifier</a>
+                                    <a href="units?organisation_id=<?= $organisationId ?>&type=department&form_action=edit&form_id=<?= (int)$d->id ?>" class="btn btn-sm btn-light border">Modifier</a>
                                     <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce département et ses services/unités ?');">
                                         <input type="hidden" name="organisation_id" value="<?= $organisationId ?>">
                                         <input type="hidden" name="delete_department" value="<?= (int)$d->id ?>">
@@ -398,7 +398,7 @@ require __DIR__ . '/inc/header.php';
                 </table>
             </div>
         <?php else: ?>
-            <p class="text-muted mb-0">Aucun département. <a href="units.php?organisation_id=<?= $organisationId ?>&type=department&form_action=add">Ajouter un département</a></p>
+            <p class="text-muted mb-0">Aucun département. <a href="units?organisation_id=<?= $organisationId ?>&type=department&form_action=add">Ajouter un département</a></p>
         <?php endif; ?>
             </div>
 
@@ -406,7 +406,7 @@ require __DIR__ . '/inc/header.php';
     <!-- Services -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-title mb-0"><i class="bi bi-gear me-2"></i>Services</h5>
-            <a href="units.php?organisation_id=<?= $organisationId ?>&type=service&form_action=add" class="btn btn-sm btn-admin-primary">Ajouter un service</a>
+            <a href="units?organisation_id=<?= $organisationId ?>&type=service&form_action=add" class="btn btn-sm btn-admin-primary">Ajouter un service</a>
         </div>
         <?php if ($formType === 'service' && ($formAction === 'add' || $editService)): ?>
             <form method="POST" class="mb-4 p-3 bg-light rounded" enctype="multipart/form-data">
@@ -427,7 +427,7 @@ require __DIR__ . '/inc/header.php';
                         <textarea name="description" id="service_description" class="form-control"><?= htmlspecialchars(isset($editService) ? ($editService->description ?? '') : '') ?></textarea>
                         <script type="application/json" id="service_description_data"><?= json_encode(isset($editService) ? ($editService->description ?? '') : '') ?></script>
                     </div>
-                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units.php?organisation_id=<?= $organisationId ?>&tab=service" class="btn btn-secondary btn-sm">Annuler</a></div>
+                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units?organisation_id=<?= $organisationId ?>&tab=service" class="btn btn-secondary btn-sm">Annuler</a></div>
                 </div>
             </form>
         <?php endif; ?>
@@ -444,7 +444,7 @@ require __DIR__ . '/inc/header.php';
                                 <td><?= htmlspecialchars($s->department_name ?? '—') ?></td>
                                 <td><?= $s->is_active ? '<span class="badge bg-success-subtle text-success border">Actif</span>' : '<span class="badge bg-secondary">Inactif</span>' ?></td>
                                 <td class="text-end">
-                                    <a href="units.php?organisation_id=<?= $organisationId ?>&type=service&form_action=edit&form_id=<?= (int)$s->id ?>" class="btn btn-sm btn-light border">Modifier</a>
+                                    <a href="units?organisation_id=<?= $organisationId ?>&type=service&form_action=edit&form_id=<?= (int)$s->id ?>" class="btn btn-sm btn-light border">Modifier</a>
                                     <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce service et ses unités ?');">
                                         <input type="hidden" name="organisation_id" value="<?= $organisationId ?>">
                                         <input type="hidden" name="delete_service" value="<?= (int)$s->id ?>">
@@ -457,7 +457,7 @@ require __DIR__ . '/inc/header.php';
                 </table>
             </div>
         <?php else: ?>
-            <p class="text-muted mb-0">Aucun service. Créez d'abord un département, puis <a href="units.php?organisation_id=<?= $organisationId ?>&type=service&form_action=add">ajouter un service</a>.</p>
+            <p class="text-muted mb-0">Aucun service. Créez d'abord un département, puis <a href="units?organisation_id=<?= $organisationId ?>&type=service&form_action=add">ajouter un service</a>.</p>
         <?php endif; ?>
             </div>
 
@@ -465,7 +465,7 @@ require __DIR__ . '/inc/header.php';
     <!-- Unités -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-title mb-0"><i class="bi bi-diagram-3 me-2"></i>Unités</h5>
-            <a href="units.php?organisation_id=<?= $organisationId ?>&type=unit&form_action=add" class="btn btn-sm btn-admin-primary">Ajouter une unité</a>
+            <a href="units?organisation_id=<?= $organisationId ?>&type=unit&form_action=add" class="btn btn-sm btn-admin-primary">Ajouter une unité</a>
         </div>
         <?php if ($formType === 'unit' && ($formAction === 'add' || $editUnit)): ?>
             <form method="POST" class="mb-4 p-3 bg-light rounded" enctype="multipart/form-data">
@@ -486,7 +486,7 @@ require __DIR__ . '/inc/header.php';
                         <textarea name="description" id="unit_description" class="form-control"><?= htmlspecialchars(isset($editUnit) ? ($editUnit->description ?? '') : '') ?></textarea>
                         <script type="application/json" id="unit_description_data"><?= json_encode(isset($editUnit) ? ($editUnit->description ?? '') : '') ?></script>
                     </div>
-                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units.php?organisation_id=<?= $organisationId ?>&tab=unit" class="btn btn-secondary btn-sm">Annuler</a></div>
+                    <div class="col-12"><button type="submit" class="btn btn-admin-primary btn-sm">Enregistrer</button> <a href="units?organisation_id=<?= $organisationId ?>&tab=unit" class="btn btn-secondary btn-sm">Annuler</a></div>
                 </div>
             </form>
         <?php endif; ?>
@@ -503,7 +503,7 @@ require __DIR__ . '/inc/header.php';
                                 <td><?= htmlspecialchars($u->service_name ?? '—') ?></td>
                                 <td><?= $u->is_active ? '<span class="badge bg-success-subtle text-success border">Actif</span>' : '<span class="badge bg-secondary">Inactif</span>' ?></td>
                                 <td class="text-end">
-                                    <a href="units.php?organisation_id=<?= $organisationId ?>&type=unit&form_action=edit&form_id=<?= (int)$u->id ?>" class="btn btn-sm btn-light border">Modifier</a>
+                                    <a href="units?organisation_id=<?= $organisationId ?>&type=unit&form_action=edit&form_id=<?= (int)$u->id ?>" class="btn btn-sm btn-light border">Modifier</a>
                                     <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette unité ?');">
                                         <input type="hidden" name="organisation_id" value="<?= $organisationId ?>">
                                         <input type="hidden" name="delete_unit" value="<?= (int)$u->id ?>">
@@ -516,7 +516,7 @@ require __DIR__ . '/inc/header.php';
                 </table>
             </div>
         <?php else: ?>
-            <p class="text-muted mb-0">Aucune unité. Créez d'abord un service, puis <a href="units.php?organisation_id=<?= $organisationId ?>&type=unit&form_action=add">ajouter une unité</a>.</p>
+            <p class="text-muted mb-0">Aucune unité. Créez d'abord un service, puis <a href="units?organisation_id=<?= $organisationId ?>&type=unit&form_action=add">ajouter une unité</a>.</p>
         <?php endif; ?>
             </div>
 
@@ -524,7 +524,7 @@ require __DIR__ . '/inc/header.php';
     <!-- Gouvernance – contenu page Notre gouvernance -->
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h5 class="card-title mb-0"><i class="bi bi-diagram-2 me-2"></i>Contenu de la page « Notre gouvernance »</h5>
-            <a href="../governance.php" target="_blank" class="btn btn-sm btn-admin-outline">Voir la page <i class="bi bi-box-arrow-up-right ms-1"></i></a>
+            <a href="../governance" target="_blank" class="btn btn-sm btn-admin-outline">Voir la page <i class="bi bi-box-arrow-up-right ms-1"></i></a>
         </div>
         <p class="text-muted small mb-3">Ce contenu s'affiche sur la page publique <strong>Notre gouvernance</strong> pour l'organisation sélectionnée.</p>
         <form method="POST" class="p-3 bg-light rounded" accept-charset="UTF-8">
@@ -632,7 +632,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="organisations.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Organisations</a>
+        <a href="organisations" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Organisations</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

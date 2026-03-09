@@ -76,8 +76,8 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="offers.php" class="text-decoration-none">Nos offres</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="offers" class="text-decoration-none">Nos offres</a></li>
         <li class="breadcrumb-item active">Profil candidat</li>
     </ol>
 </nav>
@@ -88,7 +88,7 @@ require __DIR__ . '/inc/header.php';
             <h1><i class="bi bi-person-badge me-2"></i>Profil candidat</h1>
             <p class="text-muted mb-0">Vue en lecture seule du profil et CV du candidat.</p>
         </div>
-        <a href="offers.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux offres</a>
+        <a href="offers" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux offres</a>
     </div>
 </header>
 
@@ -206,11 +206,11 @@ require __DIR__ . '/inc/header.php';
                 <tbody>
                     <?php foreach ($applications as $app): ?>
                         <tr>
-                            <td><a href="offers.php?id=<?= (int) $app->offer_id ?>"><?= htmlspecialchars($app->offer_title) ?></a></td>
+                            <td><a href="offers?id=<?= (int) $app->offer_id ?>"><?= htmlspecialchars($app->offer_title) ?></a></td>
                             <td><?= htmlspecialchars($app->offer_reference ?? '—') ?></td>
                             <td><?= date('d/m/Y H:i', strtotime($app->created_at)) ?></td>
                             <td><span class="badge bg-secondary"><?= $applicationStatusLabels[$app->status] ?? $app->status ?></span></td>
-                            <td><a href="offers.php?id=<?= (int) $app->offer_id ?>" class="btn btn-sm btn-admin-outline">Voir l'offre</a></td>
+                            <td><a href="offers?id=<?= (int) $app->offer_id ?>" class="btn btn-sm btn-admin-outline">Voir l'offre</a></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -221,6 +221,6 @@ require __DIR__ . '/inc/header.php';
 <?php endif; ?>
 
 <footer class="admin-main-footer mt-4">
-    <a href="offers.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Nos offres</a>
+    <a href="offers" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Nos offres</a>
 </footer>
 <?php require __DIR__ . '/inc/footer.php'; ?>

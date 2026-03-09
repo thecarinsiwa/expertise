@@ -27,7 +27,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_id'];
             try {
                 $pdo->prepare("DELETE FROM portfolio WHERE id = ?")->execute([$delId]);
-                header('Location: portfolios.php?msg=deleted');
+                header('Location: portfolios?msg=deleted');
                 exit;
             } catch (PDOException $e) {
                 $error = 'Impossible de supprimer : des programmes sont liés à ce portfolio.';
@@ -52,7 +52,7 @@ if ($pdo) {
                     } else {
                         $pdo->prepare("INSERT INTO portfolio (organisation_id, name, code, description, is_active) VALUES (?, ?, ?, ?, ?)")
                             ->execute([$organisation_id, $name, $code, $description, $is_active]);
-                        header('Location: portfolios.php?id=' . $pdo->lastInsertId() . '&msg=created');
+                        header('Location: portfolios?id=' . $pdo->lastInsertId() . '&msg=created');
                         exit;
                     }
                 } catch (PDOException $e) {
@@ -88,10 +88,10 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="projects.php" class="text-decoration-none">Projets & Tâches</a></li>
-        <li class="breadcrumb-item"><a href="programmes.php" class="text-decoration-none">Programmes</a></li>
-        <li class="breadcrumb-item"><a href="portfolios.php" class="text-decoration-none">Portfolios</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="projects" class="text-decoration-none">Projets & Tâches</a></li>
+        <li class="breadcrumb-item"><a href="programmes" class="text-decoration-none">Programmes</a></li>
+        <li class="breadcrumb-item"><a href="portfolios" class="text-decoration-none">Portfolios</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau portfolio</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -123,13 +123,13 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
-                <a href="portfolios.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <a href="portfolios.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="portfolios?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+                <a href="portfolios" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="portfolios.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
+                <a href="portfolios<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="programmes.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Programmes</a>
-                <a href="portfolios.php?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouveau portfolio</a>
+                <a href="programmes" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Programmes</a>
+                <a href="portfolios?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouveau portfolio</a>
             <?php endif; ?>
         </div>
     </div>
@@ -169,7 +169,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php if ($isForm): ?>
     <div class="admin-card admin-section-card">
         <h5 class="card-title mb-4"><i class="bi bi-folder"></i> <?= $id ? 'Modifier le portfolio' : 'Nouveau portfolio' ?></h5>
-        <form method="POST" action="<?= $id ? 'portfolios.php?action=edit&id=' . $id : 'portfolios.php?action=add' ?>">
+        <form method="POST" action="<?= $id ? 'portfolios?action=edit&id=' . $id : 'portfolios?action=add' ?>">
             <input type="hidden" name="save_portfolio" value="1">
             <div class="row g-3">
                 <div class="col-md-6">
@@ -216,8 +216,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             <tr><th>Statut</th><td><span class="badge bg-secondary"><?= $detail->is_active ? 'Actif' : 'Inactif' ?></span></td></tr>
         </table>
         <div class="mt-4 d-flex gap-2">
-            <a href="portfolios.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-            <a href="portfolios.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="portfolios?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
+            <a href="portfolios" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deletePortfolioModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
         </div>
     </div>
@@ -256,7 +256,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <tbody>
                     <?php foreach ($list as $pf): ?>
                         <tr>
-                            <td><a href="portfolios.php?id=<?= (int) $pf->id ?>"><?= htmlspecialchars($pf->name) ?></a></td>
+                            <td><a href="portfolios?id=<?= (int) $pf->id ?>"><?= htmlspecialchars($pf->name) ?></a></td>
                             <td><?= htmlspecialchars($pf->organisation_name ?? '—') ?></td>
                             <td><?= htmlspecialchars($pf->code ?? '—') ?></td>
                             <td><span class="badge bg-secondary"><?= (int) ($pf->programmes_count ?? 0) ?></span></td>
@@ -265,8 +265,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                        <li><a class="dropdown-item" href="portfolios.php?id=<?= (int) $pf->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
-                                        <li><a class="dropdown-item" href="portfolios.php?action=edit&id=<?= (int) $pf->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
+                                        <li><a class="dropdown-item" href="portfolios?id=<?= (int) $pf->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
+                                        <li><a class="dropdown-item" href="portfolios?action=edit&id=<?= (int) $pf->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
                                             <form method="POST" onsubmit="return confirm('Supprimer ce portfolio et ses programmes ?');">
@@ -293,13 +293,13 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
     </script>
 <?php else: ?>
     <div class="admin-card admin-section-card">
-        <p class="admin-empty py-4 mb-0"><i class="bi bi-inbox"></i> Aucun portfolio. <a href="portfolios.php?action=add">Créer un portfolio</a> pour pouvoir y rattacher des programmes.</p>
+        <p class="admin-empty py-4 mb-0"><i class="bi bi-inbox"></i> Aucun portfolio. <a href="portfolios?action=add">Créer un portfolio</a> pour pouvoir y rattacher des programmes.</p>
     </div>
 <?php endif; ?>
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="programmes.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Programmes</a>
+        <a href="programmes" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Programmes</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

@@ -23,12 +23,18 @@ if ($pdo) {
     $id = isset($_GET['id']) ? (int) $_GET['id'] : 0;
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (isset($_POST['save_organisation'])) {
+            $id = isset($_POST['organisation_id']) ? (int) $_POST['organisation_id'] : $id;
+        }
+        if (empty($_POST) && isset($_SERVER['CONTENT_LENGTH']) && (int) $_SERVER['CONTENT_LENGTH'] > 0) {
+            $error = 'Les données envoyées sont trop volumineuses ou la requête a été tronquée (augmentez post_max_size / upload_max_filesize dans php.ini).';
+        }
         if (isset($_POST['delete_id'])) {
             require_permission('admin.organisations.delete');
             $delId = (int) $_POST['delete_id'];
             try {
                 $pdo->prepare("DELETE FROM organisation WHERE id = ?")->execute([$delId]);
-                header('Location: organisations.php?msg=deleted');
+                header('Location: organisations?msg=deleted');
                 exit;
             } catch (PDOException $e) {
                 $error = 'Impossible de supprimer : des enregistrements dépendent de cette organisation.';
@@ -98,15 +104,19 @@ if ($pdo) {
             } else {
                 if ($id > 0) {
                     require_permission('admin.organisations.modify');
-                    $stmt = $pdo->prepare("UPDATE organisation SET name = ?, code = ?, description = ?, address = ?, phone = ?, email = ?, website = ?, postal_code = ?, city = ?, country = ?, rccm = ?, nif = ?, sector = ?, notes = ?, logo = ?, cover_image = ?, facebook_url = ?, linkedin_url = ?, twitter_url = ?, instagram_url = ?, youtube_url = ?, is_active = ? WHERE id = ?");
-                    $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $cover_image, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active, $id]);
-                    $pdo->prepare("DELETE FROM organisation_organisation_type WHERE organisation_id = ?")->execute([$id]);
-                    $stmtTypes = $pdo->prepare("INSERT INTO organisation_organisation_type (organisation_id, type_code) VALUES (?, ?)");
-                    foreach ($organisation_types as $tc) {
-                        $stmtTypes->execute([$id, $tc]);
+                    try {
+                        $stmt = $pdo->prepare("UPDATE organisation SET name = ?, code = ?, description = ?, address = ?, phone = ?, email = ?, website = ?, postal_code = ?, city = ?, country = ?, rccm = ?, nif = ?, sector = ?, notes = ?, logo = ?, cover_image = ?, facebook_url = ?, linkedin_url = ?, twitter_url = ?, instagram_url = ?, youtube_url = ?, is_active = ? WHERE id = ?");
+                        $stmt->execute([$name, $code, $description, $address, $phone, $email, $website, $postal_code, $city, $country, $rccm, $nif, $sector, $notes, $logo, $cover_image, $facebook_url, $linkedin_url, $twitter_url, $instagram_url, $youtube_url, $is_active, $id]);
+                        $pdo->prepare("DELETE FROM organisation_organisation_type WHERE organisation_id = ?")->execute([$id]);
+                        $stmtTypes = $pdo->prepare("INSERT INTO organisation_organisation_type (organisation_id, type_code) VALUES (?, ?)");
+                        foreach ($organisation_types as $tc) {
+                            $stmtTypes->execute([$id, $tc]);
+                        }
+                        header('Location: organisations?id=' . $id . '&msg=updated');
+                        exit;
+                    } catch (PDOException $e) {
+                        $error = 'Erreur base de données : ' . htmlspecialchars($e->getMessage());
                     }
-                    $success = 'Organisation mise à jour.';
-                    $action = 'view';
                 } else {
                     require_permission('admin.organisations.add');
                     $stmt = $pdo->prepare("INSERT INTO organisation (name, code, description, address, phone, email, website, postal_code, city, country, rccm, nif, sector, notes, logo, cover_image, facebook_url, linkedin_url, twitter_url, instagram_url, youtube_url, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -116,7 +126,7 @@ if ($pdo) {
                     foreach ($organisation_types as $tc) {
                         $stmtTypes->execute([$newId, $tc]);
                     }
-                    header('Location: organisations.php?id=' . $newId . '&msg=created');
+                    header('Location: organisations?id=' . $newId . '&msg=created');
                     exit;
                 }
             }
@@ -160,9 +170,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="organisations.php" class="text-decoration-none">Structure</a></li>
-        <li class="breadcrumb-item"><a href="organisations.php" class="text-decoration-none">Organisations</a></li>
+        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="organisations" class="text-decoration-none">Structure</a></li>
+        <li class="breadcrumb-item"><a href="organisations" class="text-decoration-none">Organisations</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouvelle</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -194,13 +204,13 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         </div>
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
-                <?php if (has_permission('admin.organisations.modify')): ?><a href="organisations.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
-                <a href="units.php?organisation_id=<?= (int) $detail->id ?>" class="btn btn-admin-outline"><i class="bi bi-diagram-3 me-1"></i> Unités & Services</a>
-                <a href="organisations.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <?php if (has_permission('admin.organisations.modify')): ?><a href="organisations?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+                <a href="units?organisation_id=<?= (int) $detail->id ?>" class="btn btn-admin-outline"><i class="bi bi-diagram-3 me-1"></i> Unités & Services</a>
+                <a href="organisations" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="organisations.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
+                <a href="organisations<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <?php if (has_permission('admin.organisations.add')): ?><a href="organisations.php?action=add" class="btn btn-admin-primary"><i class="bi bi-building-add me-1"></i> Nouvelle organisation</a><?php endif; ?>
+                <?php if (has_permission('admin.organisations.add')): ?><a href="organisations?action=add" class="btn btn-admin-primary"><i class="bi bi-building-add me-1"></i> Nouvelle organisation</a><?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -212,8 +222,17 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 <?php if (isset($_GET['msg']) && $_GET['msg'] === 'created'): ?>
     <div class="alert alert-success">Organisation créée.</div>
 <?php endif; ?>
+<?php if (isset($_GET['msg']) && $_GET['msg'] === 'updated'): ?>
+    <div class="alert alert-success">Organisation mise à jour.</div>
+<?php endif; ?>
 <?php if ($error): ?>
     <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+<?php endif; ?>
+<?php if ($action === 'edit' && $id > 0 && !$detail && $pdo): ?>
+    <div class="alert alert-warning">Organisation introuvable (id=<?= (int) $id ?>).</div>
+<?php endif; ?>
+<?php if ($action === 'edit' && $detail && !has_permission('admin.organisations.modify')): ?>
+    <div class="alert alert-warning">Vous n'avez pas la permission de modifier les organisations. Demandez l'accès « Organisations – Modifier » à un administrateur.</div>
 <?php endif; ?>
 <?php if ($success): ?>
     <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
@@ -239,8 +258,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <?php if ($isForm && (($action === 'add' && has_permission('admin.organisations.add')) || ($action === 'edit' && has_permission('admin.organisations.modify')))): ?>
     <div class="admin-card admin-section-card">
-        <form method="POST" action="<?= $id ? 'organisations.php?action=edit&id=' . $id : 'organisations.php?action=add' ?>" enctype="multipart/form-data">
+        <form method="POST" action="<?= $id ? 'organisations?action=edit&id=' . $id : 'organisations?action=add' ?>" enctype="multipart/form-data" id="organisationForm">
             <input type="hidden" name="save_organisation" value="1">
+            <?php if ($id > 0): ?><input type="hidden" name="organisation_id" value="<?= (int) $id ?>"><?php endif; ?>
             <div class="row g-3">
                 <div class="col-md-8">
                     <label class="form-label fw-bold">Nom *</label>
@@ -362,7 +382,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-admin-primary"><i class="bi bi-check-lg me-1"></i> Enregistrer</button>
-                    <a href="organisations.php<?= $id ? '?id=' . $id : '' ?>" class="btn btn-secondary">Annuler</a>
+                    <a href="organisations<?= $id ? '?id=' . $id : '' ?>" class="btn btn-secondary">Annuler</a>
                 </div>
             </div>
         </form>
@@ -370,6 +390,16 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
     <style>.organisation-description-editor h1,.organisation-description-editor h2,.organisation-description-editor h3,.organisation-description-editor h4{ margin: 1rem 0 0.5rem; font-size: 1rem; font-weight: 600; } .organisation-description-editor p{ margin: 0.5rem 0; } .organisation-description-editor ul,.organisation-description-editor ol{ margin: 0.5rem 0; padding-left: 1.5rem; } .organisation-description-editor img{ max-width: 100%; height: auto; }</style>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
+        var $form = $('#organisationForm');
+        if ($form.length) {
+            $form.on('submit', function() {
+                var $desc = $('#organisation_description');
+                if ($desc.length && typeof $desc.summernote === 'function') {
+                    var code = $desc.summernote('code');
+                    $desc.val(code || '');
+                }
+            });
+        }
         if (typeof $ !== 'undefined' && $.fn.summernote) {
             $('#organisation_description').summernote({
                 placeholder: 'Description de l\'organisation (texte enrichi)...',
@@ -389,7 +419,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                             var data = new FormData();
                             data.append('file', files[i]);
                             $.ajax({
-                                url: 'upload_organisation_image.php',
+                                url: 'upload_organisation_image',
                                 data: data,
                                 processData: false,
                                 contentType: false,
@@ -487,9 +517,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
             <div class="col-auto"><span class="badge bg-secondary"><?= (int)($detail->count_users ?? 0) ?> utilisateur(s)</span></div>
         </div>
         <div class="mt-4 d-flex gap-2">
-            <?php if (has_permission('admin.organisations.modify')): ?><a href="organisations.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
-            <a href="units.php?organisation_id=<?= (int) $detail->id ?>" class="btn btn-admin-outline"><i class="bi bi-diagram-3 me-1"></i> Unités & Services</a>
-            <a href="organisations.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <?php if (has_permission('admin.organisations.modify')): ?><a href="organisations?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+            <a href="units?organisation_id=<?= (int) $detail->id ?>" class="btn btn-admin-outline"><i class="bi bi-diagram-3 me-1"></i> Unités & Services</a>
+            <a href="organisations" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php if (has_permission('admin.organisations.delete')): ?><button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteOrgModal"><i class="bi bi-trash me-1"></i> Supprimer</button><?php endif; ?>
         </div>
     </div>
@@ -535,7 +565,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                     <?php if (!empty($o->logo)): ?>
                                         <img src="../<?= htmlspecialchars($o->logo) ?>" alt="" class="rounded flex-shrink-0" style="width: 32px; height: 32px; object-fit: contain;">
                                     <?php endif; ?>
-                                    <a href="organisations.php?id=<?= (int) $o->id ?>"><?= htmlspecialchars($o->name) ?></a>
+                                    <a href="organisations?id=<?= (int) $o->id ?>"><?= htmlspecialchars($o->name) ?></a>
                                 </div>
                             </td>
                             <td><?= htmlspecialchars($o->code ?? '—') ?></td>
@@ -544,9 +574,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                 <div class="dropdown">
                                     <button class="btn btn-sm btn-light border" type="button" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                        <li><a class="dropdown-item" href="organisations.php?id=<?= (int) $o->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
-                                        <?php if (has_permission('admin.organisations.modify')): ?><li><a class="dropdown-item" href="organisations.php?action=edit&id=<?= (int) $o->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li><?php endif; ?>
-                                        <li><a class="dropdown-item" href="units.php?organisation_id=<?= (int) $o->id ?>"><i class="bi bi-diagram-3 me-2"></i> Unités & Services</a></li>
+                                        <li><a class="dropdown-item" href="organisations?id=<?= (int) $o->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
+                                        <?php if (has_permission('admin.organisations.modify')): ?><li><a class="dropdown-item" href="organisations?action=edit&id=<?= (int) $o->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li><?php endif; ?>
+                                        <li><a class="dropdown-item" href="units?organisation_id=<?= (int) $o->id ?>"><i class="bi bi-diagram-3 me-2"></i> Unités & Services</a></li>
                                         <?php if (has_permission('admin.organisations.delete')): ?>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
@@ -590,7 +620,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

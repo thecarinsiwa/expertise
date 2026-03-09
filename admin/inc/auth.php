@@ -22,7 +22,7 @@ if (empty($_SESSION['admin_logged_in'])) {
     $adminBase = admin_base_url() . 'admin/';
     $redirect = $_SERVER['REQUEST_URI'] ?? '';
     if (strpos($redirect, ':') !== false) $redirect = $adminBase;
-    $loginUrl = $adminBase . 'login.php' . ($redirect ? '?redirect=' . urlencode($redirect) : '');
+    $loginUrl = $adminBase . 'login' . ($redirect ? '?redirect=' . urlencode($redirect) : '');
     header('Location: ' . $loginUrl);
     exit;
 }
@@ -42,8 +42,8 @@ function get_admin_permissions() {
     }
     require_once __DIR__ . '/db.php';
     $perms = [];
-    if (isset($GLOBALS['pdo']) && $GLOBALS['pdo']) {
-        $stmt = $GLOBALS['pdo']->prepare("
+    if (isset($pdo) && $pdo) {
+        $stmt = $pdo->prepare("
             SELECT DISTINCT p.code
             FROM permission p
             JOIN role_permission rp ON p.id = rp.permission_id
@@ -79,6 +79,6 @@ function require_permission($code) {
     if (has_permission($code)) {
         return;
     }
-    header('Location: 403.php');
+    header('Location: 403');
     exit;
 }
