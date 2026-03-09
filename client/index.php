@@ -4,7 +4,7 @@
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
+require_once dirname(__DIR__) . '/inc/url_hash.php';
 
 $pageTitle = 'Mon espace – Expertise';
 $clientName = !empty($_SESSION['client_name']) && trim($_SESSION['client_name']) !== ''
