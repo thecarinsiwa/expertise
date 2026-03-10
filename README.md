@@ -60,7 +60,7 @@ expertise/
 
 ## Installation de la base de données
 
-1. Créer la base :
+1. Créer la base des données :
 
    ```bash
    mysql -u root -p < database/00_create_database.sql
