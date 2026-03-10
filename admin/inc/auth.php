@@ -79,6 +79,16 @@ function require_permission($code) {
     if (has_permission($code)) {
         return;
     }
-    header('Location: 403');
+    if (!function_exists('admin_base_url')) {
+        function admin_base_url() {
+            if (!getenv('SITE_BASE_URL') && empty($_ENV['SITE_BASE_URL'])) {
+                $envFile = dirname(__DIR__, 2) . '/config/load_env.php';
+                if (is_file($envFile)) require_once $envFile;
+            }
+            $base = getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '/expertise/');
+            return rtrim($base, '/') . '/';
+        }
+    }
+    header('Location: ' . admin_base_url() . 'admin/403.php');
     exit;
 }
