@@ -1,6 +1,6 @@
 # Expertise – Database (MySQL)
 
-Schéma MySQL unifié pour la plateforme Expertise. **Un seul fichier** : `schema.sql` (toutes les anciennes migrations y sont intégrées).
+Schéma MySQL unifié pour la plateforme Expertise Humanitaire et Sociale. **Un seul fichier** : `schema.sql` (toutes les anciennes migrations y sont intégrées).
 
 ## Fichiers
 
@@ -24,7 +24,7 @@ Schéma MySQL unifié pour la plateforme Expertise. **Un seul fichier** : `schem
 
 ## Setup
 
-1. Create the database (optional):
+1. Create the database (optional if doesn'nt exist):
 
 ```bash
 mysql -u root -p -e "CREATE DATABASE IF NOT EXISTS expertise CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
