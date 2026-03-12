@@ -120,7 +120,7 @@ $missionsQueryString = [];
 if ($searchQ !== '') $missionsQueryString['q'] = $searchQ;
 if ($locationFilter !== '') $missionsQueryString['location'] = $locationFilter;
 if ($sort !== 'date_desc') $missionsQueryString['sort'] = $sort;
-$missionsQueryPrefix = $baseUrl . 'missions' . (count($missionsQueryString) ? '?' . http_build_query($missionsQueryString) . '&' : '?');
+$missionsQueryPrefix = $baseUrl . 'missions.php' . (count($missionsQueryString) ? '?' . http_build_query($missionsQueryString) . '&' : '?');
 
 require_once __DIR__ . '/inc/asset_url.php';
 require __DIR__ . '/inc/head.php';
@@ -140,15 +140,15 @@ require __DIR__ . '/inc/header.php';
     <section class="py-5">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= $baseUrl ?>index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Retour à l'accueil</a>
+                <a href="<?= $baseUrl ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Retour à l'accueil</a>
             </nav>
 
             <h1 class="mb-4">Missions<?= $locationFilter !== '' ? ' — ' . htmlspecialchars($locationFilter) : '' ?></h1>
             <?php if ($locationFilter !== ''): ?>
-                <p class="text-muted mb-3"><a href="<?= $baseUrl ?>missions" class="text-decoration-none"><i class="bi bi-arrow-left me-1"></i> Toutes les missions</a></p>
+                <p class="text-muted mb-3"><a href="<?= $baseUrl ?>missions.php" class="text-decoration-none"><i class="bi bi-arrow-left me-1"></i> Toutes les missions</a></p>
             <?php endif; ?>
 
-            <form method="get" action="<?= $baseUrl ?>missions" class="row g-3 mb-4 list-toolbar">
+            <form method="get" action="<?= $baseUrl ?>missions.php" class="row g-3 mb-4 list-toolbar">
                 <?php if ($locationFilter !== ''): ?>
                 <input type="hidden" name="location" value="<?= htmlspecialchars($locationFilter) ?>">
                 <?php endif; ?>
@@ -172,7 +172,7 @@ require __DIR__ . '/inc/header.php';
                 </div>
                 <?php if ($searchQ !== '' || $sort !== 'date_desc'): ?>
                 <div class="col-auto">
-                    <a href="<?= $baseUrl ?>missions<?= $locationFilter !== '' ? '?location=' . urlencode($locationFilter) : '' ?>" class="btn btn-outline-secondary">Réinitialiser filtres</a>
+                    <a href="<?= $baseUrl ?>missions.php<?= $locationFilter !== '' ? '?location=' . urlencode($locationFilter) : '' ?>" class="btn btn-outline-secondary">Réinitialiser filtres</a>
                 </div>
                 <?php endif; ?>
             </form>

@@ -52,7 +52,7 @@ require __DIR__ . '/../inc/header.php';
     <section class="client-dashboard py-5">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="client-breadcrumb mb-4">
-                <a href="<?= htmlspecialchars($baseUrl) ?>client/"><i class="bi bi-arrow-left me-1"></i> Mon espace</a>
+                <a href="<?= htmlspecialchars($baseUrl) ?>client/index.php"><i class="bi bi-arrow-left me-1"></i> Mon espace</a>
             </nav>
 
             <h1 class="client-page-title"><i class="bi bi-file-earmark-text me-2"></i>Mes candidatures</h1>
@@ -104,7 +104,7 @@ require __DIR__ . '/../inc/header.php';
                     <span class="client-empty-icon"><i class="bi bi-file-earmark-plus"></i></span>
                     <h3 class="client-empty-title">Aucune candidature</h3>
                     <p class="client-empty-text">Vous n'avez pas encore postulé à une offre. Parcourez nos offres et déposez votre candidature.</p>
-                    <a href="<?= htmlspecialchars($baseUrl) ?>offres" class="btn btn-read-more"><i class="bi bi-briefcase me-2"></i>Voir nos offres</a>
+                    <a href="<?= htmlspecialchars($baseUrl) ?>offres.php" class="btn btn-read-more"><i class="bi bi-briefcase me-2"></i>Voir nos offres</a>
                 </div>
             <?php endif; ?>
         </div>

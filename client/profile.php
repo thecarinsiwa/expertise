@@ -205,7 +205,7 @@ require __DIR__ . '/../inc/header.php';
     <section class="client-dashboard py-5">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= htmlspecialchars($baseUrl) ?>client/" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Mon espace</a>
+                <a href="<?= htmlspecialchars($baseUrl) ?>client/index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Mon espace</a>
             </nav>
 
             <h1 class="section-heading mb-4"><i class="bi bi-person-badge me-2"></i>Mon profil / Mon CV</h1>
@@ -316,7 +316,7 @@ require __DIR__ . '/../inc/header.php';
 
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-read-more"><i class="bi bi-check-lg me-2"></i>Enregistrer mon profil</button>
-                    <a href="<?= htmlspecialchars($baseUrl) ?>client/" class="btn btn-outline-secondary">Annuler</a>
+                    <a href="<?= htmlspecialchars($baseUrl) ?>client/index.php" class="btn btn-outline-secondary">Annuler</a>
                 </div>
             </form>
         </div>

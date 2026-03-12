@@ -68,7 +68,7 @@ $totalPages = $totalProjects > 0 ? (int) ceil($totalProjects / $perPage) : 1;
 $projectsQueryString = [];
 if ($searchQ !== '') $projectsQueryString['q'] = $searchQ;
 if ($sort !== 'date_desc') $projectsQueryString['sort'] = $sort;
-$projectsQueryPrefix = $baseUrl . 'projects' . (count($projectsQueryString) ? '?' . http_build_query($projectsQueryString) . '&' : '?');
+$projectsQueryPrefix = $baseUrl . 'projects.php' . (count($projectsQueryString) ? '?' . http_build_query($projectsQueryString) . '&' : '?');
 
 require_once __DIR__ . '/inc/asset_url.php';
 require_once __DIR__ . '/inc/page-static.php';
@@ -76,12 +76,12 @@ require_once __DIR__ . '/inc/page-static.php';
     <section class="py-5 page-content">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= $baseUrl ?>index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
+                <a href="<?= $baseUrl ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
             </nav>
             <h1 class="section-heading mb-4">Projets</h1>
             <p class="lead text-muted mb-4">Portfolios et programmes, suivi des projets et livrables.</p>
 
-            <form method="get" action="<?= $baseUrl ?>projects" class="row g-3 mb-4 list-toolbar">
+            <form method="get" action="<?= $baseUrl ?>projects.php" class="row g-3 mb-4 list-toolbar">
                 <div class="col-md-5 col-lg-4">
                     <label for="projects-q" class="form-label visually-hidden">Rechercher</label>
                     <input type="search" name="q" id="projects-q" class="form-control" value="<?= htmlspecialchars($searchQ) ?>" placeholder="Rechercher (nom, code, statut)…">
@@ -104,7 +104,7 @@ require_once __DIR__ . '/inc/page-static.php';
                 </div>
                 <?php if ($searchQ !== '' || $sort !== 'date_desc'): ?>
                 <div class="col-auto">
-                    <a href="<?= $baseUrl ?>projects" class="btn btn-outline-secondary">Réinitialiser</a>
+                    <a href="<?= $baseUrl ?>projects.php" class="btn btn-outline-secondary">Réinitialiser</a>
                 </div>
                 <?php endif; ?>
             </form>

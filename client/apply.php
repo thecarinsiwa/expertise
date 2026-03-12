@@ -54,7 +54,7 @@ if ($pdo) {
 }
 
 if (!$offer) {
-    header('Location: ' . $baseUrl . 'offres');
+    header('Location: ' . $baseUrl . 'offres.php');
     exit;
 }
 
@@ -123,9 +123,9 @@ require __DIR__ . '/../inc/header.php';
     <section class="py-5">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= htmlspecialchars($baseUrl) ?>client/" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Mon espace</a>
+                <a href="<?= htmlspecialchars($baseUrl) ?>client/index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Mon espace</a>
                 <span class="mx-2">/</span>
-                <a href="<?= htmlspecialchars($baseUrl) ?>offres" class="text-muted text-decoration-none small">Nos offres</a>
+                <a href="<?= htmlspecialchars($baseUrl) ?>offres.php" class="text-muted text-decoration-none small">Nos offres</a>
                 <span class="mx-2">/</span>
                 <a href="<?= htmlspecialchars(public_entity_url($baseUrl, 'offre', (int) $offer->id)) ?>" class="text-muted text-decoration-none small"><?= htmlspecialchars($offer->title) ?></a>
             </nav>

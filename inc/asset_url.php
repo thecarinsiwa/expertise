@@ -36,6 +36,31 @@ if (!function_exists('client_rewrite_uploads_in_html')) {
 }
 
 /**
+ * Base URL pour les assets statiques (inc/style.css, inc/scripts.js).
+ * Quand la page est servie sous /client/, ces fichiers sont à la racine du site,
+ * pas sous /client/inc/, pour éviter 404 et erreur MIME type.
+ *
+ * @param string $baseUrl Base URL courante (ex. '' ou '/client/' ou '/expertise/')
+ * @return string Base URL à utiliser pour les liens vers inc/style.css et inc/scripts.js
+ */
+if (!function_exists('get_assets_base_url')) {
+    function get_assets_base_url($baseUrl) {
+        $baseUrl = $baseUrl ?? '';
+        if ($baseUrl === '' || strpos($baseUrl, '/client') !== false) {
+            if (!getenv('SITE_BASE_URL') && empty($_ENV['SITE_BASE_URL']) && is_file(__DIR__ . '/../config/load_env.php')) {
+                require_once __DIR__ . '/../config/load_env.php';
+            }
+            $siteRoot = getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '');
+            if ($siteRoot !== '' && $siteRoot !== '/' && substr($siteRoot, -1) !== '/') {
+                $siteRoot .= '/';
+            }
+            return $siteRoot;
+        }
+        return $baseUrl;
+    }
+}
+
+/**
  * Logo du site : organisation active (logo) ou fallback assets/images/logo.jpg.
  * @param string $baseUrl Base URL du site
  * @param object|null $organisation Objet organisation (optionnel, avec ->logo)

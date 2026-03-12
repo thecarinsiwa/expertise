@@ -11,7 +11,7 @@ require_once __DIR__ . '/inc/url_hash.php';
 
 $id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
 if ($id === null || $id <= 0) {
-    header('Location: ' . $baseUrl . 'index');
+    header('Location: ' . $baseUrl . 'index.php');
     exit;
 }
 
@@ -34,7 +34,7 @@ try {
     $mission = $stmt->fetch();
 
     if (!$mission) {
-        header('Location: ' . $baseUrl . 'index');
+        header('Location: ' . $baseUrl . 'index.php');
         exit;
     }
 
@@ -55,7 +55,7 @@ try {
     $bailleurs = $stmt->fetchAll();
 } catch (PDOException $e) {
     $pdo = null;
-    header('Location: ' . $baseUrl . 'index');
+    header('Location: ' . $baseUrl . 'index.php');
     exit;
 }
 
@@ -73,7 +73,7 @@ $coverUrl = $hasCover ? client_asset_url($baseUrl, $mission->cover_image) : '';
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                     <button type="button" class="mission-detail-print-btn" onclick="window.print();" aria-label="Imprimer la page"><i class="bi bi-printer"></i> Imprimer</button>
                 </nav>
                 <span class="mission-detail-badge"><?= htmlspecialchars($mission->location ?: 'Mission') ?></span>
@@ -99,7 +99,7 @@ $coverUrl = $hasCover ? client_asset_url($baseUrl, $mission->cover_image) : '';
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                     <button type="button" class="mission-detail-print-btn mission-detail-print-btn--dark" onclick="window.print();" aria-label="Imprimer la page"><i class="bi bi-printer"></i> Imprimer</button>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark"><?= htmlspecialchars($mission->location ?: 'Mission') ?></span>

@@ -65,7 +65,7 @@ $totalPages = $totalAnnouncements > 0 ? (int) ceil($totalAnnouncements / $perPag
 $newsQueryString = [];
 if ($searchQ !== '') $newsQueryString['q'] = $searchQ;
 if ($sort !== 'date_desc') $newsQueryString['sort'] = $sort;
-$newsQueryPrefix = $baseUrl . 'news' . (count($newsQueryString) ? '?' . http_build_query($newsQueryString) . '&' : '?');
+$newsQueryPrefix = $baseUrl . 'news.php' . (count($newsQueryString) ? '?' . http_build_query($newsQueryString) . '&' : '?');
 
 require_once __DIR__ . '/inc/asset_url.php';
 require __DIR__ . '/inc/head.php';
@@ -75,12 +75,12 @@ require __DIR__ . '/inc/header.php';
     <section class="py-5">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= $baseUrl ?>index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Retour à l'accueil</a>
+                <a href="<?= $baseUrl ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Retour à l'accueil</a>
             </nav>
 
             <h1 class="mb-4">Actualités</h1>
 
-            <form method="get" action="<?= $baseUrl ?>news" class="row g-3 mb-4 list-toolbar">
+            <form method="get" action="<?= $baseUrl ?>news.php" class="row g-3 mb-4 list-toolbar">
                 <div class="col-md-5 col-lg-4">
                     <label for="news-q" class="form-label visually-hidden">Rechercher</label>
                     <input type="search" name="q" id="news-q" class="form-control" value="<?= htmlspecialchars($searchQ) ?>" placeholder="Rechercher dans les actualités…">
@@ -99,7 +99,7 @@ require __DIR__ . '/inc/header.php';
                 </div>
                 <?php if ($searchQ !== '' || $sort !== 'date_desc'): ?>
                 <div class="col-auto">
-                    <a href="<?= $baseUrl ?>news" class="btn btn-outline-secondary">Réinitialiser</a>
+                    <a href="<?= $baseUrl ?>news.php" class="btn btn-outline-secondary">Réinitialiser</a>
                 </div>
                 <?php endif; ?>
             </form>

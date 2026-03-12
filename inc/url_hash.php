@@ -84,10 +84,12 @@ if (!function_exists('public_entity_url')) {
      */
     function public_entity_url($baseUrl, $page, $id) {
         $base = $baseUrl !== '' ? rtrim($baseUrl, '/') . '/' : '';
+        $suffix = (substr($page, -4) !== '.php') ? '.php' : '';
+        $pagePath = $page . $suffix;
         $token = encode_id($id);
         if ($token === '') {
-            return $base . $page;
+            return $base . $pagePath;
         }
-        return $base . $page . '?h=' . urlencode($token);
+        return $base . $pagePath . '?h=' . urlencode($token);
     }
 }

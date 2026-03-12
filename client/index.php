@@ -77,7 +77,7 @@ require __DIR__ . '/../inc/header.php';
             <h2 class="client-section-title">Accès rapides</h2>
             <div class="row g-4 mb-5">
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>offres" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>offres.php" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-briefcase"></i></span>
                         <h3 class="client-action-title">Nos offres</h3>
                         <p class="client-action-desc">Consulter les offres et postuler</p>
@@ -101,7 +101,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>index" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>index.php" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-house"></i></span>
                         <h3 class="client-action-title">Site principal</h3>
                         <p class="client-action-desc">Retour à l'accueil du site</p>
@@ -109,7 +109,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>missions" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>missions.php" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-geo-alt"></i></span>
                         <h3 class="client-action-title">Nos missions</h3>
                         <p class="client-action-desc">Découvrir nos missions</p>
@@ -117,7 +117,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>news" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>news.php" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-newspaper"></i></span>
                         <h3 class="client-action-title">Actualités</h3>
                         <p class="client-action-desc">Lire les dernières actualités</p>
@@ -125,7 +125,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>contact" class="client-action-card">
+                    <a href="<?= htmlspecialchars($baseUrl) ?>contact.php" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-envelope"></i></span>
                         <h3 class="client-action-title">Nous contacter</h3>
                         <p class="client-action-desc">Une question ? Écrivez-nous</p>

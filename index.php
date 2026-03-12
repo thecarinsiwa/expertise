@@ -325,7 +325,7 @@ require __DIR__ . '/inc/header.php';
     <section class="container py-5" id="missions">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
             <h2 class="section-heading mb-0">Dernières missions</h2>
-            <a href="<?= $baseUrl ?>missions" class="btn-view-all">Voir tout</a>
+            <a href="<?= $baseUrl ?>missions.php" class="btn-view-all">Voir tout</a>
         </div>
         <?php if (count($recentMissions) > 0): ?>
             <div class="row g-4">
@@ -355,7 +355,7 @@ require __DIR__ . '/inc/header.php';
     <section class="container py-5 border-top" id="actualites">
         <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pt-4">
             <h2 class="section-heading mb-0">Actualités</h2>
-            <a href="<?= $baseUrl ?>news" class="btn-view-all">Voir tout</a>
+            <a href="<?= $baseUrl ?>news.php" class="btn-view-all">Voir tout</a>
         </div>
         <?php if (count($recentAnnouncements) > 0): ?>
             <div class="row g-4">
@@ -400,7 +400,7 @@ require __DIR__ . '/inc/header.php';
                         <p class="text-muted mb-2">Parmi nos lieux d'intervention :</p>
                         <ul class="index-where-list mb-0">
                             <?php foreach ($recentLocations as $loc): ?>
-                                <li><a href="<?= $baseUrl ?>missions?location=<?= urlencode($loc) ?>"><?= htmlspecialchars($loc) ?></a></li>
+                                <li><a href="<?= $baseUrl ?>missions.php?location=<?= urlencode($loc) ?>"><?= htmlspecialchars($loc) ?></a></li>
                             <?php endforeach; ?>
                         </ul>
                     <?php else: ?>

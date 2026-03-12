@@ -11,7 +11,7 @@ require_once __DIR__ . '/inc/url_hash.php';
 
 $id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
 if ($id === null || $id <= 0) {
-    header('Location: ' . $baseUrl . 'index');
+    header('Location: ' . $baseUrl . 'index.php');
     exit;
 }
 
@@ -48,7 +48,7 @@ try {
     $announcement = $stmt->fetch();
 
     if (!$announcement) {
-        header('Location: ' . $baseUrl . 'index');
+        header('Location: ' . $baseUrl . 'index.php');
         exit;
     }
 
@@ -153,7 +153,7 @@ try {
     $recentAnnouncements = $stmt->fetchAll();
 } catch (PDOException $e) {
     $pdo = null;
-    header('Location: ' . $baseUrl . 'index');
+    header('Location: ' . $baseUrl . 'index.php');
     exit;
 }
 
@@ -173,7 +173,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                 </nav>
                 <span class="mission-detail-badge">Annonce</span>
                 <h1 class="mission-detail-title"><?= htmlspecialchars($announcement->title) ?></h1>
@@ -193,7 +193,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark">Annonce</span>
                 <h1 class="mission-detail-title mission-detail-title--dark"><?= htmlspecialchars($announcement->title) ?></h1>
@@ -327,7 +327,7 @@ $reactionSuccess = isset($_GET['reaction']) && $_GET['reaction'] === '1';
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
-                                <a href="<?= $baseUrl ?>news" class="btn btn-view-all btn-sm mt-2">Toutes les actualités</a>
+                                <a href="<?= $baseUrl ?>news.php" class="btn btn-view-all btn-sm mt-2">Toutes les actualités</a>
                             </div>
                         <?php endif; ?>
                     </aside>

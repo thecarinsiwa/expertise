@@ -26,7 +26,7 @@ $hasSocial = $organisation && (trim($organisation->facebook_url ?? '') !== '' ||
     <section class="py-5 page-content contact-page">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= htmlspecialchars($baseUrl) ?>index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
+                <a href="<?= htmlspecialchars($baseUrl) ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
             </nav>
             <h1 class="section-heading mb-4">Nous contacter</h1>
 

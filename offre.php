@@ -11,7 +11,7 @@ require_once __DIR__ . '/inc/url_hash.php';
 
 $id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
 if ($id === null || $id <= 0) {
-    header('Location: ' . $baseUrl . 'offres');
+    header('Location: ' . $baseUrl . 'offres.php');
     exit;
 }
 
@@ -34,14 +34,14 @@ try {
     $offer = $stmt->fetch();
 
     if (!$offer) {
-        header('Location: ' . $baseUrl . 'offres');
+        header('Location: ' . $baseUrl . 'offres.php');
         exit;
     }
 
     $pageTitle = $offer->title . ' — ' . ($organisation ? $organisation->name : 'Expertise');
 } catch (PDOException $e) {
     $pdo = null;
-    header('Location: ' . $baseUrl . 'offres');
+    header('Location: ' . $baseUrl . 'offres.php');
     exit;
 }
 
@@ -72,9 +72,9 @@ $loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode(public_entity_ur
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                     <span class="mx-2">/</span>
-                    <a href="<?= $baseUrl ?>offres">Nos offres</a>
+                    <a href="<?= $baseUrl ?>offres.php">Nos offres</a>
                 </nav>
                 <span class="mission-detail-badge"><?= htmlspecialchars($offer->mission_id ? ($offer->mission_title ?? 'Mission') : ($offer->project_id ? ($offer->project_name ?? 'Projet') : 'Offre')) ?></span>
                 <h1 class="mission-detail-title"><?= htmlspecialchars($offer->title) ?></h1>
@@ -91,9 +91,9 @@ $loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode(public_entity_ur
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Retour à l'accueil</a>
                     <span class="mx-2">/</span>
-                    <a href="<?= $baseUrl ?>offres">Nos offres</a>
+                    <a href="<?= $baseUrl ?>offres.php">Nos offres</a>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark"><?= htmlspecialchars($offer->mission_id ? ($offer->mission_title ?? 'Mission') : ($offer->project_id ? ($offer->project_name ?? 'Projet') : 'Offre')) ?></span>
                 <h1 class="mission-detail-title mission-detail-title--dark"><?= htmlspecialchars($offer->title) ?></h1>

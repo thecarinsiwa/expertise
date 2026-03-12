@@ -85,7 +85,7 @@ function format_file_size($bytes) {
     <section class="py-5 page-content media-resources-page">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="mb-4">
-                <a href="<?= htmlspecialchars($baseUrl) ?>index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
+                <a href="<?= htmlspecialchars($baseUrl) ?>index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Accueil</a>
             </nav>
             <h1 class="section-heading mb-4">Médias & ressources</h1>
 
@@ -93,7 +93,7 @@ function format_file_size($bytes) {
                 <p class="lead text-muted">Documents, publications et ressources utiles.</p>
                 <p class="mb-4">Cette section rassemble les supports de communication, rapports et documents mis à disposition du public.</p>
                 <div class="media-quick-links d-flex flex-wrap gap-2">
-                    <a href="<?= htmlspecialchars($baseUrl) ?>index#actualites" class="btn btn-outline-primary btn-sm"><i class="bi bi-newspaper me-1"></i> Actualités</a>
+                    <a href="<?= htmlspecialchars($baseUrl) ?>index.php#actualites" class="btn btn-outline-primary btn-sm"><i class="bi bi-newspaper me-1"></i> Actualités</a>
                     <a href="<?= htmlspecialchars($baseUrl) ?>reports-finances.php" class="btn btn-outline-primary btn-sm"><i class="bi bi-graph-up me-1"></i> Rapports et finances</a>
                     <a href="<?= htmlspecialchars($baseUrl) ?>responsibility.php" class="btn btn-outline-primary btn-sm"><i class="bi bi-shield-check me-1"></i> Responsabilité</a>
                 </div>

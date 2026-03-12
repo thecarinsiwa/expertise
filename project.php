@@ -11,7 +11,7 @@ require_once __DIR__ . '/inc/url_hash.php';
 
 $id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
 if ($id === null || $id <= 0) {
-    header('Location: ' . $baseUrl . 'projects');
+    header('Location: ' . $baseUrl . 'projects.php');
     exit;
 }
 
@@ -48,7 +48,7 @@ try {
     $project = $stmt->fetch();
 
     if (!$project) {
-        header('Location: ' . $baseUrl . 'projects');
+        header('Location: ' . $baseUrl . 'projects.php');
         exit;
     }
 
@@ -80,7 +80,7 @@ try {
     $otherProjects = $stmt->fetchAll();
 } catch (PDOException $e) {
     $pdo = null;
-    header('Location: ' . $baseUrl . 'projects');
+    header('Location: ' . $baseUrl . 'projects.php');
     exit;
 }
 
@@ -100,9 +100,9 @@ $priorityLabel = isset($priorityLabels[$project->priority]) ? $priorityLabels[$p
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
-                    <a href="<?= $baseUrl ?>projects">Projets</a>
+                    <a href="<?= $baseUrl ?>projects.php">Projets</a>
                 </nav>
                 <span class="mission-detail-badge">Projet</span>
                 <?php if (!empty($project->programme_name)): ?>
@@ -123,9 +123,9 @@ $priorityLabel = isset($priorityLabels[$project->priority]) ? $priorityLabels[$p
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
-                    <a href="<?= $baseUrl ?>projects">Projets</a>
+                    <a href="<?= $baseUrl ?>projects.php">Projets</a>
                 </nav>
                 <span class="mission-detail-badge mission-detail-badge--dark">Projet</span>
                 <?php if (!empty($project->programme_name)): ?>
@@ -223,7 +223,7 @@ $priorityLabel = isset($priorityLabels[$project->priority]) ? $priorityLabels[$p
                                 </li>
                                 <?php endforeach; ?>
                             </ul>
-                            <a href="<?= $baseUrl ?>projects" class="btn btn-view-all btn-sm mt-2">Tous les projets</a>
+                            <a href="<?= $baseUrl ?>projects.php" class="btn btn-view-all btn-sm mt-2">Tous les projets</a>
                         </div>
                         <?php endif; ?>
                     </aside>

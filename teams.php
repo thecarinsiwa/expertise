@@ -19,7 +19,7 @@ $staffId = 0;
 if (isset($_GET['h'])) {
     $decoded = decode_id($_GET['h']);
     if ($decoded === null || $decoded <= 0) {
-        header('Location: ' . $baseUrl . 'teams');
+        header('Location: ' . $baseUrl . 'teams.php');
         exit;
     }
     $staffId = $decoded;
@@ -84,9 +84,9 @@ $employmentLabels = [
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
-                    <a href="<?= $baseUrl ?>teams">Notre équipe</a>
+                    <a href="<?= $baseUrl ?>teams.php">Notre équipe</a>
                     <span class="mx-1">/</span>
                     <span><?= htmlspecialchars($personName) ?></span>
                 </nav>
@@ -105,9 +105,9 @@ $employmentLabels = [
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
-                    <a href="<?= $baseUrl ?>teams">Notre équipe</a>
+                    <a href="<?= $baseUrl ?>teams.php">Notre équipe</a>
                     <span class="mx-1">/</span>
                     <span><?= htmlspecialchars($personName) ?></span>
                 </nav>
@@ -210,7 +210,7 @@ $employmentLabels = [
                         </div>
                         <?php endif; ?>
                         <div class="mission-detail-block">
-                            <a href="<?= $baseUrl ?>teams" class="btn btn-read-more w-100"><i class="bi bi-people me-2"></i>Toute l'équipe</a>
+                            <a href="<?= $baseUrl ?>teams.php" class="btn btn-read-more w-100"><i class="bi bi-people me-2"></i>Toute l'équipe</a>
                         </div>
                     </aside>
                 </div>
@@ -221,7 +221,7 @@ $employmentLabels = [
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
                     <span>Notre équipe</span>
                 </nav>
@@ -260,7 +260,7 @@ $employmentLabels = [
                 </div>
                 <?php else: ?>
                 <p class="text-muted">Aucun membre de l'équipe à afficher pour le moment.</p>
-                <a href="<?= $baseUrl ?>about" class="btn btn-read-more">Qui nous sommes</a>
+                <a href="<?= $baseUrl ?>about.php" class="btn btn-read-more">Qui nous sommes</a>
                 <?php endif; ?>
             </div>
         </div>

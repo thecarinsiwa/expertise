@@ -106,7 +106,7 @@ $typeLabels = [
             <div class="mission-detail-hero-overlay"></div>
             <div class="container mission-detail-hero-content">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
                     <span>Qui nous sommes</span>
                 </nav>
@@ -133,7 +133,7 @@ $typeLabels = [
         <div class="mission-detail-no-hero">
             <div class="container">
                 <nav aria-label="Fil d'Ariane" class="mission-detail-breadcrumb">
-                    <a href="<?= $baseUrl ?>index"><i class="bi bi-arrow-left"></i> Accueil</a>
+                    <a href="<?= $baseUrl ?>index.php"><i class="bi bi-arrow-left"></i> Accueil</a>
                     <span class="mx-1">/</span>
                     <span>Qui nous sommes</span>
                 </nav>
@@ -354,11 +354,11 @@ $typeLabels = [
                         <div class="mission-detail-block">
                             <h2 class="mission-detail-block-title"><i class="bi bi-link-45deg"></i> En savoir plus</h2>
                             <ul class="list-unstyled mb-0">
-                                <li class="mb-2"><a href="<?= $baseUrl ?>contact" class="text-decoration-none">Nous contacter</a></li>
-                                <li class="mb-2"><a href="<?= $baseUrl ?>teams" class="text-decoration-none">Notre équipe</a></li>
-                                <li class="mb-2"><a href="<?= $baseUrl ?>projects" class="text-decoration-none">Nos projets</a></li>
-                                <li class="mb-2"><a href="<?= $baseUrl ?>missions" class="text-decoration-none">Nos missions</a></li>
-                                <li><a href="<?= $baseUrl ?>how-we-work" class="text-decoration-none">Comment nous travaillons</a></li>
+                                <li class="mb-2"><a href="<?= $baseUrl ?>contact.php" class="text-decoration-none">Nous contacter</a></li>
+                                <li class="mb-2"><a href="<?= $baseUrl ?>teams.php" class="text-decoration-none">Notre équipe</a></li>
+                                <li class="mb-2"><a href="<?= $baseUrl ?>projects.php" class="text-decoration-none">Nos projets</a></li>
+                                <li class="mb-2"><a href="<?= $baseUrl ?>missions.php" class="text-decoration-none">Nos missions</a></li>
+                                <li><a href="<?= $baseUrl ?>how-we-work.php" class="text-decoration-none">Comment nous travaillons</a></li>
                             </ul>
                         </div>
                     </aside>
