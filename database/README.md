@@ -1,6 +1,6 @@
 # Expertise – Database (MySQL)
 
-Schéma MySQL unifié pour la plateforme Expertise Humanitaire et Sociale. **Un seul fichier** : `schema.sql` (toutes les anciennes migrations y sont intégrées).
+Schéma MySQL unifié pour la plateforme de Expertise Humanitaire et Sociale. **Un seul fichier** : `schema.sql` (toutes les anciennes migrations y sont intégrées).
 
 ## Fichiers
 
