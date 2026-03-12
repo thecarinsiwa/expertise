@@ -1,1405 +1,1352 @@
--- =============================================================================
--- Expertise - MySQL Database Schema (English)
--- Modules: Organizational, Users/Staff, Project, Mission, Offers (Nos offres),
---          Communication, Security, Document, Planning & Tracking
--- =============================================================================
-
-SET NAMES utf8mb4;
-SET FOREIGN_KEY_CHECKS = 0;
-
--- -----------------------------------------------------------------------------
--- 1. ORGANIZATIONAL MANAGEMENT
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `organisation` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50) DEFAULT NULL,
-  `description` TEXT,
-  `address` TEXT,
-  `phone` VARCHAR(50),
-  `email` VARCHAR(255),
-  `website` VARCHAR(255),
-  `postal_code` VARCHAR(20) DEFAULT NULL COMMENT 'Code postal',
-  `city` VARCHAR(100) DEFAULT NULL COMMENT 'Ville',
-  `country` VARCHAR(100) DEFAULT NULL COMMENT 'Pays',
-  `rccm` VARCHAR(50) DEFAULT NULL COMMENT 'RCCM – Registre de Commerce et de Crédit Mobilier',
-  `nif` VARCHAR(50) DEFAULT NULL COMMENT 'NIF – Numéro d''Identification Fiscal (DGI)',
-  `sector` VARCHAR(150) DEFAULT NULL COMMENT 'Secteur d''activité',
-  `notes` TEXT DEFAULT NULL COMMENT 'Notes internes',
-  `logo` VARCHAR(500) DEFAULT NULL COMMENT 'Logo de l''organisation',
-  `favicon` VARCHAR(500) DEFAULT NULL COMMENT 'Favicon de l''organisation (icône onglet)',
-  `cover_image` VARCHAR(500) DEFAULT NULL COMMENT 'Photo de couverture (bannière)',
-  `facebook_url` VARCHAR(500) DEFAULT NULL COMMENT 'Facebook',
-  `linkedin_url` VARCHAR(500) DEFAULT NULL COMMENT 'LinkedIn',
-  `twitter_url` VARCHAR(500) DEFAULT NULL COMMENT 'Twitter / X',
-  `instagram_url` VARCHAR(500) DEFAULT NULL COMMENT 'Instagram',
-  `youtube_url` VARCHAR(500) DEFAULT NULL COMMENT 'YouTube',
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_organisation_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `organisation_organisation_type` (
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `type_code` VARCHAR(50) NOT NULL,
-  PRIMARY KEY (`organisation_id`, `type_code`),
-  KEY `idx_org_type_org` (`organisation_id`),
-  CONSTRAINT `fk_org_type_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `organisational_entity` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50) DEFAULT NULL,
-  `entity_type` ENUM('department','service','unit','division') NOT NULL,
-  `parent_entity_id` INT UNSIGNED DEFAULT NULL,
-  `description` TEXT,
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_organisation` (`organisation_id`),
-  KEY `idx_parent` (`parent_entity_id`),
-  CONSTRAINT `fk_entity_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_entity_parent` FOREIGN KEY (`parent_entity_id`) REFERENCES `organisational_entity` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `department` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `entity_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50) DEFAULT NULL,
-  `description` TEXT,
-  `photo` VARCHAR(500) DEFAULT NULL COMMENT 'Photo du département',
-  `head_user_id` INT UNSIGNED DEFAULT NULL,
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_dept_organisation` (`organisation_id`),
-  KEY `idx_dept_entity` (`entity_id`),
-  CONSTRAINT `fk_department_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_department_entity` FOREIGN KEY (`entity_id`) REFERENCES `organisational_entity` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `service` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `department_id` INT UNSIGNED NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50) DEFAULT NULL,
-  `description` TEXT,
-  `photo` VARCHAR(500) DEFAULT NULL COMMENT 'Photo du service',
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_service_department` (`department_id`),
-  CONSTRAINT `fk_service_department` FOREIGN KEY (`department_id`) REFERENCES `department` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `unit` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `service_id` INT UNSIGNED NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50) DEFAULT NULL,
-  `description` TEXT,
-  `photo` VARCHAR(500) DEFAULT NULL COMMENT 'Photo de l''unité',
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_unit_service` (`service_id`),
-  CONSTRAINT `fk_unit_service` FOREIGN KEY (`service_id`) REFERENCES `service` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `position` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `unit_id` INT UNSIGNED DEFAULT NULL,
-  `title` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50) DEFAULT NULL,
-  `description` TEXT,
-  `grade_level` VARCHAR(50),
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_position_organisation` (`organisation_id`),
-  KEY `idx_position_unit` (`unit_id`),
-  CONSTRAINT `fk_position_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_position_unit` FOREIGN KEY (`unit_id`) REFERENCES `unit` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `organisational_hierarchy` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `parent_entity_type` VARCHAR(50) NOT NULL,
-  `parent_entity_id` INT UNSIGNED NOT NULL,
-  `child_entity_type` VARCHAR(50) NOT NULL,
-  `child_entity_id` INT UNSIGNED NOT NULL,
-  `level` INT UNSIGNED DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_hierarchy_organisation` (`organisation_id`),
-  KEY `idx_hierarchy_parent` (`parent_entity_type`,`parent_entity_id`),
-  KEY `idx_hierarchy_child` (`child_entity_type`,`child_entity_id`),
-  CONSTRAINT `fk_hierarchy_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 2. USER AND STAFF MANAGEMENT
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `user` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL,
-  `email` VARCHAR(255) NOT NULL,
-  `password_hash` VARCHAR(255),
-  `first_name` VARCHAR(100) NOT NULL,
-  `last_name` VARCHAR(100) NOT NULL,
-  `phone` VARCHAR(50),
-  `avatar_url` VARCHAR(500),
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `email_verified_at` TIMESTAMP NULL,
-  `last_login_at` TIMESTAMP NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_email` (`email`),
-  KEY `idx_user_organisation` (`organisation_id`),
-  CONSTRAINT `fk_user_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Add FK for department head after user exists
-ALTER TABLE `department` ADD CONSTRAINT `fk_department_head` FOREIGN KEY (`head_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL;
-
-CREATE TABLE IF NOT EXISTS `role` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(100) NOT NULL,
-  `code` VARCHAR(50) NOT NULL,
-  `description` TEXT,
-  `is_system` TINYINT(1) NOT NULL DEFAULT 0,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_role_code_org` (`organisation_id`,`code`),
-  CONSTRAINT `fk_role_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `permission` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(100) NOT NULL,
-  `code` VARCHAR(100) NOT NULL,
-  `module` VARCHAR(50),
-  `description` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_permission_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `role_permission` (
-  `role_id` INT UNSIGNED NOT NULL,
-  `permission_id` INT UNSIGNED NOT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`role_id`,`permission_id`),
-  KEY `idx_role_perm_permission` (`permission_id`),
-  CONSTRAINT `fk_role_perm_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_role_perm_permission` FOREIGN KEY (`permission_id`) REFERENCES `permission` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `profile` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED NOT NULL,
-  `bio` TEXT,
-  `job_title` VARCHAR(255),
-  `cv_path` VARCHAR(500) DEFAULT NULL,
-  `skills` JSON,
-  `experience` JSON DEFAULT NULL,
-  `education` JSON DEFAULT NULL,
-  `preferences` JSON,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_profile_user` (`user_id`),
-  CONSTRAINT `fk_profile_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `user_role` (
-  `user_id` INT UNSIGNED NOT NULL,
-  `role_id` INT UNSIGNED NOT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`user_id`,`role_id`),
-  KEY `idx_user_role_role` (`role_id`),
-  CONSTRAINT `fk_user_role_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_user_role_role` FOREIGN KEY (`role_id`) REFERENCES `role` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `staff` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED NOT NULL,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `employee_number` VARCHAR(50),
-  `phone_extension` VARCHAR(20) DEFAULT NULL COMMENT 'Poste / Extension',
-  `work_email` VARCHAR(255) DEFAULT NULL COMMENT 'Email professionnel',
-  `hire_date` DATE,
-  `end_date` DATE DEFAULT NULL COMMENT 'Date de fin de contrat',
-  `employment_type` ENUM('full_time','part_time','contract','intern','freelance') DEFAULT 'full_time',
-  `department` VARCHAR(100) DEFAULT NULL COMMENT 'Département / Service',
-  `job_title` VARCHAR(150) DEFAULT NULL COMMENT 'Intitulé du poste',
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `notes` TEXT DEFAULT NULL COMMENT 'Notes RH',
-  `photo` VARCHAR(500) DEFAULT NULL COMMENT 'Photo du personnel',
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_staff_user_org` (`user_id`,`organisation_id`),
-  KEY `idx_staff_organisation` (`organisation_id`),
-  CONSTRAINT `fk_staff_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_staff_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `assignment` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `staff_id` INT UNSIGNED NOT NULL,
-  `position_id` INT UNSIGNED NOT NULL,
-  `unit_id` INT UNSIGNED DEFAULT NULL,
-  `start_date` DATE NOT NULL,
-  `end_date` DATE DEFAULT NULL,
-  `is_primary` TINYINT(1) NOT NULL DEFAULT 0,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_assignment_staff` (`staff_id`),
-  KEY `idx_assignment_position` (`position_id`),
-  KEY `idx_assignment_unit` (`unit_id`),
-  CONSTRAINT `fk_assignment_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_assignment_position` FOREIGN KEY (`position_id`) REFERENCES `position` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_assignment_unit` FOREIGN KEY (`unit_id`) REFERENCES `unit` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `contract` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `staff_id` INT UNSIGNED NOT NULL,
-  `contract_type` VARCHAR(50),
-  `start_date` DATE NOT NULL,
-  `end_date` DATE DEFAULT NULL,
-  `reference` VARCHAR(100),
-  `document_url` VARCHAR(500),
-  `notes` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_contract_staff` (`staff_id`),
-  CONSTRAINT `fk_contract_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `position_history` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `staff_id` INT UNSIGNED NOT NULL,
-  `position_id` INT UNSIGNED NOT NULL,
-  `unit_id` INT UNSIGNED DEFAULT NULL,
-  `start_date` DATE NOT NULL,
-  `end_date` DATE DEFAULT NULL,
-  `reason` VARCHAR(255),
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_pos_hist_staff` (`staff_id`),
-  KEY `idx_pos_hist_position` (`position_id`),
-  CONSTRAINT `fk_pos_hist_staff` FOREIGN KEY (`staff_id`) REFERENCES `staff` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_pos_hist_position` FOREIGN KEY (`position_id`) REFERENCES `position` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_pos_hist_unit` FOREIGN KEY (`unit_id`) REFERENCES `unit` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `user_group` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50),
-  `description` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_user_group_organisation` (`organisation_id`),
-  CONSTRAINT `fk_user_group_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `user_group_member` (
-  `user_group_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`user_group_id`,`user_id`),
-  KEY `idx_ugm_user` (`user_id`),
-  CONSTRAINT `fk_ugm_group` FOREIGN KEY (`user_group_id`) REFERENCES `user_group` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_ugm_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 3. PROJECT MANAGEMENT
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `portfolio` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50),
-  `description` TEXT,
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_portfolio_organisation` (`organisation_id`),
-  CONSTRAINT `fk_portfolio_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `programme` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `portfolio_id` INT UNSIGNED NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50),
-  `description` TEXT,
-  `start_date` DATE,
-  `end_date` DATE,
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_programme_portfolio` (`portfolio_id`),
-  CONSTRAINT `fk_programme_portfolio` FOREIGN KEY (`portfolio_id`) REFERENCES `portfolio` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `project` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `programme_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50),
-  `description` TEXT,
-  `cover_image` VARCHAR(255) DEFAULT NULL,
-  `start_date` DATE,
-  `end_date` DATE,
-  `status` ENUM('draft','planned','in_progress','on_hold','completed','cancelled') DEFAULT 'draft',
-  `priority` ENUM('low','medium','high','critical') DEFAULT 'medium',
-  `manager_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_project_organisation` (`organisation_id`),
-  KEY `idx_project_programme` (`programme_id`),
-  KEY `idx_project_manager` (`manager_user_id`),
-  CONSTRAINT `fk_project_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_project_programme` FOREIGN KEY (`programme_id`) REFERENCES `programme` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_project_manager` FOREIGN KEY (`manager_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `bailleur` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50) DEFAULT NULL,
-  `description` TEXT,
-  `logo` VARCHAR(255) DEFAULT NULL,
-  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `project_bailleur` (
-  `project_id` INT UNSIGNED NOT NULL,
-  `bailleur_id` INT UNSIGNED NOT NULL,
-  PRIMARY KEY (`project_id`, `bailleur_id`),
-  KEY `idx_project_bailleur_bailleur` (`bailleur_id`),
-  CONSTRAINT `fk_project_bailleur_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_project_bailleur_bailleur` FOREIGN KEY (`bailleur_id`) REFERENCES `bailleur` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `project_phase` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `project_id` INT UNSIGNED NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `sequence` INT UNSIGNED DEFAULT 0,
-  `start_date` DATE,
-  `end_date` DATE,
-  `description` TEXT,
-  `image_url` VARCHAR(255) DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_project_phase_project` (`project_id`),
-  CONSTRAINT `fk_project_phase_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `task` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `project_id` INT UNSIGNED NOT NULL,
-  `project_phase_id` INT UNSIGNED DEFAULT NULL,
-  `parent_task_id` INT UNSIGNED DEFAULT NULL,
-  `title` VARCHAR(500) NOT NULL,
-  `description` TEXT,
-  `sequence` INT UNSIGNED DEFAULT 0,
-  `status` ENUM('todo','in_progress','review','done','cancelled') DEFAULT 'todo',
-  `priority` ENUM('low','medium','high','critical') DEFAULT 'medium',
-  `start_date` DATE,
-  `due_date` DATE,
-  `estimated_hours` DECIMAL(10,2),
-  `assigned_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_task_project` (`project_id`),
-  KEY `idx_task_phase` (`project_phase_id`),
-  KEY `idx_task_parent` (`parent_task_id`),
-  KEY `idx_task_assigned` (`assigned_user_id`),
-  CONSTRAINT `fk_task_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_task_phase` FOREIGN KEY (`project_phase_id`) REFERENCES `project_phase` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_task_parent` FOREIGN KEY (`parent_task_id`) REFERENCES `task` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_task_assigned` FOREIGN KEY (`assigned_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `sub_task` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `task_id` INT UNSIGNED NOT NULL,
-  `title` VARCHAR(500) NOT NULL,
-  `description` TEXT,
-  `sequence` INT UNSIGNED DEFAULT 0,
-  `status` ENUM('todo','in_progress','done','cancelled') DEFAULT 'todo',
-  `due_date` DATE,
-  `assigned_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_sub_task_task` (`task_id`),
-  KEY `idx_sub_task_assigned` (`assigned_user_id`),
-  CONSTRAINT `fk_sub_task_task` FOREIGN KEY (`task_id`) REFERENCES `task` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_sub_task_assigned` FOREIGN KEY (`assigned_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `deliverable` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `project_id` INT UNSIGNED NOT NULL,
-  `task_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `description` TEXT,
-  `type` VARCHAR(50),
-  `due_date` DATE,
-  `status` ENUM('pending','in_progress','submitted','approved','rejected') DEFAULT 'pending',
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_deliverable_project` (`project_id`),
-  KEY `idx_deliverable_task` (`task_id`),
-  CONSTRAINT `fk_deliverable_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_deliverable_task` FOREIGN KEY (`task_id`) REFERENCES `task` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `milestone` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `project_id` INT UNSIGNED NOT NULL,
-  `project_phase_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `description` TEXT,
-  `due_date` DATE NOT NULL,
-  `status` ENUM('pending','achieved','delayed','cancelled') DEFAULT 'pending',
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_milestone_project` (`project_id`),
-  KEY `idx_milestone_phase` (`project_phase_id`),
-  CONSTRAINT `fk_milestone_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_milestone_phase` FOREIGN KEY (`project_phase_id`) REFERENCES `project_phase` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `project_budget` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `project_id` INT UNSIGNED NOT NULL,
-  `name` VARCHAR(255),
-  `amount` DECIMAL(15,2) NOT NULL,
-  `currency` CHAR(3) DEFAULT 'USD',
-  `budget_type` ENUM('initial','revised','actual') DEFAULT 'initial',
-  `fiscal_year` INT UNSIGNED,
-  `notes` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_project_budget_project` (`project_id`),
-  CONSTRAINT `fk_project_budget_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `project_resource` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `project_id` INT UNSIGNED NOT NULL,
-  `resource_type` ENUM('human','material','equipment','financial') NOT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `quantity` DECIMAL(10,2) DEFAULT 1.00,
-  `unit` VARCHAR(50),
-  `cost_per_unit` DECIMAL(15,2),
-  `notes` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_project_resource_project` (`project_id`),
-  CONSTRAINT `fk_project_resource_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `project_assignment` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `project_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `role_in_project` VARCHAR(100),
-  `allocation_percent` DECIMAL(5,2),
-  `start_date` DATE,
-  `end_date` DATE,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_project_assignment_project` (`project_id`),
-  KEY `idx_project_assignment_user` (`user_id`),
-  CONSTRAINT `fk_project_assignment_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_project_assignment_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 4. MISSION MANAGEMENT
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `mission_type` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50),
-  `description` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_mission_type_organisation` (`organisation_id`),
-  CONSTRAINT `fk_mission_type_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `mission_status` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `name` VARCHAR(100) NOT NULL,
-  `code` VARCHAR(50) NOT NULL,
-  `description` TEXT,
-  `sort_order` INT UNSIGNED DEFAULT 0,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_mission_status_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `mission` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `mission_type_id` INT UNSIGNED DEFAULT NULL,
-  `mission_status_id` INT UNSIGNED DEFAULT NULL,
-  `title` VARCHAR(255) NOT NULL,
-  `reference` VARCHAR(100),
-  `description` LONGTEXT,
-  `cover_image` VARCHAR(500) DEFAULT NULL,
-  `start_date` DATE,
-  `end_date` DATE,
-  `location` VARCHAR(255),
-  `latitude` DECIMAL(10,8) DEFAULT NULL COMMENT 'Latitude du lieu',
-  `longitude` DECIMAL(11,8) DEFAULT NULL COMMENT 'Longitude du lieu',
-  `created_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_mission_organisation` (`organisation_id`),
-  KEY `idx_mission_type` (`mission_type_id`),
-  KEY `idx_mission_status` (`mission_status_id`),
-  KEY `idx_mission_created_by` (`created_by_user_id`),
-  CONSTRAINT `fk_mission_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mission_type` FOREIGN KEY (`mission_type_id`) REFERENCES `mission_type` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_mission_status` FOREIGN KEY (`mission_status_id`) REFERENCES `mission_status` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_mission_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `mission_bailleur` (
-  `mission_id` INT UNSIGNED NOT NULL,
-  `bailleur_id` INT UNSIGNED NOT NULL,
-  PRIMARY KEY (`mission_id`, `bailleur_id`),
-  KEY `idx_mission_bailleur_bailleur` (`bailleur_id`),
-  CONSTRAINT `fk_mission_bailleur_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mission_bailleur_bailleur` FOREIGN KEY (`bailleur_id`) REFERENCES `bailleur` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `mission_order` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `mission_id` INT UNSIGNED NOT NULL,
-  `order_number` VARCHAR(100),
-  `issue_date` DATE,
-  `authorised_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `document_url` VARCHAR(500),
-  `notes` TEXT,
-  `status` ENUM('draft', 'sent', 'signed', 'cancelled') DEFAULT 'draft',
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_mission_order_mission` (`mission_id`),
-  KEY `idx_mission_order_authorised` (`authorised_by_user_id`),
-  CONSTRAINT `fk_mission_order_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mission_order_authorised` FOREIGN KEY (`authorised_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `objective` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `mission_id` INT UNSIGNED NOT NULL,
-  `title` VARCHAR(500) NOT NULL,
-  `description` TEXT,
-  `sequence` INT UNSIGNED DEFAULT 0,
-  `is_achieved` TINYINT(1) NOT NULL DEFAULT 0,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_objective_mission` (`mission_id`),
-  CONSTRAINT `fk_objective_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `mission_plan` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `mission_id` INT UNSIGNED NOT NULL,
-  `title` VARCHAR(255),
-  `content` TEXT,
-  `image_url` VARCHAR(500) DEFAULT NULL,
-  `planned_date` DATE,
-  `sequence` INT UNSIGNED DEFAULT 0,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_mission_plan_mission` (`mission_id`),
-  CONSTRAINT `fk_mission_plan_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `mission_report` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `mission_id` INT UNSIGNED NOT NULL,
-  `author_user_id` INT UNSIGNED NOT NULL,
-  `title` VARCHAR(255),
-  `content` TEXT,
-  `summary` TEXT,
-  `report_date` DATE,
-  `status` ENUM('draft', 'submitted', 'final') DEFAULT 'draft',
-  `submitted_at` TIMESTAMP NULL,
-  `document_url` VARCHAR(500),
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_mission_report_mission` (`mission_id`),
-  KEY `idx_mission_report_author` (`author_user_id`),
-  CONSTRAINT `fk_mission_report_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mission_report_author` FOREIGN KEY (`author_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `mission_expense` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `mission_id` INT UNSIGNED NOT NULL,
-  `category` VARCHAR(100),
-  `description` TEXT,
-  `amount` DECIMAL(15,2) NOT NULL,
-  `currency` CHAR(3) DEFAULT 'USD',
-  `expense_date` DATE,
-  `receipt_url` VARCHAR(500),
-  `status` ENUM('pending','submitted','approved','reimbursed','rejected') DEFAULT 'pending',
-  `user_id` INT UNSIGNED DEFAULT NULL,
-  `created_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_mission_expense_mission` (`mission_id`),
-  KEY `idx_mission_expense_created_by` (`created_by_user_id`),
-  CONSTRAINT `fk_mission_expense_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mission_expense_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `mission_assignment` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `mission_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `role_in_mission` VARCHAR(100),
-  `start_date` DATE,
-  `end_date` DATE,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_mission_assignment_mission` (`mission_id`),
-  KEY `idx_mission_assignment_user` (`user_id`),
-  CONSTRAINT `fk_mission_assignment_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_mission_assignment_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- Nos offres (liées à une mission, un projet ou à rien – candidatures client)
--- -----------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS `offer` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `title` VARCHAR(255) NOT NULL,
-  `reference` VARCHAR(100) DEFAULT NULL,
-  `description` LONGTEXT,
-  `cover_image` VARCHAR(500) DEFAULT NULL,
-  `mission_id` INT UNSIGNED DEFAULT NULL,
-  `project_id` INT UNSIGNED DEFAULT NULL,
-  `status` ENUM('draft','published','closed') NOT NULL DEFAULT 'draft',
-  `published_at` DATE DEFAULT NULL,
-  `deadline_at` DATE DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_offer_organisation` (`organisation_id`),
-  KEY `idx_offer_mission` (`mission_id`),
-  KEY `idx_offer_project` (`project_id`),
-  KEY `idx_offer_status` (`status`),
-  CONSTRAINT `fk_offer_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_offer_mission` FOREIGN KEY (`mission_id`) REFERENCES `mission` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_offer_project` FOREIGN KEY (`project_id`) REFERENCES `project` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `offer_application` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `offer_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `message` TEXT DEFAULT NULL,
-  `cv_path` VARCHAR(500) DEFAULT NULL,
-  `status` ENUM('pending','reviewed','accepted','rejected') NOT NULL DEFAULT 'pending',
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_offer_application_offer_user` (`offer_id`, `user_id`),
-  KEY `idx_offer_application_offer` (`offer_id`),
-  KEY `idx_offer_application_user` (`user_id`),
-  CONSTRAINT `fk_offer_application_offer` FOREIGN KEY (`offer_id`) REFERENCES `offer` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_offer_application_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 5. COMMUNICATION MANAGEMENT
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `channel` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50),
-  `channel_type` ENUM('public','private','direct','announcement') DEFAULT 'public',
-  `description` TEXT,
-  `created_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_channel_organisation` (`organisation_id`),
-  KEY `idx_channel_created_by` (`created_by_user_id`),
-  CONSTRAINT `fk_channel_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_channel_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `conversation` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `channel_id` INT UNSIGNED DEFAULT NULL,
-  `subject` VARCHAR(500),
-  `conversation_type` ENUM('channel','direct','thread') DEFAULT 'direct',
-  `created_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_conversation_channel` (`channel_id`),
-  KEY `idx_conversation_created_by` (`created_by_user_id`),
-  CONSTRAINT `fk_conversation_channel` FOREIGN KEY (`channel_id`) REFERENCES `channel` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_conversation_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `message` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `conversation_id` INT UNSIGNED NOT NULL,
-  `parent_message_id` INT UNSIGNED DEFAULT NULL,
-  `sender_user_id` INT UNSIGNED NOT NULL,
-  `body` TEXT NOT NULL,
-  `is_edited` TINYINT(1) NOT NULL DEFAULT 0,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_message_conversation` (`conversation_id`),
-  KEY `idx_message_parent` (`parent_message_id`),
-  KEY `idx_message_sender` (`sender_user_id`),
-  CONSTRAINT `fk_message_conversation` FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_message_parent` FOREIGN KEY (`parent_message_id`) REFERENCES `message` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_message_sender` FOREIGN KEY (`sender_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `notification` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED NOT NULL,
-  `title` VARCHAR(255) NOT NULL,
-  `body` TEXT,
-  `type` VARCHAR(50),
-  `related_entity_type` VARCHAR(50),
-  `related_entity_id` INT UNSIGNED,
-  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
-  `read_at` TIMESTAMP NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_notification_user` (`user_id`),
-  KEY `idx_notification_read` (`is_read`),
-  CONSTRAINT `fk_notification_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `announcement` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED NOT NULL,
-  `channel_id` INT UNSIGNED DEFAULT NULL,
-  `author_user_id` INT UNSIGNED NOT NULL,
-  `title` VARCHAR(255) NOT NULL,
-  `content` TEXT NOT NULL,
-  `cover_image` VARCHAR(500) DEFAULT NULL,
-  `is_pinned` TINYINT(1) NOT NULL DEFAULT 0,
-  `published_at` TIMESTAMP NULL,
-  `expires_at` TIMESTAMP NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_announcement_organisation` (`organisation_id`),
-  KEY `idx_announcement_channel` (`channel_id`),
-  KEY `idx_announcement_author` (`author_user_id`),
-  CONSTRAINT `fk_announcement_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_announcement_channel` FOREIGN KEY (`channel_id`) REFERENCES `channel` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_announcement_author` FOREIGN KEY (`author_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `announcement_reaction` (
-  `announcement_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `reaction_type` VARCHAR(50) NOT NULL DEFAULT 'like',
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`announcement_id`, `user_id`),
-  KEY `idx_announcement_reaction_user` (`user_id`),
-  CONSTRAINT `fk_announcement_reaction_announcement` FOREIGN KEY (`announcement_id`) REFERENCES `announcement` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_announcement_reaction_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Lier les conversations à une annonce
-ALTER TABLE `conversation`
-  ADD COLUMN `announcement_id` INT UNSIGNED DEFAULT NULL AFTER `channel_id`,
-  ADD KEY `idx_conversation_announcement` (`announcement_id`),
-  ADD CONSTRAINT `fk_conversation_announcement` FOREIGN KEY (`announcement_id`) REFERENCES `announcement` (`id`) ON DELETE SET NULL;
-
-CREATE TABLE IF NOT EXISTS `comment` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED NOT NULL,
-  `commentable_type` VARCHAR(100) NOT NULL,
-  `commentable_id` INT UNSIGNED NOT NULL,
-  `body` TEXT NOT NULL,
-  `parent_comment_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_comment_user` (`user_id`),
-  KEY `idx_comment_commentable` (`commentable_type`,`commentable_id`),
-  KEY `idx_comment_parent` (`parent_comment_id`),
-  CONSTRAINT `fk_comment_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_comment_parent` FOREIGN KEY (`parent_comment_id`) REFERENCES `comment` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `attachment` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `attachable_type` VARCHAR(100) NOT NULL,
-  `attachable_id` INT UNSIGNED NOT NULL,
-  `uploaded_by_user_id` INT UNSIGNED NOT NULL,
-  `file_name` VARCHAR(255) NOT NULL,
-  `file_path` VARCHAR(500) NOT NULL,
-  `file_size` INT UNSIGNED,
-  `mime_type` VARCHAR(100),
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_attachment_attachable` (`attachable_type`,`attachable_id`),
-  KEY `idx_attachment_uploaded_by` (`uploaded_by_user_id`),
-  CONSTRAINT `fk_attachment_uploaded_by` FOREIGN KEY (`uploaded_by_user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `communication_history` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED DEFAULT NULL,
-  `entity_type` VARCHAR(100) NOT NULL,
-  `entity_id` INT UNSIGNED NOT NULL,
-  `action` VARCHAR(50) NOT NULL,
-  `metadata` JSON,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_comm_hist_user` (`user_id`),
-  KEY `idx_comm_hist_entity` (`entity_type`,`entity_id`),
-  CONSTRAINT `fk_comm_hist_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 6. SECURITY MANAGEMENT
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `session` (
-  `id` VARCHAR(255) NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `ip_address` VARCHAR(45),
-  `user_agent` TEXT,
-  `payload` TEXT,
-  `last_activity` INT NOT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_session_user` (`user_id`),
-  CONSTRAINT `fk_session_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `activity_log` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED DEFAULT NULL,
-  `action` VARCHAR(100) NOT NULL,
-  `subject_type` VARCHAR(100),
-  `subject_id` INT UNSIGNED,
-  `description` TEXT,
-  `metadata` JSON,
-  `ip_address` VARCHAR(45),
-  `user_agent` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_activity_log_user` (`user_id`),
-  KEY `idx_activity_log_subject` (`subject_type`,`subject_id`),
-  KEY `idx_activity_log_created` (`created_at`),
-  CONSTRAINT `fk_activity_log_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `audit` (
-  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED DEFAULT NULL,
-  `auditable_type` VARCHAR(100) NOT NULL,
-  `auditable_id` INT UNSIGNED NOT NULL,
-  `event` VARCHAR(50) NOT NULL,
-  `old_values` JSON,
-  `new_values` JSON,
-  `ip_address` VARCHAR(45),
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_audit_user` (`user_id`),
-  KEY `idx_audit_auditable` (`auditable_type`,`auditable_id`),
-  KEY `idx_audit_created` (`created_at`),
-  CONSTRAINT `fk_audit_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `authentication` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED NOT NULL,
-  `provider` VARCHAR(50) NOT NULL,
-  `provider_user_id` VARCHAR(255),
-  `token` TEXT,
-  `refresh_token` TEXT,
-  `expires_at` TIMESTAMP NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_auth_provider_user` (`user_id`,`provider`),
-  CONSTRAINT `fk_authentication_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `authorization` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `user_id` INT UNSIGNED NOT NULL,
-  `authorizable_type` VARCHAR(100) NOT NULL,
-  `authorizable_id` INT UNSIGNED NOT NULL,
-  `permission` VARCHAR(100) NOT NULL,
-  `granted_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_authorization_user` (`user_id`),
-  KEY `idx_authorization_authorizable` (`authorizable_type`,`authorizable_id`),
-  CONSTRAINT `fk_authorization_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_authorization_granted_by` FOREIGN KEY (`granted_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 7. DOCUMENT MANAGEMENT
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `document_category` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL,
-  `parent_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50),
-  `description` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_doc_category_organisation` (`organisation_id`),
-  KEY `idx_doc_category_parent` (`parent_id`),
-  CONSTRAINT `fk_doc_category_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_doc_category_parent` FOREIGN KEY (`parent_id`) REFERENCES `document_category` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `document` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL,
-  `document_category_id` INT UNSIGNED DEFAULT NULL,
-  `title` VARCHAR(255) NOT NULL,
-  `description` TEXT,
-  `document_type` VARCHAR(50),
-  `cover_image` VARCHAR(500) DEFAULT NULL COMMENT 'Photo de couverture (miniature)',
-  `current_version_id` INT UNSIGNED DEFAULT NULL,
-  `created_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_document_organisation` (`organisation_id`),
-  KEY `idx_document_category` (`document_category_id`),
-  KEY `idx_document_created_by` (`created_by_user_id`),
-  CONSTRAINT `fk_document_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_document_category` FOREIGN KEY (`document_category_id`) REFERENCES `document_category` (`id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_document_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `document_version` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `document_id` INT UNSIGNED NOT NULL,
-  `version_number` INT UNSIGNED NOT NULL,
-  `file_path` VARCHAR(500) NOT NULL,
-  `file_name` VARCHAR(255),
-  `file_size` INT UNSIGNED,
-  `mime_type` VARCHAR(100),
-  `checksum` VARCHAR(64),
-  `created_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `change_notes` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_doc_version_document` (`document_id`),
-  KEY `idx_doc_version_created_by` (`created_by_user_id`),
-  CONSTRAINT `fk_doc_version_document` FOREIGN KEY (`document_id`) REFERENCES `document` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_doc_version_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-ALTER TABLE `document` ADD CONSTRAINT `fk_document_current_version` FOREIGN KEY (`current_version_id`) REFERENCES `document_version` (`id`) ON DELETE SET NULL;
-
-CREATE TABLE IF NOT EXISTS `archiving` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `document_id` INT UNSIGNED NOT NULL,
-  `archived_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `archived_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `archive_location` VARCHAR(500),
-  `retention_until` DATE,
-  `reason` TEXT,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_archiving_document` (`document_id`),
-  KEY `idx_archiving_archived_by` (`archived_by_user_id`),
-  CONSTRAINT `fk_archiving_document` FOREIGN KEY (`document_id`) REFERENCES `document` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_archiving_archived_by` FOREIGN KEY (`archived_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 7b. RESPONSIBILITY PAGE CONTENT (public page: intro + engagement cards)
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `responsibility_page` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL COMMENT 'NULL = contenu par défaut',
-  `intro_block1` TEXT DEFAULT NULL,
-  `intro_block2` TEXT DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_responsibility_page_organisation` (`organisation_id`),
-  CONSTRAINT `fk_responsibility_page_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `responsibility_commitment` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL COMMENT 'NULL = global',
-  `title` VARCHAR(255) NOT NULL,
-  `description` TEXT DEFAULT NULL,
-  `icon` VARCHAR(100) DEFAULT NULL COMMENT 'Bootstrap Icons class e.g. bi-shield-check',
-  `sort_order` INT NOT NULL DEFAULT 0,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_responsibility_commitment_organisation` (`organisation_id`),
-  CONSTRAINT `fk_responsibility_commitment_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 7c. REPORTS & FINANCES PAGE CONTENT
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `reports_finances_page` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL COMMENT 'NULL = contenu par défaut',
-  `intro_block1` TEXT DEFAULT NULL,
-  `intro_block2` TEXT DEFAULT NULL,
-  `section_activity_title` VARCHAR(255) DEFAULT NULL,
-  `section_activity_text` TEXT DEFAULT NULL,
-  `section_finance_title` VARCHAR(255) DEFAULT NULL,
-  `section_finance_text` TEXT DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_reports_finances_page_organisation` (`organisation_id`),
-  CONSTRAINT `fk_reports_finances_page_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 7d. GOVERNANCE PAGE CONTENT
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `governance_page` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL COMMENT 'NULL = contenu par défaut',
-  `intro_block1` TEXT DEFAULT NULL,
-  `intro_block2` TEXT DEFAULT NULL,
-  `section_instances_title` VARCHAR(255) DEFAULT NULL,
-  `section_instances_text` TEXT DEFAULT NULL,
-  `section_bureaux_title` VARCHAR(255) DEFAULT NULL,
-  `section_bureaux_text` TEXT DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_governance_page_organisation` (`organisation_id`),
-  CONSTRAINT `fk_governance_page_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- -----------------------------------------------------------------------------
--- 8. PLANNING & TRACKING
--- -----------------------------------------------------------------------------
-
-CREATE TABLE IF NOT EXISTS `calendar` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL,
-  `user_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `description` TEXT,
-  `colour` VARCHAR(20),
-  `is_public` TINYINT(1) NOT NULL DEFAULT 0,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_calendar_organisation` (`organisation_id`),
-  KEY `idx_calendar_user` (`user_id`),
-  CONSTRAINT `fk_calendar_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_calendar_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `event` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `calendar_id` INT UNSIGNED NOT NULL,
-  `title` VARCHAR(255) NOT NULL,
-  `description` TEXT,
-  `start_at` TIMESTAMP NOT NULL,
-  `end_at` TIMESTAMP NOT NULL,
-  `location` VARCHAR(255),
-  `is_all_day` TINYINT(1) NOT NULL DEFAULT 0,
-  `recurrence_rule` VARCHAR(255),
-  `created_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_event_calendar` (`calendar_id`),
-  KEY `idx_event_dates` (`start_at`,`end_at`),
-  KEY `idx_event_created_by` (`created_by_user_id`),
-  CONSTRAINT `fk_event_calendar` FOREIGN KEY (`calendar_id`) REFERENCES `calendar` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_event_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `schedule` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `description` TEXT,
-  `start_date` DATE,
-  `end_date` DATE,
-  `schedule_type` VARCHAR(50),
-  `created_by_user_id` INT UNSIGNED DEFAULT NULL,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_schedule_organisation` (`organisation_id`),
-  KEY `idx_schedule_created_by` (`created_by_user_id`),
-  CONSTRAINT `fk_schedule_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_schedule_created_by` FOREIGN KEY (`created_by_user_id`) REFERENCES `user` (`id`) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE TABLE IF NOT EXISTS `performance_indicator` (
-  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `organisation_id` INT UNSIGNED DEFAULT NULL,
-  `name` VARCHAR(255) NOT NULL,
-  `code` VARCHAR(50),
-  `description` TEXT,
-  `indicator_type` ENUM('numeric','percentage','boolean','rating') DEFAULT 'numeric',
-  `unit` VARCHAR(50),
-  `target_value` DECIMAL(15,4),
-  `current_value` DECIMAL(15,4),
-  `period_type` ENUM('daily','weekly','monthly','quarterly','yearly'),
-  `period_start` DATE,
-  `period_end` DATE,
-  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  KEY `idx_perf_ind_organisation` (`organisation_id`),
-  CONSTRAINT `fk_perf_ind_organisation` FOREIGN KEY (`organisation_id`) REFERENCES `organisation` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Channel membership for conversations
-CREATE TABLE IF NOT EXISTS `channel_member` (
-  `channel_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `role` VARCHAR(50) DEFAULT 'member',
-  `joined_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`channel_id`,`user_id`),
-  KEY `idx_channel_member_user` (`user_id`),
-  CONSTRAINT `fk_channel_member_channel` FOREIGN KEY (`channel_id`) REFERENCES `channel` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_channel_member_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- Conversation participants for direct/thread
-CREATE TABLE IF NOT EXISTS `conversation_participant` (
-  `conversation_id` INT UNSIGNED NOT NULL,
-  `user_id` INT UNSIGNED NOT NULL,
-  `joined_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`conversation_id`,`user_id`),
-  KEY `idx_conv_part_user` (`user_id`),
-  CONSTRAINT `fk_conv_part_conversation` FOREIGN KEY (`conversation_id`) REFERENCES `conversation` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_conv_part_user` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-SET FOREIGN_KEY_CHECKS = 1;
-
--- -----------------------------------------------------------------------------
--- 9. SEED DATA (INITIALIZATION)
--- -----------------------------------------------------------------------------
-
--- Default Organisation
-INSERT IGNORE INTO `organisation` (`id`, `name`, `code`, `is_active`) 
-VALUES (1, 'Expertise Humanitaire et Sociale SARL', 'EXPERT', 1);
-
--- System Roles
-INSERT IGNORE INTO `role` (`id`, `organisation_id`, `name`, `code`, `is_system`) 
-VALUES 
-(1, 1, 'Super Administrateur', 'superadmin', 1),
-(2, 1, 'Administrateur', 'admin', 1),
-(3, 1, 'Manager', 'manager', 1),
-(4, 1, 'Collaborateur', 'staff', 1),
-(5, 1, 'Client', 'client', 1);
-
--- Default Permissions (RBAC: 4 actions per resource – voir, ajout, modifier, supprimer)
-INSERT IGNORE INTO `permission` (`module`, `code`, `name`) VALUES
-('Tableau de bord', 'admin.dashboard', 'Tableau de bord – Accès'),
-('Organisations', 'admin.organisations.view', 'Organisations – Voir'),
-('Organisations', 'admin.organisations.add', 'Organisations – Ajout'),
-('Organisations', 'admin.organisations.modify', 'Organisations – Modifier'),
-('Organisations', 'admin.organisations.delete', 'Organisations – Supprimer'),
-('Unités & Services', 'admin.units.view', 'Unités & Services – Voir'),
-('Unités & Services', 'admin.units.add', 'Unités & Services – Ajout'),
-('Unités & Services', 'admin.units.modify', 'Unités & Services – Modifier'),
-('Unités & Services', 'admin.units.delete', 'Unités & Services – Supprimer'),
-('Utilisateurs', 'admin.users.view', 'Utilisateurs – Voir'),
-('Utilisateurs', 'admin.users.add', 'Utilisateurs – Ajout'),
-('Utilisateurs', 'admin.users.modify', 'Utilisateurs – Modifier'),
-('Utilisateurs', 'admin.users.delete', 'Utilisateurs – Supprimer'),
-('Personnel', 'admin.staff.view', 'Personnel – Voir'),
-('Personnel', 'admin.staff.add', 'Personnel – Ajout'),
-('Personnel', 'admin.staff.modify', 'Personnel – Modifier'),
-('Personnel', 'admin.staff.delete', 'Personnel – Supprimer'),
-('Rôles & Accès', 'admin.roles.view', 'Rôles & Accès – Voir'),
-('Rôles & Accès', 'admin.roles.add', 'Rôles & Accès – Ajout'),
-('Rôles & Accès', 'admin.roles.modify', 'Rôles & Accès – Modifier'),
-('Rôles & Accès', 'admin.roles.delete', 'Rôles & Accès – Supprimer'),
-('Sécurité', 'admin.security.view', 'Sécurité – Voir'),
-('Sécurité', 'admin.security.modify', 'Sécurité – Modifier'),
-('Projets', 'admin.projects.view', 'Projets – Voir'),
-('Projets', 'admin.projects.add', 'Projets – Ajout'),
-('Projets', 'admin.projects.modify', 'Projets – Modifier'),
-('Projets', 'admin.projects.delete', 'Projets – Supprimer'),
-('Programmes', 'admin.programmes.view', 'Programmes – Voir'),
-('Programmes', 'admin.programmes.add', 'Programmes – Ajout'),
-('Programmes', 'admin.programmes.modify', 'Programmes – Modifier'),
-('Programmes', 'admin.programmes.delete', 'Programmes – Supprimer'),
-('Portfolios', 'admin.portfolios.view', 'Portfolios – Voir'),
-('Portfolios', 'admin.portfolios.add', 'Portfolios – Ajout'),
-('Portfolios', 'admin.portfolios.modify', 'Portfolios – Modifier'),
-('Portfolios', 'admin.portfolios.delete', 'Portfolios – Supprimer'),
-('Bailleurs', 'admin.bailleurs.view', 'Bailleurs – Voir'),
-('Bailleurs', 'admin.bailleurs.add', 'Bailleurs – Ajout'),
-('Bailleurs', 'admin.bailleurs.modify', 'Bailleurs – Modifier'),
-('Bailleurs', 'admin.bailleurs.delete', 'Bailleurs – Supprimer'),
-('Missions', 'admin.missions.view', 'Missions – Voir'),
-('Missions', 'admin.missions.add', 'Missions – Ajout'),
-('Missions', 'admin.missions.modify', 'Missions – Modifier'),
-('Missions', 'admin.missions.delete', 'Missions – Supprimer'),
-('Nos offres', 'admin.offers.view', 'Nos offres – Voir'),
-('Nos offres', 'admin.offers.add', 'Nos offres – Ajout'),
-('Nos offres', 'admin.offers.modify', 'Nos offres – Modifier'),
-('Nos offres', 'admin.offers.delete', 'Nos offres – Supprimer'),
-('Types de mission', 'admin.mission_types.view', 'Types de mission – Voir'),
-('Types de mission', 'admin.mission_types.add', 'Types de mission – Ajout'),
-('Types de mission', 'admin.mission_types.modify', 'Types de mission – Modifier'),
-('Types de mission', 'admin.mission_types.delete', 'Types de mission – Supprimer'),
-('Ordres de mission', 'admin.mission_orders.view', 'Ordres de mission – Voir'),
-('Ordres de mission', 'admin.mission_orders.add', 'Ordres de mission – Ajout'),
-('Ordres de mission', 'admin.mission_orders.modify', 'Ordres de mission – Modifier'),
-('Ordres de mission', 'admin.mission_orders.delete', 'Ordres de mission – Supprimer'),
-('Plans de mission', 'admin.mission_plans.view', 'Plans de mission – Voir'),
-('Plans de mission', 'admin.mission_plans.add', 'Plans de mission – Ajout'),
-('Plans de mission', 'admin.mission_plans.modify', 'Plans de mission – Modifier'),
-('Plans de mission', 'admin.mission_plans.delete', 'Plans de mission – Supprimer'),
-('Rapports de mission', 'admin.mission_reports.view', 'Rapports de mission – Voir'),
-('Rapports de mission', 'admin.mission_reports.add', 'Rapports de mission – Ajout'),
-('Rapports de mission', 'admin.mission_reports.modify', 'Rapports de mission – Modifier'),
-('Rapports de mission', 'admin.mission_reports.delete', 'Rapports de mission – Supprimer'),
-('Dépenses de mission', 'admin.mission_expenses.view', 'Dépenses de mission – Voir'),
-('Dépenses de mission', 'admin.mission_expenses.add', 'Dépenses de mission – Ajout'),
-('Dépenses de mission', 'admin.mission_expenses.modify', 'Dépenses de mission – Modifier'),
-('Dépenses de mission', 'admin.mission_expenses.delete', 'Dépenses de mission – Supprimer'),
-('Annonces', 'admin.announcements.view', 'Annonces – Voir'),
-('Annonces', 'admin.announcements.add', 'Annonces – Ajout'),
-('Annonces', 'admin.announcements.modify', 'Annonces – Modifier'),
-('Annonces', 'admin.announcements.delete', 'Annonces – Supprimer'),
-('Canaux', 'admin.channels.view', 'Canaux – Voir'),
-('Canaux', 'admin.channels.add', 'Canaux – Ajout'),
-('Canaux', 'admin.channels.modify', 'Canaux – Modifier'),
-('Canaux', 'admin.channels.delete', 'Canaux – Supprimer'),
-('Types de canaux', 'admin.channel_types.view', 'Types de canaux – Voir'),
-('Types de canaux', 'admin.channel_types.add', 'Types de canaux – Ajout'),
-('Types de canaux', 'admin.channel_types.modify', 'Types de canaux – Modifier'),
-('Types de canaux', 'admin.channel_types.delete', 'Types de canaux – Supprimer'),
-('Conversations', 'admin.conversations.view', 'Conversations – Voir'),
-('Conversations', 'admin.conversations.add', 'Conversations – Ajout'),
-('Conversations', 'admin.conversations.modify', 'Conversations – Modifier'),
-('Conversations', 'admin.conversations.delete', 'Conversations – Supprimer'),
-('Notifications', 'admin.notifications.view', 'Notifications – Voir'),
-('Notifications', 'admin.notifications.add', 'Notifications – Ajout'),
-('Notifications', 'admin.notifications.modify', 'Notifications – Modifier'),
-('Notifications', 'admin.notifications.delete', 'Notifications – Supprimer'),
-('Commentaires', 'admin.comments.view', 'Commentaires – Voir'),
-('Commentaires', 'admin.comments.add', 'Commentaires – Ajout'),
-('Commentaires', 'admin.comments.modify', 'Commentaires – Modifier'),
-('Commentaires', 'admin.comments.delete', 'Commentaires – Supprimer'),
-('Pièces jointes', 'admin.attachments.view', 'Pièces jointes – Voir'),
-('Pièces jointes', 'admin.attachments.add', 'Pièces jointes – Ajout'),
-('Pièces jointes', 'admin.attachments.modify', 'Pièces jointes – Modifier'),
-('Pièces jointes', 'admin.attachments.delete', 'Pièces jointes – Supprimer'),
-('Historique communication', 'admin.communication_history.view', 'Historique communication – Voir'),
-('Historique communication', 'admin.communication_history.add', 'Historique communication – Ajout'),
-('Historique communication', 'admin.communication_history.modify', 'Historique communication – Modifier'),
-('Historique communication', 'admin.communication_history.delete', 'Historique communication – Supprimer'),
-('Documents', 'admin.documents.view', 'Documents – Voir'),
-('Documents', 'admin.documents.add', 'Documents – Ajout'),
-('Documents', 'admin.documents.modify', 'Documents – Modifier'),
-('Documents', 'admin.documents.delete', 'Documents – Supprimer'),
-('Planning & KPI', 'admin.planning.view', 'Planning & KPI – Voir'),
-('Planning & KPI', 'admin.planning.modify', 'Planning & KPI – Modifier');
-
--- Link SuperAdmin (role_id 1) to all permissions
-INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
-SELECT 1, id FROM `permission`;
-
--- Link Administrateur (role_id 2) to all permissions
-INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`)
-SELECT 2, id FROM `permission`;
-
-
-
+-- phpMyAdmin SQL Dump
+-- version 5.2.1
+-- https://www.phpmyadmin.net/
+--
+-- Hôte : localhost:3306
+-- Généré le : jeu. 12 mars 2026 à 19:55
+-- Version du serveur : 8.0.30
+-- Version de PHP : 8.1.10
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Base de données : `expertise`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `activity_log`
+--
+
+CREATE TABLE `activity_log` (
+  `id` bigint UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED DEFAULT NULL,
+  `action` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `subject_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `subject_id` int UNSIGNED DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `metadata` json DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `announcement`
+--
+
+CREATE TABLE `announcement` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `channel_id` int UNSIGNED DEFAULT NULL,
+  `author_user_id` int UNSIGNED NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `cover_image` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_pinned` tinyint(1) NOT NULL DEFAULT '0',
+  `published_at` timestamp NULL DEFAULT NULL,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `announcement_reaction`
+--
+
+CREATE TABLE `announcement_reaction` (
+  `announcement_id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `reaction_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'like',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `archiving`
+--
+
+CREATE TABLE `archiving` (
+  `id` int UNSIGNED NOT NULL,
+  `document_id` int UNSIGNED NOT NULL,
+  `archived_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `archived_by_user_id` int UNSIGNED DEFAULT NULL,
+  `archive_location` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `retention_until` date DEFAULT NULL,
+  `reason` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `assignment`
+--
+
+CREATE TABLE `assignment` (
+  `id` int UNSIGNED NOT NULL,
+  `staff_id` int UNSIGNED NOT NULL,
+  `position_id` int UNSIGNED NOT NULL,
+  `unit_id` int UNSIGNED DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `is_primary` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `attachment`
+--
+
+CREATE TABLE `attachment` (
+  `id` int UNSIGNED NOT NULL,
+  `attachable_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `attachable_id` int UNSIGNED NOT NULL,
+  `uploaded_by_user_id` int UNSIGNED NOT NULL,
+  `file_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_size` int UNSIGNED DEFAULT NULL,
+  `mime_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `audit`
+--
+
+CREATE TABLE `audit` (
+  `id` bigint UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED DEFAULT NULL,
+  `auditable_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `auditable_id` int UNSIGNED NOT NULL,
+  `event` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `old_values` json DEFAULT NULL,
+  `new_values` json DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `authentication`
+--
+
+CREATE TABLE `authentication` (
+  `id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `provider` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `provider_user_id` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `token` text COLLATE utf8mb4_unicode_ci,
+  `refresh_token` text COLLATE utf8mb4_unicode_ci,
+  `expires_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `authorization`
+--
+
+CREATE TABLE `authorization` (
+  `id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `authorizable_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `authorizable_id` int UNSIGNED NOT NULL,
+  `permission` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `granted_by_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `bailleur`
+--
+
+CREATE TABLE `bailleur` (
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `logo` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `calendar`
+--
+
+CREATE TABLE `calendar` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL,
+  `user_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `colour` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_public` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `channel`
+--
+
+CREATE TABLE `channel` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `channel_type` enum('public','private','direct','announcement') COLLATE utf8mb4_unicode_ci DEFAULT 'public',
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `created_by_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `channel_member`
+--
+
+CREATE TABLE `channel_member` (
+  `channel_id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `role` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT 'member',
+  `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `comment`
+--
+
+CREATE TABLE `comment` (
+  `id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `commentable_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `commentable_id` int UNSIGNED NOT NULL,
+  `body` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `parent_comment_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `communication_history`
+--
+
+CREATE TABLE `communication_history` (
+  `id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED DEFAULT NULL,
+  `entity_type` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `entity_id` int UNSIGNED NOT NULL,
+  `action` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `metadata` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `contract`
+--
+
+CREATE TABLE `contract` (
+  `id` int UNSIGNED NOT NULL,
+  `staff_id` int UNSIGNED NOT NULL,
+  `contract_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `reference` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `document_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `conversation`
+--
+
+CREATE TABLE `conversation` (
+  `id` int UNSIGNED NOT NULL,
+  `channel_id` int UNSIGNED DEFAULT NULL,
+  `announcement_id` int UNSIGNED DEFAULT NULL,
+  `subject` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `conversation_type` enum('channel','direct','thread') COLLATE utf8mb4_unicode_ci DEFAULT 'direct',
+  `created_by_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `conversation_participant`
+--
+
+CREATE TABLE `conversation_participant` (
+  `conversation_id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `joined_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `deliverable`
+--
+
+CREATE TABLE `deliverable` (
+  `id` int UNSIGNED NOT NULL,
+  `project_id` int UNSIGNED NOT NULL,
+  `task_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `status` enum('pending','in_progress','submitted','approved','rejected') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `department`
+--
+
+CREATE TABLE `department` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `entity_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `photo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Photo du d??partement',
+  `head_user_id` int UNSIGNED DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `document`
+--
+
+CREATE TABLE `document` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL,
+  `document_category_id` int UNSIGNED DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `document_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cover_image` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Photo de couverture (miniature)',
+  `current_version_id` int UNSIGNED DEFAULT NULL,
+  `created_by_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `document_category`
+--
+
+CREATE TABLE `document_category` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL,
+  `parent_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `document_version`
+--
+
+CREATE TABLE `document_version` (
+  `id` int UNSIGNED NOT NULL,
+  `document_id` int UNSIGNED NOT NULL,
+  `version_number` int UNSIGNED NOT NULL,
+  `file_path` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `file_name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `file_size` int UNSIGNED DEFAULT NULL,
+  `mime_type` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `checksum` varchar(64) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by_user_id` int UNSIGNED DEFAULT NULL,
+  `change_notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `event`
+--
+
+CREATE TABLE `event` (
+  `id` int UNSIGNED NOT NULL,
+  `calendar_id` int UNSIGNED NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `start_at` timestamp NOT NULL,
+  `end_at` timestamp NOT NULL,
+  `location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_all_day` tinyint(1) NOT NULL DEFAULT '0',
+  `recurrence_rule` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `governance_page`
+--
+
+CREATE TABLE `governance_page` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL COMMENT 'NULL = contenu par d??faut',
+  `intro_block1` text COLLATE utf8mb4_unicode_ci,
+  `intro_block2` text COLLATE utf8mb4_unicode_ci,
+  `section_instances_title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `section_instances_text` text COLLATE utf8mb4_unicode_ci,
+  `section_bureaux_title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `section_bureaux_text` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `message`
+--
+
+CREATE TABLE `message` (
+  `id` int UNSIGNED NOT NULL,
+  `conversation_id` int UNSIGNED NOT NULL,
+  `parent_message_id` int UNSIGNED DEFAULT NULL,
+  `sender_user_id` int UNSIGNED NOT NULL,
+  `body` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_edited` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `milestone`
+--
+
+CREATE TABLE `milestone` (
+  `id` int UNSIGNED NOT NULL,
+  `project_id` int UNSIGNED NOT NULL,
+  `project_phase_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `due_date` date NOT NULL,
+  `status` enum('pending','achieved','delayed','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mission`
+--
+
+CREATE TABLE `mission` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `mission_type_id` int UNSIGNED DEFAULT NULL,
+  `mission_status_id` int UNSIGNED DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reference` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` longtext COLLATE utf8mb4_unicode_ci,
+  `cover_image` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `location` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mission_assignment`
+--
+
+CREATE TABLE `mission_assignment` (
+  `id` int UNSIGNED NOT NULL,
+  `mission_id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `role_in_mission` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mission_bailleur`
+--
+
+CREATE TABLE `mission_bailleur` (
+  `mission_id` int UNSIGNED NOT NULL,
+  `bailleur_id` int UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mission_expense`
+--
+
+CREATE TABLE `mission_expense` (
+  `id` int UNSIGNED NOT NULL,
+  `mission_id` int UNSIGNED NOT NULL,
+  `category` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `amount` decimal(15,2) NOT NULL,
+  `currency` char(3) COLLATE utf8mb4_unicode_ci DEFAULT 'USD',
+  `expense_date` date DEFAULT NULL,
+  `receipt_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('pending','submitted','approved','reimbursed','rejected') COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
+  `user_id` int UNSIGNED DEFAULT NULL,
+  `created_by_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mission_order`
+--
+
+CREATE TABLE `mission_order` (
+  `id` int UNSIGNED NOT NULL,
+  `mission_id` int UNSIGNED NOT NULL,
+  `order_number` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `issue_date` date DEFAULT NULL,
+  `authorised_by_user_id` int UNSIGNED DEFAULT NULL,
+  `document_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('draft','sent','signed','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mission_plan`
+--
+
+CREATE TABLE `mission_plan` (
+  `id` int UNSIGNED NOT NULL,
+  `mission_id` int UNSIGNED NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci,
+  `image_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `planned_date` date DEFAULT NULL,
+  `sequence` int UNSIGNED DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mission_report`
+--
+
+CREATE TABLE `mission_report` (
+  `id` int UNSIGNED NOT NULL,
+  `mission_id` int UNSIGNED NOT NULL,
+  `author_user_id` int UNSIGNED NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci,
+  `summary` text COLLATE utf8mb4_unicode_ci,
+  `report_date` date DEFAULT NULL,
+  `status` enum('draft','submitted','final') COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `submitted_at` timestamp NULL DEFAULT NULL,
+  `document_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mission_status`
+--
+
+CREATE TABLE `mission_status` (
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `sort_order` int UNSIGNED DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `mission_type`
+--
+
+CREATE TABLE `mission_type` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `notification`
+--
+
+CREATE TABLE `notification` (
+  `id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `body` text COLLATE utf8mb4_unicode_ci,
+  `type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `related_entity_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `related_entity_id` int UNSIGNED DEFAULT NULL,
+  `is_read` tinyint(1) NOT NULL DEFAULT '0',
+  `read_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `objective`
+--
+
+CREATE TABLE `objective` (
+  `id` int UNSIGNED NOT NULL,
+  `mission_id` int UNSIGNED NOT NULL,
+  `title` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `sequence` int UNSIGNED DEFAULT '0',
+  `is_achieved` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `offer`
+--
+
+CREATE TABLE `offer` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reference` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` longtext COLLATE utf8mb4_unicode_ci,
+  `cover_image` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `mission_id` int UNSIGNED DEFAULT NULL,
+  `project_id` int UNSIGNED DEFAULT NULL,
+  `status` enum('draft','published','closed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft',
+  `published_at` date DEFAULT NULL,
+  `deadline_at` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `offer_application`
+--
+
+CREATE TABLE `offer_application` (
+  `id` int UNSIGNED NOT NULL,
+  `offer_id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci,
+  `cv_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `status` enum('pending','reviewed','accepted','rejected') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `organisation`
+--
+
+CREATE TABLE `organisation` (
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `address` text COLLATE utf8mb4_unicode_ci,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `website` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `postal_code` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Code postal',
+  `city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Ville',
+  `country` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Pays',
+  `rccm` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'RCCM ??? Registre de Commerce et de Cr??dit Mobilier',
+  `nif` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'NIF ??? Num??ro d''Identification Fiscal (DGI)',
+  `sector` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Secteur d''activit??',
+  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Notes internes',
+  `logo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Logo de l''organisation',
+  `favicon` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Favicon de l''organisation (icône onglet)',
+  `cover_image` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Photo de couverture (bannière)',
+  `facebook_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Facebook',
+  `linkedin_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'LinkedIn',
+  `twitter_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Twitter / X',
+  `instagram_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Instagram',
+  `youtube_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'YouTube',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `organisational_entity`
+--
+
+CREATE TABLE `organisational_entity` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `entity_type` enum('department','service','unit','division') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `parent_entity_id` int UNSIGNED DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `organisational_hierarchy`
+--
+
+CREATE TABLE `organisational_hierarchy` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `parent_entity_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `parent_entity_id` int UNSIGNED NOT NULL,
+  `child_entity_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `child_entity_id` int UNSIGNED NOT NULL,
+  `level` int UNSIGNED DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `organisation_organisation_type`
+--
+
+CREATE TABLE `organisation_organisation_type` (
+  `organisation_id` int UNSIGNED NOT NULL,
+  `type_code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `password_reset_tokens`
+--
+
+CREATE TABLE `password_reset_tokens` (
+  `id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `token` varchar(64) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `used` tinyint(1) NOT NULL DEFAULT '0',
+  `expires_at` datetime NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `performance_indicator`
+--
+
+CREATE TABLE `performance_indicator` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `indicator_type` enum('numeric','percentage','boolean','rating') COLLATE utf8mb4_unicode_ci DEFAULT 'numeric',
+  `unit` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `target_value` decimal(15,4) DEFAULT NULL,
+  `current_value` decimal(15,4) DEFAULT NULL,
+  `period_type` enum('daily','weekly','monthly','quarterly','yearly') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `period_start` date DEFAULT NULL,
+  `period_end` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `permission`
+--
+
+CREATE TABLE `permission` (
+  `id` int UNSIGNED NOT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `module` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `portfolio`
+--
+
+CREATE TABLE `portfolio` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `position`
+--
+
+CREATE TABLE `position` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `unit_id` int UNSIGNED DEFAULT NULL,
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `grade_level` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `position_history`
+--
+
+CREATE TABLE `position_history` (
+  `id` int UNSIGNED NOT NULL,
+  `staff_id` int UNSIGNED NOT NULL,
+  `position_id` int UNSIGNED NOT NULL,
+  `unit_id` int UNSIGNED DEFAULT NULL,
+  `start_date` date NOT NULL,
+  `end_date` date DEFAULT NULL,
+  `reason` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `profile`
+--
+
+CREATE TABLE `profile` (
+  `id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `bio` text COLLATE utf8mb4_unicode_ci,
+  `job_title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cv_path` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `skills` json DEFAULT NULL,
+  `experience` json DEFAULT NULL,
+  `education` json DEFAULT NULL,
+  `preferences` json DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `programme`
+--
+
+CREATE TABLE `programme` (
+  `id` int UNSIGNED NOT NULL,
+  `portfolio_id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `project`
+--
+
+CREATE TABLE `project` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `programme_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `cover_image` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `status` enum('draft','planned','in_progress','on_hold','completed','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'draft',
+  `priority` enum('low','medium','high','critical') COLLATE utf8mb4_unicode_ci DEFAULT 'medium',
+  `manager_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `project_assignment`
+--
+
+CREATE TABLE `project_assignment` (
+  `id` int UNSIGNED NOT NULL,
+  `project_id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `role_in_project` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `allocation_percent` decimal(5,2) DEFAULT NULL,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `project_bailleur`
+--
+
+CREATE TABLE `project_bailleur` (
+  `project_id` int UNSIGNED NOT NULL,
+  `bailleur_id` int UNSIGNED NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `project_budget`
+--
+
+CREATE TABLE `project_budget` (
+  `id` int UNSIGNED NOT NULL,
+  `project_id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `amount` decimal(15,2) NOT NULL,
+  `currency` char(3) COLLATE utf8mb4_unicode_ci DEFAULT 'USD',
+  `budget_type` enum('initial','revised','actual') COLLATE utf8mb4_unicode_ci DEFAULT 'initial',
+  `fiscal_year` int UNSIGNED DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `project_phase`
+--
+
+CREATE TABLE `project_phase` (
+  `id` int UNSIGNED NOT NULL,
+  `project_id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sequence` int UNSIGNED DEFAULT '0',
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `image_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `project_resource`
+--
+
+CREATE TABLE `project_resource` (
+  `id` int UNSIGNED NOT NULL,
+  `project_id` int UNSIGNED NOT NULL,
+  `resource_type` enum('human','material','equipment','financial') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `quantity` decimal(10,2) DEFAULT '1.00',
+  `unit` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `cost_per_unit` decimal(15,2) DEFAULT NULL,
+  `notes` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `reports_finances_page`
+--
+
+CREATE TABLE `reports_finances_page` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL COMMENT 'NULL = contenu par d??faut',
+  `intro_block1` text COLLATE utf8mb4_unicode_ci,
+  `intro_block2` text COLLATE utf8mb4_unicode_ci,
+  `section_activity_title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `section_activity_text` text COLLATE utf8mb4_unicode_ci,
+  `section_finance_title` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `section_finance_text` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `responsibility_commitment`
+--
+
+CREATE TABLE `responsibility_commitment` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL COMMENT 'NULL = global',
+  `title` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `icon` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Bootstrap Icons class e.g. bi-shield-check',
+  `sort_order` int NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `responsibility_page`
+--
+
+CREATE TABLE `responsibility_page` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL COMMENT 'NULL = contenu par d??faut',
+  `intro_block1` text COLLATE utf8mb4_unicode_ci,
+  `intro_block2` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `role`
+--
+
+CREATE TABLE `role` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `is_system` tinyint(1) NOT NULL DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `role_permission`
+--
+
+CREATE TABLE `role_permission` (
+  `role_id` int UNSIGNED NOT NULL,
+  `permission_id` int UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `schedule`
+--
+
+CREATE TABLE `schedule` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `start_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL,
+  `schedule_type` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_by_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `service`
+--
+
+CREATE TABLE `service` (
+  `id` int UNSIGNED NOT NULL,
+  `department_id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `photo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Photo du service',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `session`
+--
+
+CREATE TABLE `session` (
+  `id` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` text COLLATE utf8mb4_unicode_ci,
+  `payload` text COLLATE utf8mb4_unicode_ci,
+  `last_activity` int NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `staff`
+--
+
+CREATE TABLE `staff` (
+  `id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `employee_number` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `phone_extension` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Poste / Extension',
+  `work_email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Email professionnel',
+  `hire_date` date DEFAULT NULL,
+  `end_date` date DEFAULT NULL COMMENT 'Date de fin de contrat',
+  `employment_type` enum('full_time','part_time','contract','intern','freelance') COLLATE utf8mb4_unicode_ci DEFAULT 'full_time',
+  `department` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'D??partement / Service',
+  `job_title` varchar(150) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Intitul?? du poste',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `notes` text COLLATE utf8mb4_unicode_ci COMMENT 'Notes RH',
+  `photo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Photo du personnel',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `sub_task`
+--
+
+CREATE TABLE `sub_task` (
+  `id` int UNSIGNED NOT NULL,
+  `task_id` int UNSIGNED NOT NULL,
+  `title` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `sequence` int UNSIGNED DEFAULT '0',
+  `status` enum('todo','in_progress','done','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'todo',
+  `due_date` date DEFAULT NULL,
+  `assigned_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `task`
+--
+
+CREATE TABLE `task` (
+  `id` int UNSIGNED NOT NULL,
+  `project_id` int UNSIGNED NOT NULL,
+  `project_phase_id` int UNSIGNED DEFAULT NULL,
+  `parent_task_id` int UNSIGNED DEFAULT NULL,
+  `title` varchar(500) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `sequence` int UNSIGNED DEFAULT '0',
+  `status` enum('todo','in_progress','review','done','cancelled') COLLATE utf8mb4_unicode_ci DEFAULT 'todo',
+  `priority` enum('low','medium','high','critical') COLLATE utf8mb4_unicode_ci DEFAULT 'medium',
+  `start_date` date DEFAULT NULL,
+  `due_date` date DEFAULT NULL,
+  `estimated_hours` decimal(10,2) DEFAULT NULL,
+  `assigned_user_id` int UNSIGNED DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `unit`
+--
+
+CREATE TABLE `unit` (
+  `id` int UNSIGNED NOT NULL,
+  `service_id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `photo` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Photo de l''unit??',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `user`
+--
+
+CREATE TABLE `user` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED DEFAULT NULL,
+  `email` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `password_hash` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `first_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `last_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `phone` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `avatar_url` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `email_verified_at` timestamp NULL DEFAULT NULL,
+  `last_login_at` timestamp NULL DEFAULT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `user_group`
+--
+
+CREATE TABLE `user_group` (
+  `id` int UNSIGNED NOT NULL,
+  `organisation_id` int UNSIGNED NOT NULL,
+  `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `code` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `description` text COLLATE utf8mb4_unicode_ci,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `user_group_member`
+--
+
+CREATE TABLE `user_group_member` (
+  `user_group_id` int UNSIGNED NOT NULL,
+  `user_id` int UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Structure de la table `user_role`
+--
+
+CREATE TABLE `user_role` (
+  `user_id` int UNSIGNED NOT NULL,
+  `role_id` int UNSIGNED NOT NULL,
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
