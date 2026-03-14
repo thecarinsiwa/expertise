@@ -7,9 +7,8 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
 
-$id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
+$id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 if ($id === null || $id <= 0) {
     header('Location: ' . $baseUrl . 'index.php');
     exit;

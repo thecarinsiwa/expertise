@@ -7,9 +7,9 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
+require_once __DIR__ . '/inc/entity_url.php';
 
-$id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
+$id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 if ($id === null || $id <= 0) {
     header('Location: ' . $baseUrl . 'projects.php');
     exit;
@@ -216,7 +216,7 @@ $priorityLabel = isset($priorityLabels[$project->priority]) ? $priorityLabels[$p
                             <ul class="list-unstyled mb-0">
                                 <?php foreach ($otherProjects as $op): ?>
                                 <li class="mb-2 pb-2 border-bottom border-light">
-                                    <a href="<?= public_entity_url($baseUrl, 'project', (int) $op->id) ?>" class="text-decoration-none text-dark">
+                                    <a href="<?= entity_url($baseUrl, 'project', (int) $op->id) ?>" class="text-decoration-none text-dark">
                                         <strong class="d-block"><?= htmlspecialchars($op->name) ?></strong>
                                         <span class="small text-muted"><?= $op->start_date ? date('d/m/Y', strtotime($op->start_date)) : '' ?><?= $op->end_date ? ' — ' . date('d/m/Y', strtotime($op->end_date)) : '' ?></span>
                                     </a>

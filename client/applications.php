@@ -4,7 +4,7 @@
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
-require_once dirname(__DIR__) . '/inc/url_hash.php';
+require_once dirname(__DIR__) . '/inc/entity_url.php';
 
 $pageTitle = 'Mes candidatures – Mon espace';
 $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
@@ -78,7 +78,7 @@ require __DIR__ . '/../inc/header.php';
                             <div class="row align-items-center">
                                 <div class="col-lg-8">
                                     <h3 class="client-application-title">
-                                        <a href="<?= htmlspecialchars(public_entity_url($baseUrl, 'offre', (int) $app->offer_id)) ?>"><?= htmlspecialchars($app->offer_title) ?></a>
+                                        <a href="<?= htmlspecialchars(entity_url($baseUrl, 'offre', (int) $app->offer_id)) ?>"><?= htmlspecialchars($app->offer_title) ?></a>
                                     </h3>
                                     <?php if (!empty($app->offer_reference)): ?>
                                         <p class="client-application-ref mb-1">Réf. <?= htmlspecialchars($app->offer_reference) ?></p>

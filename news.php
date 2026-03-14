@@ -15,7 +15,7 @@ $allowedSort = ['date_desc' => 1, 'date_asc' => 1, 'title_asc' => 1, 'title_desc
 if (!isset($allowedSort[$sort])) $sort = 'date_desc';
 
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
+require_once __DIR__ . '/inc/entity_url.php';
 
 try {
     $stmt = $pdo->query("SELECT id, name, description FROM organisation WHERE is_active = 1 LIMIT 1");
@@ -119,7 +119,7 @@ require __DIR__ . '/inc/header.php';
                                 <div class="card-mission-img" style="background-image: url('<?= htmlspecialchars($cardCover) ?>');"></div>
                                 <?php endif; ?>
                                 <div class="card-body">
-                                    <h2 class="card-title h5"><a href="<?= public_entity_url($baseUrl, 'announcement', (int) $a->id) ?>"><?= htmlspecialchars($a->title) ?></a></h2>
+                                    <h2 class="card-title h5"><a href="<?= entity_url($baseUrl, 'announcement', (int) $a->id) ?>"><?= htmlspecialchars($a->title) ?></a></h2>
                                     <p class="card-meta mb-0"><?= $a->published_at ? date('d M Y', strtotime($a->published_at)) : ($a->created_at ? date('d M Y', strtotime($a->created_at)) : '') ?></p>
                                 </div>
                             </div>

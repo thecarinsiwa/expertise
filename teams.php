@@ -12,17 +12,16 @@ $person = null;
 $teamList = [];
 
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
+require_once __DIR__ . '/inc/entity_url.php';
 require_once __DIR__ . '/inc/asset_url.php';
 
 $staffId = 0;
-if (isset($_GET['h'])) {
-    $decoded = decode_id($_GET['h']);
-    if ($decoded === null || $decoded <= 0) {
+if (isset($_GET['id'])) {
+    $staffId = (int) $_GET['id'];
+    if ($staffId <= 0) {
         header('Location: ' . $baseUrl . 'teams.php');
         exit;
     }
-    $staffId = $decoded;
 }
 
 if ($pdo) {
@@ -239,7 +238,7 @@ $employmentLabels = [
                         $staffName = trim(($s->first_name ?? '') . ' ' . ($s->last_name ?? ''));
                     ?>
                     <div class="col-12 col-sm-6 col-lg-4 col-xl-3">
-                        <a href="<?= public_entity_url($baseUrl, 'teams', (int) $s->id) ?>" class="card card-mission card-staff-link h-100 text-decoration-none">
+                        <a href="<?= entity_url($baseUrl, 'teams', (int) $s->id) ?>" class="card card-mission card-staff-link h-100 text-decoration-none">
                             <?php if ($staffPhotoUrl): ?>
                             <div class="card-mission-img card-staff-list-img" style="background-image: url('<?= htmlspecialchars($staffPhotoUrl) ?>');"></div>
                             <?php else: ?>

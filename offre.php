@@ -7,9 +7,9 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
+require_once __DIR__ . '/inc/entity_url.php';
 
-$id = isset($_GET['h']) ? decode_id($_GET['h']) : null;
+$id = isset($_GET['id']) ? (int) $_GET['id'] : null;
 if ($id === null || $id <= 0) {
     header('Location: ' . $baseUrl . 'offres.php');
     exit;
@@ -62,7 +62,7 @@ if ($clientLoggedIn && $pdo && $offer) {
     }
 }
 $applyUrl = $baseUrl . 'client/apply.php?offer_id=' . (int) $offer->id;
-$loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode(public_entity_url($baseUrl, 'offre', (int) $offer->id));
+$loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode(entity_url($baseUrl, 'offre', (int) $offer->id));
 ?>
 
     <main class="mission-detail">
@@ -141,7 +141,7 @@ $loginUrl = $baseUrl . 'client/login.php?redirect=' . urlencode(public_entity_ur
                         <?php if ($offer->mission_id): ?>
                             <div class="mission-detail-block">
                                 <h2 class="mission-detail-block-title"><i class="bi bi-geo-alt"></i> Mission liée</h2>
-                                <p class="mb-0"><a href="<?= public_entity_url($baseUrl, 'mission', (int) $offer->mission_id) ?>"><?= htmlspecialchars($offer->mission_title ?? 'Voir la mission') ?></a></p>
+                                <p class="mb-0"><a href="<?= entity_url($baseUrl, 'mission', (int) $offer->mission_id) ?>"><?= htmlspecialchars($offer->mission_title ?? 'Voir la mission') ?></a></p>
                             </div>
                         <?php endif; ?>
                         <?php if ($offer->project_id): ?>

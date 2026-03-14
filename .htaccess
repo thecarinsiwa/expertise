@@ -1,4 +1,4 @@
-# Masquer l'extension .php et hasher les IDs (paramètre h)
+# Masquer l'extension .php (URLs propres). Les query strings, ex. ?id=, sont conservées (QSA).
 # Laragon / Apache : mod_rewrite requis. AllowOverride All doit être activé pour ce répertoire.
 
 <IfModule mod_rewrite.c>

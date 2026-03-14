@@ -5,7 +5,7 @@ $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
 $baseUrl = ($scriptDir === '/' || $scriptDir === '\\') ? '' : rtrim($scriptDir, '/') . '/';
 
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
+require_once __DIR__ . '/inc/entity_url.php';
 
 $organisation = null;
 $locations = [];
@@ -48,7 +48,7 @@ if ($pdo) {
             if ($stmt) {
                 $mapLocations = $stmt->fetchAll(PDO::FETCH_OBJ);
                 foreach ($mapLocations as $mL) {
-                    $mL->url = public_entity_url($baseUrl, 'mission', (int) $mL->id);
+                    $mL->url = entity_url($baseUrl, 'mission', (int) $mL->id);
                 }
             }
         } catch (PDOException $e) {}

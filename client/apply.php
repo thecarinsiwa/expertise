@@ -4,7 +4,7 @@
  */
 require_once __DIR__ . '/inc/auth.php';
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/../inc/url_hash.php';
+require_once __DIR__ . '/../inc/entity_url.php';
 
 $pageTitle = 'Postuler – Mon espace';
 $scriptDir = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
@@ -127,7 +127,7 @@ require __DIR__ . '/../inc/header.php';
                 <span class="mx-2">/</span>
                 <a href="<?= htmlspecialchars($baseUrl) ?>offres.php" class="text-muted text-decoration-none small">Nos offres</a>
                 <span class="mx-2">/</span>
-                <a href="<?= htmlspecialchars(public_entity_url($baseUrl, 'offre', (int) $offer->id)) ?>" class="text-muted text-decoration-none small"><?= htmlspecialchars($offer->title) ?></a>
+                <a href="<?= htmlspecialchars(entity_url($baseUrl, 'offre', (int) $offer->id)) ?>" class="text-muted text-decoration-none small"><?= htmlspecialchars($offer->title) ?></a>
             </nav>
 
             <h1 class="section-heading mb-4"><i class="bi bi-send me-2"></i><?= $alreadyApplied ? 'Modifier ma candidature' : 'Postuler à l\'offre' ?></h1>
@@ -173,7 +173,7 @@ require __DIR__ . '/../inc/header.php';
                                 </div>
                                 <div class="d-flex gap-2">
                                     <button type="submit" class="btn btn-read-more"><i class="bi bi-check-lg me-2"></i><?= $alreadyApplied ? 'Enregistrer les modifications' : 'Envoyer ma candidature' ?></button>
-                                    <a href="<?= htmlspecialchars(public_entity_url($baseUrl, 'offre', (int) $offer->id)) ?>" class="btn btn-outline-secondary">Annuler</a>
+                                    <a href="<?= htmlspecialchars(entity_url($baseUrl, 'offre', (int) $offer->id)) ?>" class="btn btn-outline-secondary">Annuler</a>
                                 </div>
                             </form>
                         </div>

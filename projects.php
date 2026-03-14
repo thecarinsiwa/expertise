@@ -14,7 +14,7 @@ $allowedSort = ['date_desc' => 1, 'date_asc' => 1, 'name_asc' => 1, 'name_desc' 
 if (!isset($allowedSort[$sort])) $sort = 'date_desc';
 
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
+require_once __DIR__ . '/inc/entity_url.php';
 $organisation = null;
 if ($pdo) {
     try {
@@ -124,7 +124,7 @@ require_once __DIR__ . '/inc/page-static.php';
                                 <div class="card-mission-img" style="background-image: url('<?= htmlspecialchars($cardCover) ?>');"></div>
                                 <?php endif; ?>
                                 <div class="card-body">
-                                    <h2 class="card-title h5"><a href="<?= public_entity_url($baseUrl, 'project', (int) $p->id) ?>" class="text-decoration-none"><?= htmlspecialchars($p->name) ?></a></h2>
+                                    <h2 class="card-title h5"><a href="<?= entity_url($baseUrl, 'project', (int) $p->id) ?>" class="text-decoration-none"><?= htmlspecialchars($p->name) ?></a></h2>
                                     <?php if (!empty($p->code)): ?>
                                         <p class="card-meta mb-1"><?= htmlspecialchars($p->code) ?></p>
                                     <?php endif; ?>

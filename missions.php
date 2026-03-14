@@ -16,7 +16,7 @@ $allowedSort = ['date_desc' => 1, 'date_asc' => 1, 'title_asc' => 1, 'title_desc
 if (!isset($allowedSort[$sort])) $sort = 'date_desc';
 
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
+require_once __DIR__ . '/inc/entity_url.php';
 
 try {
     $stmt = $pdo->query("SELECT id, name, description FROM organisation WHERE is_active = 1 LIMIT 1");
@@ -82,7 +82,7 @@ if ($pdo) {
                 $mapCenterLat = (float) $firstWithCoords->latitude;
                 $mapCenterLng = (float) $firstWithCoords->longitude;
                 $mapZoom = 8;
-                $firstWithCoords->url = public_entity_url($baseUrl, 'mission', (int) $firstWithCoords->id);
+                $firstWithCoords->url = entity_url($baseUrl, 'mission', (int) $firstWithCoords->id);
                 $mapLocations = [$firstWithCoords];
             }
         } catch (PDOException $e) {
@@ -192,7 +192,7 @@ require __DIR__ . '/inc/header.php';
                                 <div class="card-mission-img" style="background-image: url('<?= htmlspecialchars($cardCover) ?>');"></div>
                                 <?php endif; ?>
                                 <div class="card-body">
-                                    <h2 class="card-title h5"><a href="<?= public_entity_url($baseUrl, 'mission', (int) $m->id) ?>"><?= htmlspecialchars($m->title) ?></a></h2>
+                                    <h2 class="card-title h5"><a href="<?= entity_url($baseUrl, 'mission', (int) $m->id) ?>"><?= htmlspecialchars($m->title) ?></a></h2>
                                     <p class="card-meta mb-1"><?= htmlspecialchars($m->location ?: '—') ?></p>
                                     <p class="card-meta mb-0"><?= $m->updated_at ? date('d M Y', strtotime($m->updated_at)) : ($m->start_date ? date('d M Y', strtotime($m->start_date)) : '') ?></p>
                                 </div>

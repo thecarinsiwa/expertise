@@ -8,7 +8,7 @@ $categoriesWithDocs = [];
 $attachments = [];
 
 require_once __DIR__ . '/inc/db.php';
-require_once __DIR__ . '/inc/url_hash.php';
+require_once __DIR__ . '/inc/entity_url.php';
 
 if ($pdo) {
     $stmt = $pdo->query("SELECT id, name, code, description FROM organisation WHERE is_active = 1 LIMIT 1");
@@ -198,8 +198,8 @@ function format_file_size($bytes) {
                             $fileUrl = client_asset_url($baseUrl, $att->file_path);
                             $parentTitle = $att->attachable_type === 'mission' ? ($att->mission_title ?? 'Mission #' . $att->attachable_id) : ($att->announcement_title ?? 'Annonce #' . $att->attachable_id);
                             $parentUrl = $att->attachable_type === 'mission'
-                                ? public_entity_url($baseUrl, 'mission', (int) $att->attachable_id)
-                                : public_entity_url($baseUrl, 'announcement', (int) $att->attachable_id);
+                                ? entity_url($baseUrl, 'mission', (int) $att->attachable_id)
+                                : entity_url($baseUrl, 'announcement', (int) $att->attachable_id);
                             $typeLabel = $att->attachable_type === 'mission' ? 'Mission' : 'Annonce';
                             $attExt = $att->file_name ? strtolower(pathinfo($att->file_name, PATHINFO_EXTENSION)) : '';
                             $attIcon = 'bi-file-earmark';
