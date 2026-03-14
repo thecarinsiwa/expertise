@@ -76,8 +76,8 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="offers" class="text-decoration-none">Nos offres</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="offers.php" class="text-decoration-none">Nos offres</a></li>
         <li class="breadcrumb-item active">Profil candidat</li>
     </ol>
 </nav>
@@ -88,7 +88,7 @@ require __DIR__ . '/inc/header.php';
             <h1><i class="bi bi-person-badge me-2"></i>Profil candidat</h1>
             <p class="text-muted mb-0">Vue en lecture seule du profil et CV du candidat.</p>
         </div>
-        <a href="offers" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux offres</a>
+        <a href="offers.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour aux offres</a>
     </div>
 </header>
 
@@ -221,6 +221,6 @@ require __DIR__ . '/inc/header.php';
 <?php endif; ?>
 
 <footer class="admin-main-footer mt-4">
-    <a href="offers" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Nos offres</a>
+    <a href="offers.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Nos offres</a>
 </footer>
 <?php require __DIR__ . '/inc/footer.php'; ?>

@@ -12,6 +12,9 @@ if (strpos($baseUrl, ':') !== false || preg_match('#^[a-zA-Z]:#', $baseUrl)) {
     if ($sn !== '' && strpos($sn, ':') === false && $sn !== '/' && $sn !== '\\') {
         $baseUrl = rtrim(dirname($sn), '/\\') . '/';
     } else {
+        if (!getenv('SITE_BASE_URL') && empty($_ENV['SITE_BASE_URL']) && is_file(__DIR__ . '/../config/load_env.php')) {
+            require_once __DIR__ . '/../config/load_env.php';
+        }
         $baseUrl = (getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '/expertise/'));
         if ($baseUrl !== '' && $baseUrl !== '/' && substr($baseUrl, -1) !== '/') $baseUrl .= '/';
     }
@@ -66,8 +69,8 @@ $hasFooterSocial = $organisation && (
                     <ul class="footer-links">
                         <li><a href="<?= $baseUrl ?>missions.php">Toutes les missions</a></li>
                         <li><a href="<?= $baseUrl ?>news.php">Toutes les actualités</a></li>
-                        <li><a href="<?= $baseUrl ?>client/index.php">Espace Utilisateur</a></li>
-                        <li><a href="<?= $baseUrl ?>admin/index.php">Administration</a></li>
+                        <li><a href="<?= (isset($siteBaseUrl) ? $siteBaseUrl : $baseUrl) ?>client/index.php">Espace Utilisateur</a></li>
+                        <li><a href="<?= (isset($siteBaseUrl) ? $siteBaseUrl : $baseUrl) ?>admin/index.php">Administration</a></li>
                     </ul>
                 </div>
                 <div class="col-12 col-md-4 col-lg-4 site-footer-cta">

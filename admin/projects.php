@@ -53,7 +53,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_project_id'];
             try {
                 $pdo->prepare("DELETE FROM project WHERE id = ?")->execute([$delId]);
-                header('Location: projects?msg=deleted');
+                header('Location: projects.php?msg=deleted');
                 exit;
             } catch (PDOException $e) {
                 $error = 'Impossible de supprimer le projet.';
@@ -143,7 +143,7 @@ if ($pdo) {
                     $bailleur_ids = isset($_POST['bailleur_ids']) && is_array($_POST['bailleur_ids']) ? array_map('intval', array_filter($_POST['bailleur_ids'])) : [];
                     $insBailleur = $pdo->prepare("INSERT INTO project_bailleur (project_id, bailleur_id) VALUES (?, ?)");
                     foreach ($bailleur_ids as $bid) { if ($bid > 0) $insBailleur->execute([$newId, $bid]); }
-                    header('Location: projects?id=' . $newId . '&msg=created');
+                    header('Location: projects.php?id=' . $newId . '&msg=created');
                     exit;
                 }
             }
@@ -167,7 +167,7 @@ if ($pdo) {
             if ($phaseName !== '') {
                 $pdo->prepare("INSERT INTO project_phase (project_id, name, sequence, description, image_url) VALUES (?, ?, ?, ?, ?)")->execute([$pid, $phaseName, $phaseSeq, $phaseDesc, $phaseImage]);
                 $redirectEdit = isset($_POST['from_edit']) ? 'action=edit&' : '';
-                header('Location: projects?' . $redirectEdit . 'id=' . $pid . '&msg=phase_added');
+                header('Location: projects.php?' . $redirectEdit . 'id=' . $pid . '&msg=phase_added');
                 exit;
             }
         }
@@ -177,7 +177,7 @@ if ($pdo) {
             $pid = (int) ($_POST['project_id'] ?? 0);
             $pdo->prepare("DELETE FROM project_phase WHERE id = ?")->execute([$phaseId]);
             $redirectEdit = isset($_POST['from_edit']) ? 'action=edit&' : '';
-            header('Location: projects?' . $redirectEdit . 'id=' . $pid . '&msg=phase_deleted');
+            header('Location: projects.php?' . $redirectEdit . 'id=' . $pid . '&msg=phase_deleted');
             exit;
         }
         // Modification phase
@@ -200,7 +200,7 @@ if ($pdo) {
             if ($phaseName !== '') {
                 $pdo->prepare("UPDATE project_phase SET name = ?, sequence = ?, description = ?, image_url = ? WHERE id = ?")->execute([$phaseName, $phaseSeq, $phaseDesc, $phaseImage, $phaseId]);
                 $redirectEdit = isset($_POST['from_edit']) ? 'action=edit&' : '';
-                header('Location: projects?' . $redirectEdit . 'id=' . $pid . '&msg=phase_updated');
+                header('Location: projects.php?' . $redirectEdit . 'id=' . $pid . '&msg=phase_updated');
                 exit;
             }
         }
@@ -217,7 +217,7 @@ if ($pdo) {
                 $pdo->prepare("INSERT INTO task (project_id, project_phase_id, title, status, priority, due_date, assigned_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)")
                     ->execute([$pid, $phase_id, $title, $status, $priority, $due_date, $assigned_user_id]);
                 $redirectEdit = isset($_POST['from_edit']) ? 'action=edit&' : '';
-                header('Location: projects?' . $redirectEdit . 'id=' . $pid . '&msg=task_added');
+                header('Location: projects.php?' . $redirectEdit . 'id=' . $pid . '&msg=task_added');
                 exit;
             }
         }
@@ -226,7 +226,7 @@ if ($pdo) {
             $pid = (int) ($_POST['project_id'] ?? 0);
             $pdo->prepare("DELETE FROM task WHERE id = ?")->execute([(int) $_POST['delete_task_id']]);
             $redirectEdit = isset($_POST['from_edit']) ? 'action=edit&' : '';
-            header('Location: projects?' . $redirectEdit . 'id=' . $pid . '&msg=task_deleted');
+            header('Location: projects.php?' . $redirectEdit . 'id=' . $pid . '&msg=task_deleted');
             exit;
         }
         // Modification tâche
@@ -243,7 +243,7 @@ if ($pdo) {
                 $pdo->prepare("UPDATE task SET title = ?, project_phase_id = ?, status = ?, priority = ?, due_date = ?, assigned_user_id = ? WHERE id = ?")
                     ->execute([$title, $phase_id, $status, $priority, $due_date, $assigned_user_id, $tid]);
                 $redirectEdit = isset($_POST['from_edit']) ? 'action=edit&' : '';
-                header('Location: projects?' . $redirectEdit . 'id=' . $pid . '&msg=task_updated');
+                header('Location: projects.php?' . $redirectEdit . 'id=' . $pid . '&msg=task_updated');
                 exit;
             }
         }
@@ -258,7 +258,7 @@ if ($pdo) {
                 $taskRow->execute([$tid]);
                 $pid = (int) $taskRow->fetch()->project_id;
                 $redirectEdit = isset($_POST['from_edit']) ? 'action=edit&' : '';
-                header('Location: projects?' . $redirectEdit . 'id=' . $pid . '&msg=subtask_added');
+                header('Location: projects.php?' . $redirectEdit . 'id=' . $pid . '&msg=subtask_added');
                 exit;
             }
         }
@@ -267,7 +267,7 @@ if ($pdo) {
             $pid = (int) ($_POST['project_id'] ?? 0);
             $pdo->prepare("DELETE FROM sub_task WHERE id = ?")->execute([(int) $_POST['delete_sub_task_id']]);
             $redirectEdit = isset($_POST['from_edit']) ? 'action=edit&' : '';
-            header('Location: projects?' . $redirectEdit . 'id=' . $pid . '&msg=subtask_deleted');
+            header('Location: projects.php?' . $redirectEdit . 'id=' . $pid . '&msg=subtask_deleted');
             exit;
         }
     }
@@ -327,8 +327,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="projects" class="text-decoration-none">Projets & Tâches</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="projects.php" class="text-decoration-none">Projets & Tâches</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau projet</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -361,12 +361,12 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
                 <a href="projects?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <a href="projects" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="projects.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="programmes" class="btn btn-admin-outline" target="_blank"><i class="bi bi-folder2 me-1"></i> Configuration des programmes</a>
+                <a href="programmes.php" class="btn btn-admin-outline" target="_blank"><i class="bi bi-folder2 me-1"></i> Configuration des programmes</a>
                 <a href="projects<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="programmes" class="btn btn-admin-outline"><i class="bi bi-folder2 me-1"></i> Configuration des programmes</a>
+                <a href="programmes.php" class="btn btn-admin-outline"><i class="bi bi-folder2 me-1"></i> Configuration des programmes</a>
                 <a href="projects?action=add" class="btn btn-admin-primary"><i class="bi bi-kanban me-1"></i> Nouveau projet</a>
             <?php endif; ?>
         </div>
@@ -488,7 +488,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                                 <option value="<?= (int) $pr->id ?>" <?= ($detail && $detail->programme_id == $pr->id) ? 'selected' : '' ?>><?= htmlspecialchars($pr->name) ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <small class="text-muted"><a href="programmes" target="_blank">Configuration des programmes</a></small>
+                        <small class="text-muted"><a href="programmes.php" target="_blank">Configuration des programmes</a></small>
                     </div>
                     <div class="col-12">
                         <label class="form-label fw-bold">Partenaires</label>
@@ -881,7 +881,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         </table>
         <div class="mt-4 d-flex gap-2">
             <a href="projects?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-            <a href="projects" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="projects.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteProjectModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
         </div>
     </div>
@@ -1396,7 +1396,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

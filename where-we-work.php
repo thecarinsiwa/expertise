@@ -162,7 +162,7 @@ require_once __DIR__ . '/inc/page-static.php';
         locations.forEach(function(m) {
             var lat = parseFloat(m.latitude), lng = parseFloat(m.longitude);
             if (isNaN(lat) || isNaN(lng)) return;
-            var popup = '<a href="' + (m.url || (baseUrl + 'mission?h=' + m.id)) + '">' + escapeHtml(m.title || 'Mission') + '</a>';
+            var popup = '<a href="' + (m.url || (baseUrl + 'mission.php?h=' + m.id)) + '">' + escapeHtml(m.title || 'Mission') + '</a>';
             if (m.location) popup += '<br><small class="text-muted">' + escapeHtml(m.location) + '</small>';
             L.marker([lat, lng]).addTo(map).bindPopup(popup);
             if (!bounds) bounds = L.latLngBounds([lat, lng], [lat, lng]); else bounds.extend([lat, lng]);

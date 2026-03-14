@@ -232,8 +232,8 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="planning" class="text-decoration-none">Gestion</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="planning.php" class="text-decoration-none">Gestion</a></li>
         <li class="breadcrumb-item active">Planning & KPI</li>
     </ol>
 </nav>
@@ -259,23 +259,23 @@ require __DIR__ . '/inc/header.php';
     <div class="col-12">
         <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
             <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i> Configuration :</span>
-            <a href="planning?tab=calendars" class="btn btn-sm btn-admin-outline"><i class="bi bi-calendar3 me-1"></i> Gérer les Calendriers</a>
+            <a href="planning.php?tab=calendars" class="btn btn-sm btn-admin-outline"><i class="bi bi-calendar3 me-1"></i> Gérer les Calendriers</a>
         </div>
     </div>
 </div>
 
 <ul class="nav nav-tabs mb-4">
-    <li class="nav-item"><a class="nav-link <?= $tab === 'calendars' ? 'active' : '' ?>" href="planning?tab=calendars">Calendriers</a></li>
-    <li class="nav-item"><a class="nav-link <?= $tab === 'events' ? 'active' : '' ?>" href="planning?tab=events">Événements</a></li>
-    <li class="nav-item"><a class="nav-link <?= $tab === 'schedules' ? 'active' : '' ?>" href="planning?tab=schedules">Plannings</a></li>
-    <li class="nav-item"><a class="nav-link <?= $tab === 'kpi' ? 'active' : '' ?>" href="planning?tab=kpi">Indicateurs KPI</a></li>
+    <li class="nav-item"><a class="nav-link <?= $tab === 'calendars' ? 'active' : '' ?>" href="planning.php?tab=calendars">Calendriers</a></li>
+    <li class="nav-item"><a class="nav-link <?= $tab === 'events' ? 'active' : '' ?>" href="planning.php?tab=events">Événements</a></li>
+    <li class="nav-item"><a class="nav-link <?= $tab === 'schedules' ? 'active' : '' ?>" href="planning.php?tab=schedules">Plannings</a></li>
+    <li class="nav-item"><a class="nav-link <?= $tab === 'kpi' ? 'active' : '' ?>" href="planning.php?tab=kpi">Indicateurs KPI</a></li>
 </ul>
 
 <?php if ($tab === 'calendars'): ?>
     <div class="admin-card admin-section-card">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="text-muted"><?= count($calendars) ?> calendrier(s)</span>
-            <a href="planning?tab=calendars&action=add" class="btn btn-admin-primary btn-sm"><i class="bi bi-plus me-1"></i> Nouveau calendrier</a>
+            <a href="planning.php?tab=calendars&action=add" class="btn btn-admin-primary btn-sm"><i class="bi bi-plus me-1"></i> Nouveau calendrier</a>
         </div>
         <?php if ($action === 'add' || ($action === 'edit' && $detail)): ?>
             <form method="POST" class="mb-4">
@@ -319,7 +319,7 @@ require __DIR__ . '/inc/header.php';
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-admin-primary">Enregistrer</button>
-                        <a href="planning?tab=calendars" class="btn btn-secondary">Annuler</a>
+                        <a href="planning.php?tab=calendars" class="btn btn-secondary">Annuler</a>
                     </div>
                 </div>
             </form>
@@ -336,7 +336,7 @@ require __DIR__ . '/inc/header.php';
                             <td><?= $c->colour ? '<span class="badge" style="background-color:'.htmlspecialchars($c->colour).'">'.$c->colour.'</span>' : '—' ?></td>
                             <td><?= $c->is_public ? 'Oui' : 'Non' ?></td>
                             <td class="text-end">
-                                <a href="planning?tab=calendars&action=edit&id=<?= (int) $c->id ?>" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                                <a href="planning.php?tab=calendars&action=edit&id=<?= (int) $c->id ?>" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
                                 <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce calendrier et ses événements ?');">
                                     <input type="hidden" name="delete_calendar" value="<?= (int) $c->id ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
@@ -366,7 +366,7 @@ require __DIR__ . '/inc/header.php';
                     <?php endforeach; ?>
                 </select>
             </form>
-            <a href="planning?tab=events&action=add" class="btn btn-admin-primary btn-sm"><i class="bi bi-plus me-1"></i> Nouvel événement</a>
+            <a href="planning.php?tab=events&action=add" class="btn btn-admin-primary btn-sm"><i class="bi bi-plus me-1"></i> Nouvel événement</a>
         </div>
         <?php if ($action === 'add' || ($action === 'edit' && $detail)): ?>
             <form method="POST" class="mb-4">
@@ -413,7 +413,7 @@ require __DIR__ . '/inc/header.php';
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-admin-primary">Enregistrer</button>
-                        <a href="planning?tab=events" class="btn btn-secondary">Annuler</a>
+                        <a href="planning.php?tab=events" class="btn btn-secondary">Annuler</a>
                     </div>
                 </div>
             </form>
@@ -430,7 +430,7 @@ require __DIR__ . '/inc/header.php';
                             <td><?= date('d/m/Y H:i', strtotime($e->end_at)) ?></td>
                             <td><?= $e->is_all_day ? 'Oui' : 'Non' ?></td>
                             <td class="text-end">
-                                <a href="planning?tab=events&action=edit&id=<?= (int) $e->id ?>" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                                <a href="planning.php?tab=events&action=edit&id=<?= (int) $e->id ?>" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
                                 <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet événement ?');">
                                     <input type="hidden" name="delete_event" value="<?= (int) $e->id ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
@@ -451,7 +451,7 @@ require __DIR__ . '/inc/header.php';
     <div class="admin-card admin-section-card">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="text-muted"><?= count($list) ?> planning(s)</span>
-            <a href="planning?tab=schedules&action=add" class="btn btn-admin-primary btn-sm"><i class="bi bi-plus me-1"></i> Nouveau planning</a>
+            <a href="planning.php?tab=schedules&action=add" class="btn btn-admin-primary btn-sm"><i class="bi bi-plus me-1"></i> Nouveau planning</a>
         </div>
         <?php if ($action === 'add' || ($action === 'edit' && $detail)): ?>
             <form method="POST" class="mb-4">
@@ -488,7 +488,7 @@ require __DIR__ . '/inc/header.php';
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-admin-primary">Enregistrer</button>
-                        <a href="planning?tab=schedules" class="btn btn-secondary">Annuler</a>
+                        <a href="planning.php?tab=schedules" class="btn btn-secondary">Annuler</a>
                     </div>
                 </div>
             </form>
@@ -505,7 +505,7 @@ require __DIR__ . '/inc/header.php';
                             <td><?= $s->start_date ? date('d/m/Y', strtotime($s->start_date)) : '—' ?></td>
                             <td><?= $s->end_date ? date('d/m/Y', strtotime($s->end_date)) : '—' ?></td>
                             <td class="text-end">
-                                <a href="planning?tab=schedules&action=edit&id=<?= (int) $s->id ?>" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                                <a href="planning.php?tab=schedules&action=edit&id=<?= (int) $s->id ?>" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
                                 <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer ce planning ?');">
                                     <input type="hidden" name="delete_schedule" value="<?= (int) $s->id ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
@@ -526,7 +526,7 @@ require __DIR__ . '/inc/header.php';
     <div class="admin-card admin-section-card">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="text-muted"><?= count($list) ?> indicateur(s)</span>
-            <a href="planning?tab=kpi&action=add" class="btn btn-admin-primary btn-sm"><i class="bi bi-plus me-1"></i> Nouvel indicateur</a>
+            <a href="planning.php?tab=kpi&action=add" class="btn btn-admin-primary btn-sm"><i class="bi bi-plus me-1"></i> Nouvel indicateur</a>
         </div>
         <?php if ($action === 'add' || ($action === 'edit' && $detail)): ?>
             <form method="POST" class="mb-4">
@@ -592,7 +592,7 @@ require __DIR__ . '/inc/header.php';
                     </div>
                     <div class="col-12">
                         <button type="submit" class="btn btn-admin-primary">Enregistrer</button>
-                        <a href="planning?tab=kpi" class="btn btn-secondary">Annuler</a>
+                        <a href="planning.php?tab=kpi" class="btn btn-secondary">Annuler</a>
                     </div>
                 </div>
             </form>
@@ -609,7 +609,7 @@ require __DIR__ . '/inc/header.php';
                             <td><?= $k->current_value !== null ? $k->current_value : '—' ?> <?= $k->target_value !== null ? ' / ' . $k->target_value : '' ?> <?= $k->unit ? $k->unit : '' ?></td>
                             <td><?= htmlspecialchars($k->period_type ?? '—') ?></td>
                             <td class="text-end">
-                                <a href="planning?tab=kpi&action=edit&id=<?= (int) $k->id ?>" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                                <a href="planning.php?tab=kpi&action=edit&id=<?= (int) $k->id ?>" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
                                 <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer cet indicateur ?');">
                                     <input type="hidden" name="delete_kpi" value="<?= (int) $k->id ?>">
                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
@@ -628,8 +628,8 @@ require __DIR__ . '/inc/header.php';
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
-        <a href="documents" class="text-muted text-decoration-none small"><i class="bi bi-file-earmark-text me-1"></i> Documents</a>
+        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="documents.php" class="text-muted text-decoration-none small"><i class="bi bi-file-earmark-text me-1"></i> Documents</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

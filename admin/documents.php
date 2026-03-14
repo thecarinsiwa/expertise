@@ -216,7 +216,7 @@ if ($pdo) {
                             $pdo->prepare("UPDATE document SET current_version_id = ? WHERE id = ?")->execute([$ver_id, $new_doc_id]);
                         }
 
-                        header('Location: documents?tab=documents&id=' . $new_doc_id . '&msg=created');
+                        header('Location: documents.php?tab=documents&id=' . $new_doc_id . '&msg=created');
                         exit;
                     }
                 }
@@ -229,7 +229,7 @@ if ($pdo) {
         $delId = (int) $_POST['delete_document'];
         try {
             $pdo->prepare("DELETE FROM document WHERE id = ?")->execute([$delId]);
-            header('Location: documents?tab=documents&msg=deleted');
+            header('Location: documents.php?tab=documents&msg=deleted');
             exit;
         } catch (PDOException $e) {
             $error = 'Impossible de supprimer le document.';
@@ -363,9 +363,9 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="documents" class="text-decoration-none">Gestion</a></li>
-        <li class="breadcrumb-item"><a href="documents" class="text-decoration-none">Documents</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="documents.php" class="text-decoration-none">Gestion</a></li>
+        <li class="breadcrumb-item"><a href="documents.php" class="text-decoration-none">Documents</a></li>
         <?php if ($tab === 'categories'): ?>
             <li class="breadcrumb-item active">Catégories</li>
         <?php elseif ($detail): ?>
@@ -816,7 +816,7 @@ require __DIR__ . '/inc/header.php';
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

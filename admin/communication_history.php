@@ -45,8 +45,8 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="announcements">Communication</a></li>
+        <li class="breadcrumb-item"><a href="index.php">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="announcements.php">Communication</a></li>
         <li class="breadcrumb-item active">Historique</li>
     </ol>
 </nav>
@@ -58,8 +58,8 @@ require __DIR__ . '/inc/header.php';
             <p class="text-muted mb-0">Journal des actions sur les entités de communication (lecture seule).</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="attachments" class="btn btn-admin-outline"><i class="bi bi-paperclip me-1"></i> Pièces jointes</a>
-            <a href="announcements" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+            <a href="attachments.php" class="btn btn-admin-outline"><i class="bi bi-paperclip me-1"></i> Pièces jointes</a>
+            <a href="announcements.php" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
         </div>
     </div>
 </header>
@@ -68,8 +68,8 @@ require __DIR__ . '/inc/header.php';
     <div class="col-12">
         <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
             <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-link-45deg me-1"></i> Raccourcis</span>
-            <a href="attachments" class="btn btn-sm btn-admin-outline"><i class="bi bi-paperclip me-1"></i> Pièces jointes</a>
-            <a href="announcements" class="btn btn-sm btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+            <a href="attachments.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-paperclip me-1"></i> Pièces jointes</a>
+            <a href="announcements.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
             <span class="text-muted small fw-bold text-uppercase ms-2 me-2"><i class="bi bi-funnel me-1"></i> Filtres</span>
             <form method="GET" class="d-flex gap-2 align-items-center flex-wrap">
                 <select name="entity_type" class="form-select form-select-sm" style="max-width:200px;" onchange="this.form.submit()">
@@ -88,7 +88,7 @@ require __DIR__ . '/inc/header.php';
                     <?php endforeach; ?>
                 </select>
                 <?php if ($entity_filter !== null && $entity_filter !== '' || $user_filter > 0): ?>
-                    <a href="communication_history" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
+                    <a href="communication_history.php" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
                 <?php endif; ?>
             </form>
         </div>
@@ -149,7 +149,7 @@ require __DIR__ . '/inc/header.php';
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="attachments" class="text-muted text-decoration-none small"><i class="bi bi-paperclip me-1"></i> Pièces jointes</a>
+        <a href="attachments.php" class="text-muted text-decoration-none small"><i class="bi bi-paperclip me-1"></i> Pièces jointes</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

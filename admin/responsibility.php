@@ -157,7 +157,7 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
         <li class="breadcrumb-item active">Responsabilité</li>
     </ol>
 </nav>
@@ -333,6 +333,6 @@ function editCommitment(c) {
 <?php endif; ?>
 
 <footer class="admin-main-footer mt-4">
-    <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+    <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
 </footer>
 <?php require __DIR__ . '/inc/footer.php'; ?>

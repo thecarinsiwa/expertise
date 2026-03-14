@@ -8,21 +8,25 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 if (empty($_SESSION['admin_logged_in'])) {
-    // Charger la config pour obtenir le chemin web de base (éviter C:/ dans l'URL)
+    // Charger la config pour obtenir le chemin web de base (éviter /admin/login.php au lieu de /expertise/admin/login.php)
     if (!function_exists('admin_base_url')) {
         function admin_base_url() {
+            $sn = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+            if (preg_match('#^/([^/]+)/#', $sn, $m) && strpos($m[1], '.') === false) {
+                return '/' . $m[1] . '/';
+            }
             if (!getenv('SITE_BASE_URL') && empty($_ENV['SITE_BASE_URL'])) {
                 $envFile = dirname(__DIR__, 2) . '/config/load_env.php';
                 if (is_file($envFile)) require_once $envFile;
             }
             $base = getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '/expertise/');
-            return rtrim($base, '/') . '/';
+            return ($base !== '' && $base !== '/') ? rtrim($base, '/') . '/' : '/expertise/';
         }
     }
     $adminBase = admin_base_url() . 'admin/';
     $redirect = $_SERVER['REQUEST_URI'] ?? '';
     if (strpos($redirect, ':') !== false) $redirect = $adminBase;
-    $loginUrl = $adminBase . 'login' . ($redirect ? '?redirect=' . urlencode($redirect) : '');
+    $loginUrl = $adminBase . 'login.php' . ($redirect ? '?redirect=' . urlencode($redirect) : '');
     header('Location: ' . $loginUrl);
     exit;
 }
@@ -81,12 +85,16 @@ function require_permission($code) {
     }
     if (!function_exists('admin_base_url')) {
         function admin_base_url() {
+            $sn = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+            if (preg_match('#^/([^/]+)/#', $sn, $m) && strpos($m[1], '.') === false) {
+                return '/' . $m[1] . '/';
+            }
             if (!getenv('SITE_BASE_URL') && empty($_ENV['SITE_BASE_URL'])) {
                 $envFile = dirname(__DIR__, 2) . '/config/load_env.php';
                 if (is_file($envFile)) require_once $envFile;
             }
             $base = getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '/expertise/');
-            return rtrim($base, '/') . '/';
+            return ($base !== '' && $base !== '/') ? rtrim($base, '/') . '/' : '/expertise/';
         }
     }
     header('Location: ' . admin_base_url() . 'admin/403.php');

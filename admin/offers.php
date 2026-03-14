@@ -50,7 +50,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_id'];
             if (has_permission('admin.offers.delete')) {
                 $pdo->prepare("DELETE FROM offer WHERE id = ? AND organisation_id = ?")->execute([$delId, $organisation_id]);
-                header('Location: offers?msg=deleted');
+                header('Location: offers.php?msg=deleted');
                 exit;
             }
         }
@@ -99,7 +99,7 @@ if ($pdo) {
                         INSERT INTO offer (organisation_id, title, reference, description, cover_image, mission_id, project_id, status, published_at, deadline_at)
                         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     ")->execute([$organisation_id, $title, $reference, $description, $cover_image, $mission_id, $project_id, $status, $published_at, $deadline_at]);
-                    header('Location: offers?id=' . $pdo->lastInsertId() . '&msg=created');
+                    header('Location: offers.php?id=' . $pdo->lastInsertId() . '&msg=created');
                     exit;
                 }
             }
@@ -203,7 +203,7 @@ if ($pdo) {
                 $pdo->exec("INSERT IGNORE INTO `permission` (`module`, `code`, `name`) VALUES ('Nos offres', 'admin.offers.view', 'Nos offres – Voir'), ('Nos offres', 'admin.offers.add', 'Nos offres – Ajout'), ('Nos offres', 'admin.offers.modify', 'Nos offres – Modifier'), ('Nos offres', 'admin.offers.delete', 'Nos offres – Supprimer')");
                 $pdo->exec("INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`) SELECT 1, id FROM `permission` WHERE `code` LIKE 'admin.offers.%'");
                 $pdo->exec("INSERT IGNORE INTO `role_permission` (`role_id`, `permission_id`) SELECT 2, id FROM `permission` WHERE `code` LIKE 'admin.offers.%'");
-                header('Location: offers?migrated=1');
+                header('Location: offers.php?migrated=1');
                 exit;
             } catch (PDOException $e2) {
                 $error = 'Erreur base de données (migration échouée) : ' . $e2->getMessage();
@@ -226,8 +226,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="offers" class="text-decoration-none">Nos offres</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="offers.php" class="text-decoration-none">Nos offres</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouvelle offre</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -262,7 +262,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                 <?php if (has_permission('admin.offers.modify')): ?>
                     <a href="offers?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
                 <?php endif; ?>
-                <a href="offers" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="offers.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
                 <a href="offers<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php elseif (has_permission('admin.offers.add')): ?>
@@ -453,7 +453,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <?php if (has_permission('admin.offers.modify')): ?>
                 <a href="offers?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
             <?php endif; ?>
-            <a href="offers" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="offers.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php if (has_permission('admin.offers.delete')): ?>
                 <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteOfferModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
             <?php endif; ?>
@@ -594,7 +594,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="missions" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Missions</a>
+        <a href="missions.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Missions</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

@@ -43,6 +43,7 @@ if ($pdo) {
 
 require __DIR__ . '/../inc/head.php';
 require __DIR__ . '/../inc/header.php';
+$clientBaseUrl = rtrim($baseUrl, '/') . '/client/';
 ?>
 
     <section class="client-dashboard py-5">
@@ -56,7 +57,7 @@ require __DIR__ . '/../inc/header.php';
                         <p class="client-welcome-text">Accédez à nos offres, suivez vos candidatures et restez informé.</p>
                     </div>
                     <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
-                        <a href="<?= htmlspecialchars($baseUrl) ?>client/logout.php" class="btn btn-client-logout">
+                        <a href="<?= htmlspecialchars($clientBaseUrl) ?>logout.php" class="btn btn-client-logout">
                             <i class="bi bi-box-arrow-right me-2"></i>Déconnexion
                         </a>
                     </div>
@@ -85,7 +86,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="applications.php" class="client-action-card">
+                    <a href="<?= htmlspecialchars($clientBaseUrl) ?>applications.php" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-file-earmark-text"></i></span>
                         <h3 class="client-action-title">Mes candidatures</h3>
                         <p class="client-action-desc">Suivre vos candidatures envoyées</p>
@@ -93,7 +94,7 @@ require __DIR__ . '/../inc/header.php';
                     </a>
                 </div>
                 <div class="col-sm-6 col-lg-4">
-                    <a href="profile.php" class="client-action-card">
+                    <a href="<?= htmlspecialchars($clientBaseUrl) ?>profile.php" class="client-action-card">
                         <span class="client-action-icon"><i class="bi bi-person-badge"></i></span>
                         <h3 class="client-action-title">Mon profil / Mon CV</h3>
                         <p class="client-action-desc">Compléter et réutiliser votre CV pour les offres</p>
@@ -157,7 +158,7 @@ require __DIR__ . '/../inc/header.php';
                 <?php endforeach; ?>
             </div>
             <p class="mt-3 mb-0">
-                <a href="applications.php" class="btn btn-read-more btn-sm"><i class="bi bi-list-ul me-1"></i>Toutes mes candidatures</a>
+                <a href="<?= htmlspecialchars($clientBaseUrl) ?>applications.php" class="btn btn-read-more btn-sm"><i class="bi bi-list-ul me-1"></i>Toutes mes candidatures</a>
             </p>
             <?php endif; ?>
         </div>

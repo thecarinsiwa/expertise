@@ -5,10 +5,13 @@
  * Les variables déjà définies ne sont pas écrasées.
  */
 $envFile = dirname(__DIR__) . '/.env';
-if (!is_file($envFile)) {
+if (!is_file($envFile) || !is_readable($envFile)) {
     return;
 }
-$lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+$lines = @file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+if (!is_array($lines)) {
+    return;
+}
 foreach ($lines as $line) {
     $line = trim($line);
     if ($line === '' || strpos($line, '#') === 0) {

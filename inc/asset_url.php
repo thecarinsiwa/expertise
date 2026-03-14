@@ -68,9 +68,10 @@ if (!function_exists('get_assets_base_url')) {
  */
 if (!function_exists('get_site_logo_url')) {
     function get_site_logo_url($baseUrl, $organisation = null) {
-        static $cached = null;
-        if ($cached !== null) {
-            return $cached;
+        static $cache = [];
+        $key = (string) $baseUrl;
+        if (isset($cache[$key])) {
+            return $cache[$key];
         }
         $path = '';
         if ($organisation && !empty($organisation->logo)) {
@@ -86,8 +87,8 @@ if (!function_exists('get_site_logo_url')) {
         if ($path === '') {
             $path = 'assets/images/logo.jpg';
         }
-        $cached = client_asset_url($baseUrl, $path);
-        return $cached;
+        $cache[$key] = client_asset_url($baseUrl, $path);
+        return $cache[$key];
     }
 }
 
@@ -99,9 +100,10 @@ if (!function_exists('get_site_logo_url')) {
  */
 if (!function_exists('get_site_favicon_url')) {
     function get_site_favicon_url($baseUrl, $organisation = null) {
-        static $cached = null;
-        if ($cached !== null) {
-            return $cached;
+        static $cache = [];
+        $key = (string) $baseUrl;
+        if (isset($cache[$key])) {
+            return $cache[$key];
         }
         $path = '';
         if ($organisation && !empty($organisation->favicon)) {
@@ -129,11 +131,10 @@ if (!function_exists('get_site_favicon_url')) {
             }
         }
         if ($path === '') {
-            $path = get_site_logo_url($baseUrl, $organisation);
-            $cached = $path;
-            return $cached;
+            $cache[$key] = get_site_logo_url($baseUrl, $organisation);
+            return $cache[$key];
         }
-        $cached = client_asset_url($baseUrl, $path);
-        return $cached;
+        $cache[$key] = client_asset_url($baseUrl, $path);
+        return $cache[$key];
     }
 }

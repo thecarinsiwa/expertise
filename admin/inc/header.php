@@ -333,73 +333,73 @@ $adminFaviconUrl = get_site_favicon_url('../', null);
         </div>
         <nav class="admin-sidebar-nav">
             <?php if (has_permission('admin.dashboard')): ?>
-            <a href="index" class="nav-link<?= $currentNav === 'dashboard' ? ' active' : '' ?>">
+            <a href="index.php" class="nav-link<?= $currentNav === 'dashboard' ? ' active' : '' ?>">
                 <i class="bi bi-speedometer2"></i><span>Tableau de bord</span>
             </a>
             <?php endif; ?>
 
             <div class="admin-sidebar-label">Structure</div>
             <?php if (has_permission('admin.organisations.view')): ?>
-            <a href="organisations" class="nav-link<?= $currentNav === 'organisations' ? ' active' : '' ?>">
+            <a href="organisations.php" class="nav-link<?= $currentNav === 'organisations' ? ' active' : '' ?>">
                 <i class="bi bi-building"></i><span>Organisations</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.units.view')): ?>
-            <a href="units" class="nav-link<?= $currentNav === 'units' ? ' active' : '' ?>">
+            <a href="units.php" class="nav-link<?= $currentNav === 'units' ? ' active' : '' ?>">
                 <i class="bi bi-diagram-3"></i><span>Unités & Services</span>
             </a>
             <?php endif; ?>
 
             <div class="admin-sidebar-label">RH & Sécurité</div>
             <?php if (has_permission('admin.users.view')): ?>
-            <a href="user" class="nav-link<?= $currentNav === 'users' ? ' active' : '' ?>">
+            <a href="user.php" class="nav-link<?= $currentNav === 'users' ? ' active' : '' ?>">
                 <i class="bi bi-person-badge"></i><span>Utilisateurs</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.staff.view')): ?>
-            <a href="staff" class="nav-link<?= $currentNav === 'staff' ? ' active' : '' ?>">
+            <a href="staff.php" class="nav-link<?= $currentNav === 'staff' ? ' active' : '' ?>">
                 <i class="bi bi-people"></i><span>Personnel</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.roles.view')): ?>
-            <a href="roles" class="nav-link<?= $currentNav === 'roles' ? ' active' : '' ?>">
+            <a href="roles.php" class="nav-link<?= $currentNav === 'roles' ? ' active' : '' ?>">
                 <i class="bi bi-shield-lock"></i><span>Rôles & Accès</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.security.view')): ?>
-            <a href="security" class="nav-link<?= $currentNav === 'security' ? ' active' : '' ?>">
+            <a href="security.php" class="nav-link<?= $currentNav === 'security' ? ' active' : '' ?>">
                 <i class="bi bi-shield-check"></i><span>Sécurité</span>
             </a>
             <?php endif; ?>
 
             <div class="admin-sidebar-label">Opérations</div>
             <?php if (has_permission('admin.projects.view')): ?>
-            <a href="projects" class="nav-link<?= $currentNav === 'projects' ? ' active' : '' ?>">
+            <a href="projects.php" class="nav-link<?= $currentNav === 'projects' ? ' active' : '' ?>">
                 <i class="bi bi-kanban"></i><span>Projets & Tâches</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.programmes.view')): ?>
-            <a href="programmes" class="nav-link<?= $currentNav === 'programmes' ? ' active' : '' ?>">
+            <a href="programmes.php" class="nav-link<?= $currentNav === 'programmes' ? ' active' : '' ?>">
                 <i class="bi bi-folder2"></i><span>Programmes</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.portfolios.view')): ?>
-            <a href="portfolios" class="nav-link<?= $currentNav === 'portfolios' ? ' active' : '' ?>">
+            <a href="portfolios.php" class="nav-link<?= $currentNav === 'portfolios' ? ' active' : '' ?>">
                 <i class="bi bi-folder"></i><span>Portfolios</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.bailleurs.view')): ?>
-            <a href="bailleurs" class="nav-link<?= $currentNav === 'bailleurs' ? ' active' : '' ?>">
+            <a href="bailleurs.php" class="nav-link<?= $currentNav === 'bailleurs' ? ' active' : '' ?>">
                 <i class="bi bi-bank"></i><span>Partenaires</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.missions.view')): ?>
-            <a href="missions" class="nav-link<?= $currentNav === 'missions' ? ' active' : '' ?>">
+            <a href="missions.php" class="nav-link<?= $currentNav === 'missions' ? ' active' : '' ?>">
                 <i class="bi bi-geo-alt"></i><span>Missions</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.offers.view')): ?>
-            <a href="offers" class="nav-link<?= $currentNav === 'offers' ? ' active' : '' ?>">
+            <a href="offers.php" class="nav-link<?= $currentNav === 'offers' ? ' active' : '' ?>">
                 <i class="bi bi-briefcase"></i><span>Nos offres</span>
             </a>
             <?php endif; ?>
@@ -407,59 +407,59 @@ $adminFaviconUrl = get_site_favicon_url('../', null);
         
             <div class="admin-sidebar-label">Communication</div>
             <?php if (has_permission('admin.announcements.view')): ?>
-            <a href="announcements" class="nav-link<?= $currentNav === 'announcements' ? ' active' : '' ?>">
+            <a href="announcements.php" class="nav-link<?= $currentNav === 'announcements' ? ' active' : '' ?>">
                 <i class="bi bi-megaphone"></i><span>Annonces</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.channels.view')): ?>
-            <a href="channels" class="nav-link<?= $currentNav === 'channels' ? ' active' : '' ?>">
+            <a href="channels.php" class="nav-link<?= $currentNav === 'channels' ? ' active' : '' ?>">
                 <i class="bi bi-chat-dots"></i><span>Canaux</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.conversations.view')): ?>
-            <a href="conversations" class="nav-link<?= $currentNav === 'conversations' ? ' active' : '' ?>">
+            <a href="conversations.php" class="nav-link<?= $currentNav === 'conversations' ? ' active' : '' ?>">
                 <i class="bi bi-chat-text"></i><span>Conversations</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.notifications.view')): ?>
-            <a href="notifications" class="nav-link<?= $currentNav === 'notifications' ? ' active' : '' ?>">
+            <a href="notifications.php" class="nav-link<?= $currentNav === 'notifications' ? ' active' : '' ?>">
                 <i class="bi bi-bell"></i><span>Notifications</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.comments.view')): ?>
-            <a href="comments" class="nav-link<?= $currentNav === 'comments' ? ' active' : '' ?>">
+            <a href="comments.php" class="nav-link<?= $currentNav === 'comments' ? ' active' : '' ?>">
                 <i class="bi bi-chat-quote"></i><span>Commentaires</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.attachments.view')): ?>
-            <a href="attachments" class="nav-link<?= $currentNav === 'attachments' ? ' active' : '' ?>">
+            <a href="attachments.php" class="nav-link<?= $currentNav === 'attachments' ? ' active' : '' ?>">
                 <i class="bi bi-paperclip"></i><span>Pièces jointes</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.communication_history.view')): ?>
-            <a href="communication_history" class="nav-link<?= $currentNav === 'communication_history' ? ' active' : '' ?>">
+            <a href="communication_history.php" class="nav-link<?= $currentNav === 'communication_history' ? ' active' : '' ?>">
                 <i class="bi bi-clock-history"></i><span>Historique</span>
             </a>
             <?php endif; ?>
 
             <div class="admin-sidebar-label">Gestion</div>
             <?php if (has_permission('admin.documents.view')): ?>
-            <a href="documents" class="nav-link<?= $currentNav === 'documents' ? ' active' : '' ?>">
+            <a href="documents.php" class="nav-link<?= $currentNav === 'documents' ? ' active' : '' ?>">
                 <i class="bi bi-file-earmark-text"></i><span>Documents</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.documents.view')): ?>
-            <a href="responsibility" class="nav-link<?= $currentNav === 'responsibility' ? ' active' : '' ?>">
+            <a href="responsibility.php" class="nav-link<?= $currentNav === 'responsibility' ? ' active' : '' ?>">
                 <i class="bi bi-card-text"></i><span>Responsabilité</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.documents.view')): ?>
-            <a href="reports_finances" class="nav-link<?= $currentNav === 'reports_finances' ? ' active' : '' ?>">
+            <a href="reports_finances.php" class="nav-link<?= $currentNav === 'reports_finances' ? ' active' : '' ?>">
                 <i class="bi bi-graph-up-arrow"></i><span>Rapports et finances</span>
             </a>
             <?php endif; ?>
             <?php if (has_permission('admin.planning.view')): ?>
-            <a href="planning" class="nav-link<?= $currentNav === 'planning' ? ' active' : '' ?>">
+            <a href="planning.php" class="nav-link<?= $currentNav === 'planning' ? ' active' : '' ?>">
                 <i class="bi bi-calendar3"></i><span>Planning & KPI</span>
             </a>
             <?php endif; ?>
@@ -479,7 +479,7 @@ $adminFaviconUrl = get_site_favicon_url('../', null);
                 </div>
             <?php endif; ?>
             <a href="../" class="mt-1"><i class="bi bi-box-arrow-left"></i><span>Retour au site</span></a>
-            <a href="logout" class="mt-1" style="color:rgba(224,60,49,.85)" title="Se déconnecter">
+            <a href="logout.php" class="mt-1" style="color:rgba(224,60,49,.85)" title="Se déconnecter">
                 <i class="bi bi-power"></i><span>Déconnexion</span>
             </a>
         </div>

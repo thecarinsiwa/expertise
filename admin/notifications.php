@@ -90,8 +90,8 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="announcements">Communication</a></li>
+        <li class="breadcrumb-item"><a href="index.php">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="announcements.php">Communication</a></li>
         <li class="breadcrumb-item active">Notifications</li>
     </ol>
 </nav>
@@ -103,7 +103,7 @@ require __DIR__ . '/inc/header.php';
             <p class="text-muted mb-0">Consulter et gérer les notifications utilisateurs.</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="announcements" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+            <a href="announcements.php" class="btn btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
             <button type="button" class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#createNotificationModal"><i class="bi bi-plus-lg me-1"></i> Envoyer une notification</button>
         </div>
     </div>
@@ -120,8 +120,8 @@ require __DIR__ . '/inc/header.php';
     <div class="col-12">
         <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
             <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-link-45deg me-1"></i> Raccourcis</span>
-            <a href="announcements" class="btn btn-sm btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
-            <a href="channels" class="btn btn-sm btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
+            <a href="announcements.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-megaphone me-1"></i> Annonces</a>
+            <a href="channels.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-chat-dots me-1"></i> Canaux</a>
             <span class="text-muted small fw-bold text-uppercase ms-2 me-2"><i class="bi bi-funnel me-1"></i> Filtres</span>
             <form method="GET" class="d-flex gap-2 align-items-center flex-wrap">
                 <select name="user_id" class="form-select form-select-sm" style="max-width:220px;" onchange="this.form.submit()">
@@ -136,7 +136,7 @@ require __DIR__ . '/inc/header.php';
                     <option value="1" <?= $read_filter === 1 ? 'selected' : '' ?>>Lues</option>
                 </select>
                 <?php if ($user_filter || $read_filter !== null): ?>
-                    <a href="notifications" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
+                    <a href="notifications.php" class="btn btn-sm btn-outline-secondary">Réinitialiser</a>
                 <?php endif; ?>
             </form>
         </div>
@@ -265,7 +265,7 @@ require __DIR__ . '/inc/header.php';
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="announcements" class="text-muted text-decoration-none small"><i class="bi bi-megaphone me-1"></i> Communication</a>
+        <a href="announcements.php" class="text-muted text-decoration-none small"><i class="bi bi-megaphone me-1"></i> Communication</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

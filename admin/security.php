@@ -22,7 +22,7 @@ if ($pdo) {
             if (preg_match('/^[a-zA-Z0-9_-]+$/', $sid)) {
                 try {
                     $pdo->prepare("DELETE FROM session WHERE id = ?")->execute([$sid]);
-                    header('Location: security?tab=sessions&msg=session_revoked');
+                    header('Location: security.php?tab=sessions&msg=session_revoked');
                     exit;
                 } catch (PDOException $e) {
                     $error = 'Impossible de révoquer la session.';
@@ -35,7 +35,7 @@ if ($pdo) {
             if ($aid > 0) {
                 try {
                     $pdo->prepare("DELETE FROM activity_log WHERE id = ?")->execute([$aid]);
-                    header('Location: security?tab=activity&msg=activity_deleted');
+                    header('Location: security.php?tab=activity&msg=activity_deleted');
                     exit;
                 } catch (PDOException $e) {
                     $error = 'Impossible de supprimer l\'entrée.';
@@ -48,7 +48,7 @@ if ($pdo) {
             if ($aid > 0) {
                 try {
                     $pdo->prepare("DELETE FROM audit WHERE id = ?")->execute([$aid]);
-                    header('Location: security?tab=audit&msg=audit_deleted');
+                    header('Location: security.php?tab=audit&msg=audit_deleted');
                     exit;
                 } catch (PDOException $e) {
                     $error = 'Impossible de supprimer l\'entrée d\'audit.';
@@ -62,7 +62,7 @@ if ($pdo) {
                 try {
                     $stmt = $pdo->prepare("DELETE FROM activity_log WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)");
                     $stmt->execute([$days]);
-                    header('Location: security?tab=activity&msg=activity_cleared');
+                    header('Location: security.php?tab=activity&msg=activity_cleared');
                     exit;
                 } catch (PDOException $e) {
                     $error = 'Impossible de purger le journal.';
@@ -76,7 +76,7 @@ if ($pdo) {
                 try {
                     $stmt = $pdo->prepare("DELETE FROM audit WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)");
                     $stmt->execute([$days]);
-                    header('Location: security?tab=audit&msg=audit_cleared');
+                    header('Location: security.php?tab=audit&msg=audit_cleared');
                     exit;
                 } catch (PDOException $e) {
                     $error = 'Impossible de purger l\'audit.';
@@ -129,8 +129,8 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="security" class="text-decoration-none">Sécurité</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="security.php" class="text-decoration-none">Sécurité</a></li>
         <?php if ($tab !== 'sessions'): ?>
             <li class="breadcrumb-item active"><?= $tab === 'activity' ? 'Journal d\'activité' : 'Audit' ?></li>
         <?php endif; ?>
@@ -379,7 +379,7 @@ require __DIR__ . '/inc/header.php';
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

@@ -26,7 +26,7 @@ if ($pdo) {
             require_permission('admin.roles.delete');
             $delId = (int) $_POST['delete_id'];
             $pdo->prepare("DELETE FROM role WHERE id = ?")->execute([$delId]);
-            header('Location: roles?msg=deleted');
+            header('Location: roles.php?msg=deleted');
             exit;
         }
         if (isset($_POST['save_role'])) {
@@ -63,7 +63,7 @@ if ($pdo) {
                             if ($pid > 0) $ins->execute([$newId, $pid]);
                         }
                     }
-                    header('Location: roles?id=' . $newId . '&msg=created');
+                    header('Location: roles.php?id=' . $newId . '&msg=created');
                     exit;
                 }
             }
@@ -122,8 +122,8 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="roles" class="text-decoration-none">Rôles & Accès</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="roles.php" class="text-decoration-none">Rôles & Accès</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -150,14 +150,14 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
         <div class="d-flex gap-2">
             <?php if ($detail && !$isForm): ?>
                 <?php if (!$detail->is_system): ?>
-                    <?php if (has_permission('admin.roles.modify')): ?><a href="roles?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+                    <?php if (has_permission('admin.roles.modify')): ?><a href="roles.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
                     <?php if (has_permission('admin.roles.delete')): ?><button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal"><i class="bi bi-trash me-1"></i> Supprimer</button><?php endif; ?>
                 <?php endif; ?>
-                <a href="roles" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="roles.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
                 <a href="roles<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <?php if (has_permission('admin.roles.add')): ?><a href="roles?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Créer un rôle</a><?php endif; ?>
+                <?php if (has_permission('admin.roles.add')): ?><a href="roles.php?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Créer un rôle</a><?php endif; ?>
             <?php endif; ?>
         </div>
     </div>
@@ -329,7 +329,7 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
         <?php if (!empty($detail->users)): ?>
             <ul class="list-unstyled mb-0">
                 <?php foreach ($detail->users as $u): ?>
-                    <li><a href="staff?user_id=<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></a> – <span class="text-muted"><?= htmlspecialchars($u->email) ?></span></li>
+                    <li><a href="staff.php?user_id=<?= (int) $u->id ?>"><?= htmlspecialchars($u->last_name . ' ' . $u->first_name) ?></a> – <span class="text-muted"><?= htmlspecialchars($u->email) ?></span></li>
                 <?php endforeach; ?>
             </ul>
             <p class="small text-muted mt-2">Le lien ouvre la fiche personnel si un enregistrement staff existe ; sinon la liste du personnel.</p>
@@ -339,10 +339,10 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
 
         <div class="mt-4 d-flex gap-2">
             <?php if (!$detail->is_system): ?>
-                <?php if (has_permission('admin.roles.modify')): ?><a href="roles?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
+                <?php if (has_permission('admin.roles.modify')): ?><a href="roles.php?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a><?php endif; ?>
                 <?php if (has_permission('admin.roles.delete')): ?><button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteRoleModal"><i class="bi bi-trash me-1"></i> Supprimer</button><?php endif; ?>
             <?php endif; ?>
-            <a href="roles" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="roles.php" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
         </div>
     </div>
 
@@ -386,7 +386,7 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
                     <?php foreach ($rolesList as $r): ?>
                         <tr>
                             <td>
-                                <h6 class="mb-0"><a href="roles?id=<?= (int) $r->id ?>"><?= htmlspecialchars($r->name) ?></a></h6>
+                                <h6 class="mb-0"><a href="roles.php?id=<?= (int) $r->id ?>"><?= htmlspecialchars($r->name) ?></a></h6>
                                 <div class="d-flex gap-2 align-items-center mt-1">
                                     <span class="text-muted x-small"><code><?= htmlspecialchars($r->code) ?></code></span>
                                     <?php if ($r->is_system): ?>
@@ -403,8 +403,8 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
                                         <i class="bi bi-three-dots"></i>
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                        <li><a class="dropdown-item" href="roles?id=<?= (int) $r->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
-                                        <?php if (has_permission('admin.roles.modify')): ?><li><a class="dropdown-item" href="roles?action=edit&id=<?= (int) $r->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li><?php endif; ?>
+                                        <li><a class="dropdown-item" href="roles.php?id=<?= (int) $r->id ?>"><i class="bi bi-eye me-2"></i> Voir</a></li>
+                                        <?php if (has_permission('admin.roles.modify')): ?><li><a class="dropdown-item" href="roles.php?action=edit&id=<?= (int) $r->id ?>"><i class="bi bi-pencil me-2"></i> Modifier</a></li><?php endif; ?>
                                         <?php if (!$r->is_system && has_permission('admin.roles.delete')): ?>
                                         <li><hr class="dropdown-divider"></li>
                                         <li>
@@ -452,7 +452,7 @@ $detailPermIds = $detail && !empty($detail->permissions) ? array_column($detail-
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

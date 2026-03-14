@@ -86,7 +86,7 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
         <li class="breadcrumb-item active">Vérification configuration</li>
     </ol>
 </nav>
@@ -128,6 +128,6 @@ require __DIR__ . '/inc/header.php';
     <?php endif; ?>
 </div>
 
-<p class="mt-3"><a href="index" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour au tableau de bord</a></p>
+<p class="mt-3"><a href="index.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Retour au tableau de bord</a></p>
 
 <?php require __DIR__ . '/inc/footer.php'; ?>

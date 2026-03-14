@@ -1,13 +1,20 @@
 <?php
 if (!isset($pageTitle)) $pageTitle = 'Expertise';
 $baseUrl = isset($baseUrl) ? $baseUrl : '';
+// Sur les pages client/ ou admin/, utiliser la racine réelle du site pour favicon/logo (dérivée de SCRIPT_NAME) pour éviter 404
+$baseUrlForAssets = $baseUrl;
+$sn = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
+if (preg_match('#/(client|admin)(/|$)#', $sn)) {
+    $baseFromScript = preg_replace('#/(client|admin)(/.*)?$#', '/', $sn);
+    $baseUrlForAssets = ($baseFromScript !== '' && $baseFromScript !== '/') ? rtrim($baseFromScript, '/') . '/' : '/expertise/';
+}
 if (isset($pdo) && $pdo) {
     $GLOBALS['pdo'] = $pdo;
 }
 if (!function_exists('get_site_favicon_url')) {
     require_once __DIR__ . '/asset_url.php';
 }
-$faviconUrl = get_site_favicon_url($baseUrl, $organisation ?? null);
+$faviconUrl = get_site_favicon_url($baseUrlForAssets, $organisation ?? null);
 $assetsBaseUrl = get_assets_base_url($baseUrl);
 ?>
 <!DOCTYPE html>
