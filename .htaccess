@@ -1,19 +1,16 @@
-# Masquer l'extension .php (URLs propres). Les query strings, ex. ?id=, sont conservées (QSA).
-# Laragon / Apache : mod_rewrite requis. AllowOverride All doit être activé pour ce répertoire.
+# Document root pour /expertise/
+DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    Options +FollowSymLinks -MultiViews
-    # Projet dans un sous-dossier (ex. http://localhost/expertise/) : adapter le RewriteBase
     RewriteBase /expertise/
 
-    # 1. Redirection 301 : .php -> sans extension (normaliser les URLs)
-    RewriteCond %{THE_REQUEST} \s/[^?\s]+\.php(\?[^\s]*)?\s [NC]
-    RewriteRule ^(.*)\.php$ $1 [R=301,L,QSA]
+    # Rediriger /index vers index.php
+    RewriteRule ^index$ index.php [L]
 
-    # 2. Réécriture : requête sans extension -> fichier .php (si existant)
+    # Toutes les URLs sans extension -> fichier .php correspondant si il existe
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME}.php -f
-    RewriteRule ^(.+?)/?$ $1.php [L,QSA]
+    RewriteRule ^(.+)$ $1.php [L]
 </IfModule>

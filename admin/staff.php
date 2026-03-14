@@ -34,7 +34,7 @@ if ($pdo) {
         $stmt->execute([$userId]);
         $row = $stmt->fetch();
         if ($row) {
-            header('Location: staff?id=' . (int) $row->id);
+            header('Location: staff.php?id=' . (int) $row->id);
             exit;
         }
     }
@@ -44,7 +44,7 @@ if ($pdo) {
         if (isset($_POST['delete_id'])) {
             $delId = (int) $_POST['delete_id'];
             $pdo->prepare("DELETE FROM staff WHERE id = ?")->execute([$delId]);
-            header('Location: staff?msg=deleted');
+            header('Location: staff.php?msg=deleted');
             exit;
         }
         if (isset($_POST['save_staff'])) {
@@ -98,7 +98,7 @@ if ($pdo) {
                         $stmt = $pdo->prepare("INSERT INTO staff (user_id, organisation_id, employee_number, phone_extension, work_email, hire_date, end_date, employment_type, department, job_title, is_active, notes, photo) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
                         $stmt->execute([$user_id, $organisation_id, $employee_number ?: null, $phone_extension ?: null, $work_email ?: null, $hire_date, $end_date, $employment_type, $department ?: null, $job_title ?: null, $is_active, $notes ?: null, $photo]);
                         $newId = (int) $pdo->lastInsertId();
-                        header('Location: staff?id=' . $newId . '&msg=created');
+                        header('Location: staff.php?id=' . $newId . '&msg=created');
                         exit;
                     }
                 }
@@ -161,8 +161,8 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="staff" class="text-decoration-none">Personnel</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="staff.php" class="text-decoration-none">Personnel</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -195,12 +195,12 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
                 <a href="staff?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <a href="staff" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="staff.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="staff" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
+                <a href="staff.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
                 <a href="staff?action=add" class="btn btn-admin-primary"><i class="bi bi-person-plus me-1"></i> Ajouter au personnel</a>
-                <a href="user" class="btn btn-admin-outline"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a>
+                <a href="user.php" class="btn btn-admin-outline"><i class="bi bi-person-plus me-1"></i> Nouvel utilisateur</a>
             <?php endif; ?>
         </div>
     </div>
@@ -461,7 +461,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
         <div class="mt-4 d-flex gap-2">
             <a href="staff?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-            <a href="staff" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="staff.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteStaffModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
         </div>
     </div>
@@ -575,7 +575,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

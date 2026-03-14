@@ -47,12 +47,13 @@ if ($pdo) {
 
 require __DIR__ . '/../inc/head.php';
 require __DIR__ . '/../inc/header.php';
+$clientBaseUrl = (isset($siteBaseUrl) ? $siteBaseUrl : rtrim($baseUrl, '/') . '/') . 'client/';
 ?>
 
     <section class="client-dashboard py-5">
         <div class="container">
             <nav aria-label="Fil d'Ariane" class="client-breadcrumb mb-4">
-                <a href="<?= htmlspecialchars($baseUrl) ?>client/index.php"><i class="bi bi-arrow-left me-1"></i> Mon espace</a>
+                <a href="<?= htmlspecialchars($clientBaseUrl) ?>index.php"><i class="bi bi-arrow-left me-1"></i> Mon espace</a>
             </nav>
 
             <h1 class="client-page-title"><i class="bi bi-file-earmark-text me-2"></i>Mes candidatures</h1>
@@ -86,13 +87,13 @@ require __DIR__ . '/../inc/header.php';
                                     <p class="client-application-date mb-0">Candidature du <?= date('d/m/Y à H:i', strtotime($app->created_at)) ?></p>
                                     <?php if (!empty($app->cv_path)): ?>
                                         <p class="client-application-cv mt-2 mb-0">
-                                            <a href="<?= htmlspecialchars($baseUrl . $app->cv_path) ?>" target="_blank" class="client-cv-link"><i class="bi bi-file-earmark-pdf me-1"></i>CV joint</a>
+                                            <a href="<?= htmlspecialchars(rtrim($baseUrl, '/') . '/' . ltrim($app->cv_path, '/')) ?>" target="_blank" class="client-cv-link"><i class="bi bi-file-earmark-pdf me-1"></i>CV joint</a>
                                         </p>
                                     <?php endif; ?>
                                 </div>
                                 <div class="col-lg-4 mt-3 mt-lg-0 text-lg-end">
                                     <span class="badge client-status-badge client-status-<?= $statusCl ?>"><?= $statusLabels[$app->status] ?? $app->status ?></span>
-                                    <a href="<?= htmlspecialchars($baseUrl) ?>client/apply.php?offer_id=<?= (int) $app->offer_id ?>" class="btn btn-client-edit mt-2">Modifier</a>
+                                    <a href="<?= htmlspecialchars($clientBaseUrl) ?>apply.php?offer_id=<?= (int) $app->offer_id ?>" class="btn btn-client-edit mt-2">Modifier</a>
                                 </div>
                             </div>
                         </div>

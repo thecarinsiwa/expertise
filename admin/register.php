@@ -32,7 +32,7 @@ $isAdmin = !empty($_SESSION['admin_logged_in']) && in_array($_SESSION['admin_rol
 $isFirstSetup = !$adminExists;
 
 if (!$isFirstSetup && !$isAdmin) {
-    header('Location: login');
+    header('Location: login.php');
     exit;
 }
 
@@ -464,7 +464,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="auth-alert success" role="alert">
                     <i class="bi bi-check-circle-fill"></i>
                     <span>
-                        <?= $success ?> <a href="login">Se connecter</a>
+                        <?= $success ?> <a href="login.php">Se connecter</a>
                     </span>
                 </div>
             <?php endif; ?>
@@ -565,7 +565,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <!-- Pied -->
         <div class="auth-footer">
             Déjà un compte ?
-            <a href="login"><i class="bi bi-box-arrow-in-right me-1"></i>Se connecter</a>
+            <a href="login.php"><i class="bi bi-box-arrow-in-right me-1"></i>Se connecter</a>
             <span class="mx-2">·</span>
             <a href="../"><i class="bi bi-arrow-left me-1"></i>Retour au site</a>
         </div>

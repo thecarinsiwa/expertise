@@ -52,12 +52,12 @@ $siteLogoAlt = $organisation ? htmlspecialchars($organisation->name) : 'EXPERTIS
                         class="nav-link-text">FR</span><i class="bi bi-chevron-down nav-link-icon small"
                         aria-hidden="true"></i></span>
                 <?php if (!empty($_SESSION['client_logged_in'])): ?>
-                    <a class="btn btn-read-more nav-link-icon-only" href="<?= $baseUrl ?>client/index.php" aria-label="Mon espace" title="Mon espace"><i class="bi bi-person-circle"></i></a>
-                    <a class="btn btn-read-more nav-link-icon-only ms-2" href="<?= $baseUrl ?>client/logout.php" aria-label="Déconnexion" title="Déconnexion"><i class="bi bi-box-arrow-right"></i></a>
+                    <a class="btn btn-read-more nav-link-icon-only" href="<?= $siteBaseUrl ?>client/index.php" aria-label="Mon espace" title="Mon espace"><i class="bi bi-person-circle"></i></a>
+                    <a class="btn btn-read-more nav-link-icon-only ms-2" href="<?= $siteBaseUrl ?>client/logout.php" aria-label="Déconnexion" title="Déconnexion"><i class="bi bi-box-arrow-right"></i></a>
                 <?php elseif (!empty($_SESSION['admin_logged_in'])): ?>
-                    <a class="btn btn-read-more" href="<?= $baseUrl ?>admin/index.php">Dashboard</a>
+                    <a class="btn btn-read-more" href="<?= $siteBaseUrl ?>admin/index.php">Dashboard</a>
                 <?php else: ?>
-                    <a class="btn btn-read-more" href="<?= $baseUrl ?>client/login.php">Se connecter</a>
+                    <a class="btn btn-read-more" href="<?= $siteBaseUrl ?>client/login.php">Se connecter</a>
                 <?php endif; ?>
             </div>
         </div>

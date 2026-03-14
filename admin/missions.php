@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
         $delId = (int) $_POST['delete_id'];
         $stmt = $pdo->prepare("DELETE FROM mission WHERE id = ?");
         if ($stmt->execute([$delId])) {
-            header('Location: missions?msg=deleted');
+            header('Location: missions.php?msg=deleted');
             exit;
         }
     }
@@ -202,10 +202,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                 $pdo->commit();
 
                 if ($id > 0) {
-                    header('Location: missions?id=' . $missionId . '&msg=updated');
+                    header('Location: missions.php?id=' . $missionId . '&msg=updated');
                     exit;
                 } else {
-                    header('Location: missions?id=' . $missionId . '&msg=created');
+                    header('Location: missions.php?id=' . $missionId . '&msg=created');
                     exit;
                 }
             } catch (PDOException $e) {
@@ -256,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                     $stmt = $pdo->prepare("INSERT INTO mission_report (mission_id, author_user_id, title, summary, content, report_date, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
                     $stmt->execute([$m_id, $author, $title, $summary, $content, $date, $status]);
                 }
-                header('Location: missions?action=edit&id=' . $m_id . '&msg=report_saved');
+                header('Location: missions.php?action=edit&id=' . $m_id . '&msg=report_saved');
                 exit;
             }
             $success = "Rapport enregistré.";
@@ -291,7 +291,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $pdo) {
                         $stmt = $pdo->prepare("INSERT INTO mission_expense (mission_id, user_id, category, description, amount, currency, expense_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
                         $stmt->execute([$m_id, $beneficiary, $cat, $desc, $amount, $currency, $date, $status]);
                     }
-                    header('Location: missions?action=edit&id=' . $m_id . '&msg=expense_saved');
+                    header('Location: missions.php?action=edit&id=' . $m_id . '&msg=expense_saved');
                     exit;
                 } catch (PDOException $e) {
                     $error = "Erreur enregistrement dépense : " . $e->getMessage();
@@ -427,8 +427,8 @@ require __DIR__ . '/inc/header.php';
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="missions" class="text-decoration-none">Missions</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="missions.php" class="text-decoration-none">Missions</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouvelle</li><?php endif; ?>
         <?php if ($action === 'edit'): ?>
@@ -483,7 +483,7 @@ require __DIR__ . '/inc/header.php';
             <div class="admin-card p-3 d-flex flex-wrap gap-2 align-items-center bg-light border shadow-sm">
                 <span class="text-muted small fw-bold text-uppercase me-2"><i class="bi bi-sliders me-1"></i> Configuration
                     :</span>
-                <a href="mission_types" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les
+                <a href="mission_types.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-tag me-1"></i> Gérer les
                     Types de Mission</a>
             </div>
         </div>
@@ -1295,7 +1295,7 @@ require __DIR__ . '/inc/header.php';
     </div>
 
     <div class="mt-4 pt-3">
-        <a href="missions" class="btn btn-sm btn-admin-outline"><i class="bi bi-arrow-left"></i> Retour à la
+        <a href="missions.php" class="btn btn-sm btn-admin-outline"><i class="bi bi-arrow-left"></i> Retour à la
             liste</a>
     </div>
 
@@ -1544,7 +1544,7 @@ require __DIR__ . '/inc/header.php';
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i>
+        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i>
             Tableau
             de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>

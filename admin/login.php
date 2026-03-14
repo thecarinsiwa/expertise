@@ -8,7 +8,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 // Déjà connecté → tableau de bord
 if (!empty($_SESSION['admin_logged_in'])) {
-    header('Location: index');
+    header('Location: index.php');
     exit;
 }
 
@@ -21,7 +21,7 @@ require_once __DIR__ . '/inc/db.php';
    Traitement du formulaire
 ────────────────────────────────────────────── */
 $error = '';
-$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'index';
+$redirect = isset($_GET['redirect']) ? $_GET['redirect'] : 'index.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
@@ -73,6 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $safe = filter_var($redirect, FILTER_VALIDATE_URL) === false
                     ? $redirect
                     : 'index.php';
+                // Afficher l’extension : /admin/index → /admin/index.php
+                $safe = preg_replace('#/index(\?|$)#', '/index.php$1', $safe);
                 header('Location: ' . $safe);
                 exit;
             }
@@ -413,9 +415,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <!-- Pied -->
         <div class="login-footer">
-            <a href="forgot-password"><i class="bi bi-key me-1"></i>Mot de passe oublié ?</a>
+            <a href="forgot-password.php"><i class="bi bi-key me-1"></i>Mot de passe oublié ?</a>
             <span class="mx-2" style="color:#dee2e6;">|</span>
-            <a href="register"><i class="bi bi-person-plus me-1"></i>Créer un compte</a>
+            <a href="register.php"><i class="bi bi-person-plus me-1"></i>Créer un compte</a>
             <span class="mx-2" style="color:#dee2e6;">|</span>
             <a href="../" class="d-inline-flex align-items-center gap-1">
                 <i class="bi bi-arrow-left"></i> Retour au site

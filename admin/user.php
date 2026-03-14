@@ -30,7 +30,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_id'];
             if ($delId !== (int) ($_SESSION['admin_id'] ?? 0)) {
                 $pdo->prepare("DELETE FROM user WHERE id = ?")->execute([$delId]);
-                header('Location: user?msg=deleted');
+                header('Location: user.php?msg=deleted');
                 exit;
             }
             $error = 'Vous ne pouvez pas supprimer votre propre compte.';
@@ -104,7 +104,7 @@ if ($pdo) {
                                 if ($rid > 0) $ins->execute([$newId, $rid]);
                             }
                         }
-                        header('Location: user?id=' . $newId . '&msg=created');
+                        header('Location: user.php?id=' . $newId . '&msg=created');
                         exit;
                     }
                 }
@@ -152,8 +152,8 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="user" class="text-decoration-none">Utilisateurs</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="user.php" class="text-decoration-none">Utilisateurs</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -189,7 +189,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
                 <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0) && has_permission('admin.users.delete')): ?>
                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
                 <?php endif; ?>
-                <a href="user" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="user.php" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
                 <a href="user<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
@@ -303,7 +303,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
             <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0) && has_permission('admin.users.delete')): ?>
                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
             <?php endif; ?>
-            <a href="user" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="user.php" class="btn btn-admin-outline ms-auto"><i class="bi bi-arrow-left me-1"></i> Liste</a>
         </div>
     </div>
     <?php if ((int)($detail->id) !== (int)($_SESSION['admin_id'] ?? 0) && has_permission('admin.users.delete')): ?>
@@ -405,7 +405,7 @@ $detailRoleIds = $detail && !empty($detail->roles) ? array_column($detail->roles
 
 <footer class="admin-main-footer">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="index" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
+        <a href="index.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Tableau de bord</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

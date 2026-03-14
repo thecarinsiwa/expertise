@@ -27,7 +27,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_id'];
             try {
                 $pdo->prepare("DELETE FROM portfolio WHERE id = ?")->execute([$delId]);
-                header('Location: portfolios?msg=deleted');
+                header('Location: portfolios.php?msg=deleted');
                 exit;
             } catch (PDOException $e) {
                 $error = 'Impossible de supprimer : des programmes sont liés à ce portfolio.';
@@ -52,7 +52,7 @@ if ($pdo) {
                     } else {
                         $pdo->prepare("INSERT INTO portfolio (organisation_id, name, code, description, is_active) VALUES (?, ?, ?, ?, ?)")
                             ->execute([$organisation_id, $name, $code, $description, $is_active]);
-                        header('Location: portfolios?id=' . $pdo->lastInsertId() . '&msg=created');
+                        header('Location: portfolios.php?id=' . $pdo->lastInsertId() . '&msg=created');
                         exit;
                     }
                 } catch (PDOException $e) {
@@ -88,10 +88,10 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="projects" class="text-decoration-none">Projets & Tâches</a></li>
-        <li class="breadcrumb-item"><a href="programmes" class="text-decoration-none">Programmes</a></li>
-        <li class="breadcrumb-item"><a href="portfolios" class="text-decoration-none">Portfolios</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="projects.php" class="text-decoration-none">Projets & Tâches</a></li>
+        <li class="breadcrumb-item"><a href="programmes.php" class="text-decoration-none">Programmes</a></li>
+        <li class="breadcrumb-item"><a href="portfolios.php" class="text-decoration-none">Portfolios</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau portfolio</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -124,11 +124,11 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
                 <a href="portfolios?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <a href="portfolios" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="portfolios.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
                 <a href="portfolios<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="programmes" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Programmes</a>
+                <a href="programmes.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Programmes</a>
                 <a href="portfolios?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouveau portfolio</a>
             <?php endif; ?>
         </div>
@@ -217,7 +217,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         </table>
         <div class="mt-4 d-flex gap-2">
             <a href="portfolios?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-            <a href="portfolios" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="portfolios.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deletePortfolioModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
         </div>
     </div>
@@ -299,7 +299,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="programmes" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Programmes</a>
+        <a href="programmes.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Programmes</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>

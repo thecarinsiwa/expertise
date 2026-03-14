@@ -27,7 +27,7 @@ if ($pdo) {
             $delId = (int) $_POST['delete_id'];
             try {
                 $pdo->prepare("DELETE FROM programme WHERE id = ?")->execute([$delId]);
-                header('Location: programmes?msg=deleted');
+                header('Location: programmes.php?msg=deleted');
                 exit;
             } catch (PDOException $e) {
                 $error = 'Impossible de supprimer : des projets sont peut-être liés à ce programme.';
@@ -54,7 +54,7 @@ if ($pdo) {
                     } else {
                         $pdo->prepare("INSERT INTO programme (portfolio_id, name, code, description, start_date, end_date, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)")
                             ->execute([$portfolio_id, $name, $code, $description, $start_date, $end_date, $is_active]);
-                        header('Location: programmes?id=' . $pdo->lastInsertId() . '&msg=created');
+                        header('Location: programmes.php?id=' . $pdo->lastInsertId() . '&msg=created');
                         exit;
                     }
                 } catch (PDOException $e) {
@@ -90,9 +90,9 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="index" class="text-decoration-none">Tableau de bord</a></li>
-        <li class="breadcrumb-item"><a href="projects" class="text-decoration-none">Projets & Tâches</a></li>
-        <li class="breadcrumb-item"><a href="programmes" class="text-decoration-none">Programmes</a></li>
+        <li class="breadcrumb-item"><a href="index.php" class="text-decoration-none">Tableau de bord</a></li>
+        <li class="breadcrumb-item"><a href="projects.php" class="text-decoration-none">Projets & Tâches</a></li>
+        <li class="breadcrumb-item"><a href="programmes.php" class="text-decoration-none">Programmes</a></li>
         <?php if ($action === 'add'): ?>
             <li class="breadcrumb-item active">Nouveau programme</li>
         <?php elseif ($action === 'edit' && $detail): ?>
@@ -125,13 +125,13 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         <div class="d-flex gap-2">
             <?php if ($detail && $action !== 'edit'): ?>
                 <a href="programmes?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-                <a href="programmes" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+                <a href="programmes.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <?php elseif ($isForm): ?>
-                <a href="portfolios" class="btn btn-admin-outline" target="_blank"><i class="bi bi-folder me-1"></i> Configuration des portfolios</a>
+                <a href="portfolios.php" class="btn btn-admin-outline" target="_blank"><i class="bi bi-folder me-1"></i> Configuration des portfolios</a>
                 <a href="programmes<?= $id ? '?id=' . $id : '' ?>" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Annuler</a>
             <?php else: ?>
-                <a href="projects" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Projets</a>
-                <a href="portfolios" class="btn btn-admin-outline"><i class="bi bi-folder me-1"></i> Configuration des portfolios</a>
+                <a href="projects.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Projets</a>
+                <a href="portfolios.php" class="btn btn-admin-outline"><i class="bi bi-folder me-1"></i> Configuration des portfolios</a>
                 <a href="programmes?action=add" class="btn btn-admin-primary"><i class="bi bi-plus-lg me-1"></i> Nouveau programme</a>
             <?php endif; ?>
         </div>
@@ -183,7 +183,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
                             <option value="<?= (int) $pf->id ?>" <?= ($detail && $detail->portfolio_id == $pf->id) ? 'selected' : '' ?>><?= htmlspecialchars($pf->name) ?></option>
                         <?php endforeach; ?>
                     </select>
-                    <small class="text-muted"><a href="portfolios" target="_blank">Configuration des portfolios</a></small>
+                    <small class="text-muted"><a href="portfolios.php" target="_blank">Configuration des portfolios</a></small>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label fw-bold">Nom *</label>
@@ -230,7 +230,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
         </table>
         <div class="mt-4 d-flex gap-2">
             <a href="programmes?action=edit&id=<?= (int) $detail->id ?>" class="btn btn-admin-primary"><i class="bi bi-pencil me-1"></i> Modifier</a>
-            <a href="programmes" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
+            <a href="programmes.php" class="btn btn-admin-outline"><i class="bi bi-arrow-left me-1"></i> Liste</a>
             <button type="button" class="btn btn-outline-danger ms-auto" data-bs-toggle="modal" data-bs-target="#deleteProgrammeModal"><i class="bi bi-trash me-1"></i> Supprimer</button>
         </div>
     </div>
@@ -312,7 +312,7 @@ $isForm = ($action === 'add') || ($action === 'edit' && $detail);
 
 <footer class="admin-main-footer mt-4">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-        <a href="projects" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Projets & Tâches</a>
+        <a href="projects.php" class="text-muted text-decoration-none small"><i class="bi bi-arrow-left me-1"></i> Projets & Tâches</a>
         <span class="small text-muted">&copy; <?= date('Y') ?> Expertise</span>
     </div>
 </footer>
