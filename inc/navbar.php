@@ -21,7 +21,7 @@ $siteLogoAlt = $organisation ? htmlspecialchars($organisation->name) : 'EXPERTIS
 ?>
 <nav class="navbar navbar-expand-lg navbar-main navbar-light">
     <div class="container">
-        <a class="navbar-brand" href="<?= $baseUrl ?>index.php">
+        <a class="navbar-brand" href="<?= $baseUrl ?>index">
             <img src="<?= htmlspecialchars($siteLogoUrl) ?>"
                 alt="<?= $siteLogoAlt ?>">
         </a>
