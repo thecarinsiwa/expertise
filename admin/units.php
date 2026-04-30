@@ -533,28 +533,28 @@ require __DIR__ . '/inc/header.php';
             <div class="row g-3">
                 <div class="col-12">
                     <label class="form-label">Introduction (bloc 1)</label>
-                    <textarea name="governance_intro_block1" class="form-control" rows="2"><?= htmlspecialchars($governanceContent?->intro_block1 ?? '') ?></textarea>
+                    <textarea name="governance_intro_block1" class="form-control" rows="2"><?= htmlspecialchars(isset($governanceContent) ? ($governanceContent->intro_block1 ?? '') : '') ?></textarea>
                 </div>
                 <div class="col-12">
                     <label class="form-label">Introduction (bloc 2)</label>
-                    <textarea name="governance_intro_block2" class="form-control" rows="2"><?= htmlspecialchars($governanceContent?->intro_block2 ?? '') ?></textarea>
+                    <textarea name="governance_intro_block2" class="form-control" rows="2"><?= htmlspecialchars(isset($governanceContent) ? ($governanceContent->intro_block2 ?? '') : '') ?></textarea>
                 </div>
                 <div class="col-12"><hr class="my-2"></div>
                 <div class="col-md-6">
                     <label class="form-label">Titre section « Instances »</label>
-                    <input type="text" name="governance_section_instances_title" class="form-control" value="<?= htmlspecialchars($governanceContent?->section_instances_title ?? '') ?>">
+                    <input type="text" name="governance_section_instances_title" class="form-control" value="<?= htmlspecialchars(isset($governanceContent) ? ($governanceContent->section_instances_title ?? '') : '') ?>">
                 </div>
                 <div class="col-12">
                     <label class="form-label">Texte section Instances</label>
-                    <textarea name="governance_section_instances_text" class="form-control" rows="2"><?= htmlspecialchars($governanceContent?->section_instances_text ?? '') ?></textarea>
+                    <textarea name="governance_section_instances_text" class="form-control" rows="2"><?= htmlspecialchars(isset($governanceContent) ? ($governanceContent->section_instances_text ?? '') : '') ?></textarea>
                 </div>
                 <div class="col-md-6">
                     <label class="form-label">Titre section « Bureaux »</label>
-                    <input type="text" name="governance_section_bureaux_title" class="form-control" value="<?= htmlspecialchars($governanceContent?->section_bureaux_title ?? '') ?>">
+                    <input type="text" name="governance_section_bureaux_title" class="form-control" value="<?= htmlspecialchars(isset($governanceContent) ? ($governanceContent->section_bureaux_title ?? '') : '') ?>">
                 </div>
                 <div class="col-12">
                     <label class="form-label">Texte section Bureaux</label>
-                    <textarea name="governance_section_bureaux_text" class="form-control" rows="2"><?= htmlspecialchars($governanceContent?->section_bureaux_text ?? '') ?></textarea>
+                    <textarea name="governance_section_bureaux_text" class="form-control" rows="2"><?= htmlspecialchars(isset($governanceContent) ? ($governanceContent->section_bureaux_text ?? '') : '') ?></textarea>
                 </div>
                 <div class="col-12">
                     <button type="submit" class="btn btn-admin-primary">Enregistrer le contenu Gouvernance</button>

@@ -60,7 +60,7 @@ $hasFooterSocial = $organisation && (
                         <li><a href="<?= $baseUrl ?>index.php#missions">Missions</a></li>
                         <li><a href="<?= $baseUrl ?>offres.php">Nos offres</a></li>
                         <li><a href="<?= $baseUrl ?>index.php#actualites">Actualités</a></li>
-                        <li><a href="<?= $baseUrl ?>where-we-work.php">Où nous travaillons</a></li>
+                        <li><a href="<?= $baseUrl ?>projects.php">Nos projets ASBL</a></li>
                         <li><a href="<?= $baseUrl ?>contact.php">Contact</a></li>
                     </ul>
                 </div>

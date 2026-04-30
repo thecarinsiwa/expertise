@@ -1,14 +1,16 @@
-# Document root pour /expertise/
+# Document root
 DirectoryIndex index.php
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteBase /expertise/
+    # Production (site à la racine, ex. expertisehs.org) : RewriteBase /
+    # Local sous-dossier (ex. http://localhost/expertise/) : décommenter la ligne suivante et commenter celle au-dessus
+    RewriteBase /
 
     # Rediriger /index vers index.php
     RewriteRule ^index$ index.php [L]
 
-    # Toutes les URLs sans extension -> fichier .php correspondant si il existe
+    # URLs sans extension -> fichier .php correspondant si il existe (ex. /client/login -> /client/login.php)
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME}.php -f

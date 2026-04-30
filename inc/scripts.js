@@ -26,8 +26,14 @@
 
     var navbarCollapse = document.getElementById('navbarMain');
     if (navbarCollapse) {
-        navbarCollapse.addEventListener('show.bs.collapse', updateMegaMenuPosition);
-        navbarCollapse.addEventListener('hidden.bs.collapse', updateMegaMenuPosition);
+        navbarCollapse.addEventListener('show.bs.collapse', function () {
+            document.body.classList.add('mobile-menu-open');
+            updateMegaMenuPosition();
+        });
+        navbarCollapse.addEventListener('hidden.bs.collapse', function () {
+            document.body.classList.remove('mobile-menu-open');
+            updateMegaMenuPosition();
+        });
     }
 
     function closeAll() {

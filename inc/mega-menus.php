@@ -1,3 +1,25 @@
+<?php
+if (!isset($baseUrl)) $baseUrl = '';
+
+$latestProjects = [];
+// Récupère les 2 derniers projets pour le sous-menu "Nos projets ASBL".
+if (isset($pdo) && $pdo) {
+    try {
+        $stmt = $pdo->prepare("
+            SELECT p.id, p.name
+            FROM project p
+            WHERE p.organisation_id = (SELECT id FROM organisation WHERE is_active = 1 LIMIT 1)
+            ORDER BY p.start_date DESC, p.updated_at DESC
+            LIMIT 2
+        ");
+        $stmt->execute();
+        $latestProjects = $stmt->fetchAll(PDO::FETCH_OBJ);
+    } catch (Throwable $e) {
+        $latestProjects = [];
+    }
+}
+?>
+
 <!-- Mega-menu : À propos -->
 <div class="mega-menu" id="mega-about" aria-hidden="true">
     <div class="mega-red-line"></div>
@@ -36,6 +58,11 @@
                 <h3>Responsabilité</h3>
                 <p>Politiques et rapports sur nos engagements éthiques, diversité et impact environnemental.</p>
                 <a href="<?= $baseUrl ?>responsibility.php" class="mega-link">En savoir plus</a>
+            </div>
+            <div class="mega-col">
+                <h3>Médias &amp; ressources</h3>
+                <p>Documents, publications et ressources disponibles.</p>
+                <a href="<?= $baseUrl ?>media-resources.php" class="mega-link">En savoir plus</a>
             </div>
             <div class="mega-col">
                 <h3>Nous contacter</h3>
@@ -79,24 +106,33 @@
     </div>
 </div>
 
-<!-- Mega-menu : Où nous travaillons -->
+<!-- Mega-menu : Nos projets ASBL -->
 <div class="mega-menu" id="mega-where" aria-hidden="true">
     <div class="mega-red-line"></div>
     <div class="container">
         <div class="mega-header">
-            <h2 class="mega-title">Où nous travaillons</h2>
+            <h2 class="mega-title">Nos projets ASBL</h2>
             <button type="button" class="btn-close-mega" aria-label="Fermer" data-close-mega><i class="bi bi-x-lg"></i></button>
         </div>
         <div class="mega-grid">
             <div class="mega-col">
-                <h3>Carte & lieux</h3>
-                <p>Visualisez nos interventions et accédez aux missions par lieu.</p>
-                <a href="<?= $baseUrl ?>where-we-work.php" class="mega-link">En savoir plus</a>
+                <h3>Derniers projets</h3>
+                <p>Les deux derniers projets ASBL.</p>
+                <?php if (!empty($latestProjects)): ?>
+                    <?php foreach ($latestProjects as $p): ?>
+                        <a href="<?= $baseUrl ?>project.php?id=<?= (int) $p->id ?>" class="mega-link d-block">
+                            <?= htmlspecialchars($p->name) ?>
+                        </a>
+                    <?php endforeach; ?>
+                <?php else: ?>
+                    <p class="mb-0">Aucun projet récent pour le moment.</p>
+                <?php endif; ?>
+                <a href="<?= $baseUrl ?>projects.php" class="mega-link d-block">Voir tous les projets</a>
             </div>
             <div class="mega-col">
-                <h3>Par lieu</h3>
-                <p>Accès aux missions par lieu d'intervention.</p>
-                <a href="<?= $baseUrl ?>where-we-work.php" class="mega-link">En savoir plus</a>
+                <h3>Accéder au catalogue</h3>
+                <p>Recherchez et filtrez tous nos projets.</p>
+                <a href="<?= $baseUrl ?>projects.php" class="mega-link">En savoir plus</a>
             </div>
         </div>
     </div>

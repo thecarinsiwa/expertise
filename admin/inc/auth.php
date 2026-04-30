@@ -12,7 +12,8 @@ if (empty($_SESSION['admin_logged_in'])) {
     if (!function_exists('admin_base_url')) {
         function admin_base_url() {
             $sn = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-            if (preg_match('#^/([^/]+)/#', $sn, $m) && strpos($m[1], '.') === false) {
+            // Ne pas prendre "admin" ou "client" comme base (sous-dossiers de l'app) → évite /admin/admin/login.php en prod
+            if (preg_match('#^/([^/]+)/#', $sn, $m) && strpos($m[1], '.') === false && $m[1] !== 'admin' && $m[1] !== 'client') {
                 return '/' . $m[1] . '/';
             }
             if (!getenv('SITE_BASE_URL') && empty($_ENV['SITE_BASE_URL'])) {
@@ -20,7 +21,8 @@ if (empty($_SESSION['admin_logged_in'])) {
                 if (is_file($envFile)) require_once $envFile;
             }
             $base = getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '/expertise/');
-            return ($base !== '' && $base !== '/') ? rtrim($base, '/') . '/' : '/expertise/';
+            if ($base === '' || $base === '/') return '/';
+            return rtrim($base, '/') . '/';
         }
     }
     $adminBase = admin_base_url() . 'admin/';
@@ -86,7 +88,7 @@ function require_permission($code) {
     if (!function_exists('admin_base_url')) {
         function admin_base_url() {
             $sn = str_replace('\\', '/', $_SERVER['SCRIPT_NAME'] ?? '');
-            if (preg_match('#^/([^/]+)/#', $sn, $m) && strpos($m[1], '.') === false) {
+            if (preg_match('#^/([^/]+)/#', $sn, $m) && strpos($m[1], '.') === false && $m[1] !== 'admin' && $m[1] !== 'client') {
                 return '/' . $m[1] . '/';
             }
             if (!getenv('SITE_BASE_URL') && empty($_ENV['SITE_BASE_URL'])) {
@@ -94,7 +96,8 @@ function require_permission($code) {
                 if (is_file($envFile)) require_once $envFile;
             }
             $base = getenv('SITE_BASE_URL') ?: ($_ENV['SITE_BASE_URL'] ?? '/expertise/');
-            return ($base !== '' && $base !== '/') ? rtrim($base, '/') . '/' : '/expertise/';
+            if ($base === '' || $base === '/') return '/';
+            return rtrim($base, '/') . '/';
         }
     }
     header('Location: ' . admin_base_url() . 'admin/403.php');

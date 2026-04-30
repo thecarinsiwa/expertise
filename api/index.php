@@ -931,6 +931,9 @@ function humanSize(int $bytes): string
                 <a href="?" class="btn btn-ghost" style="font-size:.8rem;padding:.5rem 1rem;">
                     <i class="bi bi-arrow-clockwise"></i> Rafraîchir
                 </a>
+                <a href="primary-keys.php" class="btn btn-ghost" style="font-size:.8rem;padding:.5rem 1rem;">
+                    <i class="bi bi-key"></i> Clés primaires &amp; AUTO_INCREMENT
+                </a>
                 <a href="../" class="btn btn-ghost" style="font-size:.8rem;padding:.5rem 1rem;">
                     <i class="bi bi-house"></i> Accueil
                 </a>
@@ -953,6 +956,12 @@ function humanSize(int $bytes): string
             <?php endif; ?>
             <a href="?" class="btn btn-ghost">
                 <i class="bi bi-arrow-repeat"></i> Tester à nouveau
+            </a>
+            <a href="primary-keys.php" class="btn btn-ghost">
+                <i class="bi bi-key"></i> Clés primaires &amp; AUTO_INCREMENT
+            </a>
+            <a href="../" class="btn btn-ghost">
+                <i class="bi bi-house-door"></i> Retour au site
             </a>
             <span class="sep">|</span>
             <span style="font-size:.8rem;color:var(--muted);">

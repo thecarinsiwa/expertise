@@ -403,6 +403,11 @@ $adminFaviconUrl = get_site_favicon_url('../', null);
                 <i class="bi bi-briefcase"></i><span>Nos offres</span>
             </a>
             <?php endif; ?>
+            <?php if (has_permission('admin.expertises.view')): ?>
+            <a href="expertises.php" class="nav-link<?= $currentNav === 'expertises' ? ' active' : '' ?>">
+                <i class="bi bi-stars"></i><span>Expertises</span>
+            </a>
+            <?php endif; ?>
 
         
             <div class="admin-sidebar-label">Communication</div>
