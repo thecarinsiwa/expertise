@@ -130,6 +130,26 @@ if (!isset($statsLocations)) $statsLocations = 0;
 if (!isset($statsAnnouncements)) $statsAnnouncements = 0;
 if (!isset($recentLocations)) $recentLocations = [];
 if (!isset($mapLocations)) $mapLocations = [];
+
+// Fetch upcoming events
+$upcomingEvents = [];
+if ($orgId) {
+    try {
+        $stmt = $pdo->prepare("
+            SELECT e.id, e.title, e.description, e.start_at, e.end_at, e.location, e.is_all_day, c.colour AS calendar_colour, c.name AS calendar_name
+            FROM event e
+            JOIN calendar c ON e.calendar_id = c.id
+            WHERE c.organisation_id = ? AND c.is_public = 1 AND e.start_at >= NOW()
+            ORDER BY e.start_at ASC
+            LIMIT 4
+        ");
+        $stmt->execute([$orgId]);
+        if ($stmt) $upcomingEvents = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        $upcomingEvents = [];
+    }
+}
+
 // Pays d'intervention (dernière partie du lieu, ex. "Evinayong, Guinée équatoriale" -> "Guinée équatoriale") pour colorer la carte
 $interventionCountryNames = [];
 foreach ($recentLocations as $loc) {
@@ -387,28 +407,64 @@ require __DIR__ . '/inc/header.php';
                 <h2 class="section-heading mb-0">Où nous travaillons</h2>
                 <a href="<?= $baseUrl ?>where-we-work.php" class="btn-view-all">Voir la carte et les lieux</a>
             </div>
-            <div class="row g-4">
-                <div class="col-lg-7">
-                    <div id="index-where-map" class="index-where-map rounded overflow-hidden"
-                         data-base-url="<?= htmlspecialchars($baseUrl) ?>"
-                         data-locations="<?= htmlspecialchars(json_encode($mapLocations)) ?>"
-                         data-countries="<?= htmlspecialchars(json_encode($interventionCountriesGeoJson)) ?>"
-                         style="height: 320px; background: #e9ecef;"></div>
-                </div>
-                <div class="col-lg-5 d-flex flex-column justify-content-center">
-                    <?php if (count($recentLocations) > 0): ?>
-                        <p class="text-muted mb-2">Parmi nos lieux d'intervention :</p>
-                        <ul class="index-where-list mb-0">
-                            <?php foreach ($recentLocations as $loc): ?>
-                                <li><a href="<?= $baseUrl ?>missions.php?location=<?= urlencode($loc) ?>"><?= htmlspecialchars($loc) ?></a></li>
-                            <?php endforeach; ?>
-                        </ul>
-                    <?php else: ?>
-                        <p class="text-muted mb-0">Découvrez nos zones d'intervention et les missions par pays ou région.</p>
-                    <?php endif; ?>
+            <div class="row g-0 position-relative overflow-hidden rounded">
+                <div class="col-12">
+                    <img id="index-where-map"
+                         class="index-where-map"
+                         src="<?= htmlspecialchars($baseUrl) ?>assets/images/index-where-map-static.png"
+                         alt="Carte des lieux d'intervention"
+                         loading="lazy"
+                         style="width: 100%; height: auto; object-fit: contain; background: #e9ecef; display: block;" />
                 </div>
             </div>
         </div>
+    </section>
+
+    <!-- Événements -->
+    <section class="container py-5 border-top" id="evenements">
+        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pt-4">
+            <h2 class="section-heading mb-0">Événements à venir</h2>
+        </div>
+        <?php if (count($upcomingEvents) > 0): ?>
+            <div class="row g-4">
+                <?php foreach ($upcomingEvents as $e): 
+                    $startDate = strtotime($e->start_at);
+                    $eventDay = date('d', $startDate);
+                    $eventMonth = date('M', $startDate);
+                    $eventYear = date('Y', $startDate);
+                    $eventTime = $e->is_all_day ? 'Toute la journée' : date('H:i', $startDate);
+                ?>
+                    <div class="col-md-6 col-lg-3">
+                        <div class="card card-event h-100 border-0 shadow-sm">
+                            <div class="card-body d-flex flex-column">
+                                <div class="event-date-box mb-3">
+                                    <span class="event-day"><?= $eventDay ?></span>
+                                    <span class="event-month"><?= $eventMonth ?></span>
+                                </div>
+                                <h3 class="card-title h6 mb-2 fw-bold text-dark"><?= htmlspecialchars($e->title) ?></h3>
+                                <div class="mt-auto">
+                                    <p class="card-text small text-muted mb-1">
+                                        <i class="bi bi-clock me-1"></i> <?= $eventTime ?>
+                                    </p>
+                                    <?php if ($e->location): ?>
+                                        <p class="card-text small text-muted mb-0">
+                                            <i class="bi bi-geo-alt me-1"></i> <?= htmlspecialchars($e->location) ?>
+                                        </p>
+                                    <?php endif; ?>
+                                    <div class="mt-2 pt-2 border-top">
+                                        <span class="badge rounded-pill" style="background-color: <?= htmlspecialchars($e->calendar_colour ?: '#3b82f6') ?>; font-size: 0.7rem;">
+                                            <?= htmlspecialchars($e->calendar_name) ?>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+        <?php else: ?>
+            <p class="text-muted text-center py-4">Aucun événement prévu pour le moment.</p>
+        <?php endif; ?>
     </section>
 
     <!-- Notre équipe (carousel) -->
@@ -530,56 +586,5 @@ require __DIR__ . '/inc/header.php';
             <a href="<?= $baseUrl ?>contact.php" class="btn btn-cta-primary">Nous contacter</a>
         </div>
     </section>
-
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
-    <script>
-    (function() {
-        var mapEl = document.getElementById('index-where-map');
-        if (!mapEl || typeof L === 'undefined') return;
-        var baseUrl = mapEl.getAttribute('data-base-url') || '';
-        var locations = [];
-        var interventionCountries = [];
-        try { locations = JSON.parse(mapEl.getAttribute('data-locations') || '[]'); } catch(e) {}
-        try { interventionCountries = JSON.parse(mapEl.getAttribute('data-countries') || '[]'); } catch(e) {}
-        var map = L.map('index-where-map').setView([2, 20], 3);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
-
-        var countriesLayer = null;
-        if (interventionCountries.length > 0) {
-            var countrySet = {};
-            interventionCountries.forEach(function(c) { countrySet[c] = true; });
-            fetch('https://raw.githubusercontent.com/datasets/geo-countries/master/data/countries.geojson')
-                .then(function(r) { return r.json(); })
-                .then(function(geojson) {
-                    countriesLayer = L.geoJSON(geojson, {
-                        style: function(feature) {
-                            var name = (feature.properties && (feature.properties.ADMIN || feature.properties.name)) || '';
-                            var isIntervention = countrySet[name];
-                            return {
-                                fillColor: isIntervention ? '#0071BC' : '#e8e8e8',
-                                fillOpacity: isIntervention ? 0.45 : 0.25,
-                                color: isIntervention ? '#1D1C3E' : '#ccc',
-                                weight: isIntervention ? 1.2 : 0.6
-                            };
-                        }
-                    }).addTo(map);
-                })
-                .catch(function() {});
-        }
-
-        function escapeHtml(s) { if (s == null) return ''; var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
-        var bounds = null;
-        locations.forEach(function(m) {
-            var lat = parseFloat(m.latitude), lng = parseFloat(m.longitude);
-            if (isNaN(lat) || isNaN(lng)) return;
-            var popup = '<a href="' + (m.url || (baseUrl + 'mission.php?h=' + m.id)) + '">' + escapeHtml(m.title || 'Mission') + '</a>';
-            if (m.location) popup += '<br><small class="text-muted">' + escapeHtml(m.location) + '</small>';
-            L.marker([lat, lng]).addTo(map).bindPopup(popup);
-            if (!bounds) bounds = L.latLngBounds([lat, lng], [lat, lng]); else bounds.extend([lat, lng]);
-        });
-        if (bounds && locations.length > 0) map.fitBounds(bounds, { padding: [30, 30], maxZoom: 10 });
-    })();
-    </script>
 
 <?php require __DIR__ . '/inc/footer.php'; ?>
